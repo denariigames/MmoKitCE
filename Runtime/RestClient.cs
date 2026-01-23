@@ -360,11 +360,6 @@ namespace Insthync.UnityRestClient
             return await Get(url + GetQueryString(queries), authorizationToken, authHeaderSettings);
         }
 
-        public static async Task<Result> Get(string url, string authorizationToken)
-        {
-            return await Get(url, authorizationToken, BearerAuthHeaderSettings, null);
-        }
-
         public static async Task<Result> Get(string url, string authorizationToken,
             AuthHeaderSettings authHeaderSettings)
         {
@@ -377,7 +372,7 @@ namespace Insthync.UnityRestClient
 #if UNITY_EDITOR || DEBUG_REST_CLIENT
             uint id = GetNextDebugId();
             bool errorLogged = false;
-            Debug.Log($"Get request {id} {url}");
+            Debug.Log($"Get request {id} {url} {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
 #endif
             bool doNotCountNextRequest = DoNotCountNextRequest;
             long responseCode = -1;
@@ -395,10 +390,6 @@ namespace Insthync.UnityRestClient
                 SetHeaders(webRequest, headers);
                 if (!string.IsNullOrEmpty(authorizationToken))
                 {
-#if UNITY_EDITOR || DEBUG_REST_CLIENT
-                    Debug.Log(
-                        $"Get {id} with authorization token {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
-#endif
                     webRequest.SetRequestHeader(authHeaderSettings.Header,
                         authHeaderSettings.Prefix + authorizationToken);
                 }
@@ -444,7 +435,8 @@ namespace Insthync.UnityRestClient
 
             if (!doNotCountNextRequest)
                 GetLoadCount--;
-            DoNotCountNextRequest = false;
+            if (doNotCountNextRequest)
+                DoNotCountNextRequest = false;
             return new Result(url, method, default, authorizationToken, authHeaderSettings, responseCode, isHttpError,
                 isNetworkError, stringContent, error);
         }
@@ -471,11 +463,6 @@ namespace Insthync.UnityRestClient
             return await Delete(url + GetQueryString(queries), authorizationToken, authHeaderSettings);
         }
 
-        public static async Task<Result> Delete(string url, string authorizationToken)
-        {
-            return await Delete(url, authorizationToken, BearerAuthHeaderSettings, null);
-        }
-
         public static async Task<Result> Delete(string url, string authorizationToken,
             AuthHeaderSettings authHeaderSettings)
         {
@@ -488,7 +475,7 @@ namespace Insthync.UnityRestClient
 #if UNITY_EDITOR || DEBUG_REST_CLIENT
             uint id = GetNextDebugId();
             bool errorLogged = false;
-            Debug.Log($"Delete request {id} {url}");
+            Debug.Log($"Delete request {id} {url} {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
 #endif
             bool doNotCountNextRequest = DoNotCountNextRequest;
             long responseCode = -1;
@@ -506,10 +493,6 @@ namespace Insthync.UnityRestClient
                 SetHeaders(webRequest, headers);
                 if (!string.IsNullOrEmpty(authorizationToken))
                 {
-#if UNITY_EDITOR || DEBUG_REST_CLIENT
-                    Debug.Log(
-                        $"Delete {id} with authorization token {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
-#endif
                     webRequest.SetRequestHeader(authHeaderSettings.Header,
                         authHeaderSettings.Prefix + authorizationToken);
                 }
@@ -555,7 +538,8 @@ namespace Insthync.UnityRestClient
 
             if (!doNotCountNextRequest)
                 DeleteLoadCount--;
-            DoNotCountNextRequest = false;
+            if (doNotCountNextRequest)
+                DoNotCountNextRequest = false;
             return new Result(url, method, default, authorizationToken, authHeaderSettings, responseCode, isHttpError,
                 isNetworkError, stringContent, error);
         }
@@ -588,7 +572,7 @@ namespace Insthync.UnityRestClient
 #if UNITY_EDITOR || DEBUG_REST_CLIENT
             uint id = GetNextDebugId();
             bool errorLogged = false;
-            Debug.Log($"Post request {id} {url} {content.Data}");
+            Debug.Log($"Post request {id} {url} {content.Data} {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
 #endif
             bool doNotCountNextRequest = DoNotCountNextRequest;
             long responseCode = -1;
@@ -606,10 +590,6 @@ namespace Insthync.UnityRestClient
                 SetHeaders(webRequest, headers);
                 if (!string.IsNullOrEmpty(authorizationToken))
                 {
-#if UNITY_EDITOR || DEBUG_REST_CLIENT
-                    Debug.Log(
-                        $"Post {id} with authorization token {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
-#endif
                     webRequest.SetRequestHeader(authHeaderSettings.Header,
                         authHeaderSettings.Prefix + authorizationToken);
                 }
@@ -657,7 +637,8 @@ namespace Insthync.UnityRestClient
 
             if (!doNotCountNextRequest)
                 PostLoadCount--;
-            DoNotCountNextRequest = false;
+            if (doNotCountNextRequest)
+                DoNotCountNextRequest = false;
             return new Result(url, method, content, authorizationToken, authHeaderSettings, responseCode, isHttpError,
                 isNetworkError, stringContent, error);
         }
@@ -690,7 +671,7 @@ namespace Insthync.UnityRestClient
 #if UNITY_EDITOR || DEBUG_REST_CLIENT
             uint id = GetNextDebugId();
             bool errorLogged = false;
-            Debug.Log($"Patch request {id} {url} {content.Data}");
+            Debug.Log($"Patch request {id} {url} {content.Data} {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
 #endif
             bool doNotCountNextRequest = DoNotCountNextRequest;
             long responseCode = -1;
@@ -708,10 +689,6 @@ namespace Insthync.UnityRestClient
                 SetHeaders(webRequest, headers);
                 if (!string.IsNullOrEmpty(authorizationToken))
                 {
-#if UNITY_EDITOR || DEBUG_REST_CLIENT
-                    Debug.Log(
-                        $"Patch {id} with authorization token {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
-#endif
                     webRequest.SetRequestHeader(authHeaderSettings.Header,
                         authHeaderSettings.Prefix + authorizationToken);
                 }
@@ -759,7 +736,8 @@ namespace Insthync.UnityRestClient
 
             if (!doNotCountNextRequest)
                 PatchLoadCount--;
-            DoNotCountNextRequest = false;
+            if (doNotCountNextRequest)
+                DoNotCountNextRequest = false;
             return new Result(url, method, content, authorizationToken, authHeaderSettings, responseCode, isHttpError,
                 isNetworkError, stringContent, error);
         }
@@ -792,7 +770,7 @@ namespace Insthync.UnityRestClient
 #if UNITY_EDITOR || DEBUG_REST_CLIENT
             uint id = GetNextDebugId();
             bool errorLogged = false;
-            Debug.Log($"Put request {id} {url} {content.Data}");
+            Debug.Log($"Put request {id} {url} {content.Data} {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
 #endif
             bool doNotCountNextRequest = DoNotCountNextRequest;
             long responseCode = -1;
@@ -810,10 +788,6 @@ namespace Insthync.UnityRestClient
                 SetHeaders(webRequest, headers);
                 if (!string.IsNullOrEmpty(authorizationToken))
                 {
-#if UNITY_EDITOR || DEBUG_REST_CLIENT
-                    Debug.Log(
-                        $"Put {id} with authorization token {authHeaderSettings.Header} {authHeaderSettings.Prefix} {authorizationToken}");
-#endif
                     webRequest.SetRequestHeader(authHeaderSettings.Header,
                         authHeaderSettings.Prefix + authorizationToken);
                 }
@@ -861,7 +835,8 @@ namespace Insthync.UnityRestClient
 
             if (!doNotCountNextRequest)
                 PutLoadCount--;
-            DoNotCountNextRequest = false;
+            if (doNotCountNextRequest)
+                DoNotCountNextRequest = false;
             return new Result(url, method, content, authorizationToken, authHeaderSettings, responseCode, isHttpError,
                 isNetworkError, stringContent, error);
         }
@@ -996,16 +971,16 @@ namespace Insthync.UnityRestClient
 
         public class Result : IResult
         {
-            public string Url { get; private set; }
-            public string Method { get; private set; }
-            public RequestContent RequestContent { get; private set; }
-            public string AuthorizationToken { get; private set; }
-            public AuthHeaderSettings AuthHeaderSettings { get; private set; }
-            public long ResponseCode { get; private set; }
-            public bool IsHttpError { get; private set; }
-            public bool IsNetworkError { get; private set; }
-            public string StringContent { get; private set; }
-            public string Error { get; private set; }
+            public string Url { get; protected set; }
+            public string Method { get; protected set; }
+            public RequestContent RequestContent { get; protected set; }
+            public string AuthorizationToken { get; protected set; }
+            public AuthHeaderSettings AuthHeaderSettings { get; protected set; }
+            public long ResponseCode { get; protected set; }
+            public bool IsHttpError { get; protected set; }
+            public bool IsNetworkError { get; protected set; }
+            public string StringContent { get; protected set; }
+            public string Error { get; protected set; }
 
             public Result(string url, string method, RequestContent requestContent, string authorizationToken,
                 AuthHeaderSettings authHeaderSettings, long responseCode, bool isHttpError, bool isNetworkError,
@@ -1069,6 +1044,8 @@ namespace Insthync.UnityRestClient
                         // It may not able to deserialize
                         Debug.LogError(
                             $"Can't deserialize content: {stringContent}, from {Url} ({Method}), content: {RequestContent.Data} ({RequestContent.Type}), {ex}");
+                        IsHttpError = true;
+                        Error = "Wrong content format, unable to deserialize";
                     }
                 }
             }
