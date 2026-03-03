@@ -56,6 +56,7 @@ namespace MultiplayerARPG
             ClearDetection();
             ClearExclusion();
             onUpdateList = null;
+            NearbyEntityDetectorManager.Unregister(this);
         }
 
         public void ClearDetection()

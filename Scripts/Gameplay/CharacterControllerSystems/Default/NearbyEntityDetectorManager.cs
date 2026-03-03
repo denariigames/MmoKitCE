@@ -36,9 +36,9 @@ namespace MultiplayerARPG
             Instance.Register_Implementation(detector);
         }
 
-        private void Register_Implementation(NearbyEntityDetector updater)
+        private void Register_Implementation(NearbyEntityDetector detector)
         {
-            _detectors.Add(updater);
+            _detectors.Add(detector);
         }
 
         public static void Unregister(NearbyEntityDetector detector)
@@ -46,9 +46,9 @@ namespace MultiplayerARPG
             Instance.Unregister_Implementation(detector);
         }
 
-        private void Unregister_Implementation(NearbyEntityDetector updater)
+        private void Unregister_Implementation(NearbyEntityDetector detector)
         {
-            _detectors.Remove(updater);
+            _detectors.Remove(detector);
         }
 
         private void Awake()
