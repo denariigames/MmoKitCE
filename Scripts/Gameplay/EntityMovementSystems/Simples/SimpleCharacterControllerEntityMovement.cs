@@ -235,13 +235,11 @@ namespace MultiplayerARPG
         private void OnEnable()
         {
             Functions.ComponentEnabled();
-            CacheCharacterController.enabled = true;
             UpdateManager.Register(this);
         }
 
         private void OnDisable()
         {
-            CacheCharacterController.enabled = false;
             UpdateManager.Unregister(this);
         }
 
