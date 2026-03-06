@@ -86,7 +86,11 @@ namespace MultiplayerARPG
     {
         protected override bool IsValueChanged(CharacterMount oldValue, CharacterMount newValue)
         {
-            return true;
+            return oldValue.type != newValue.type ||
+                oldValue.sourceId != newValue.sourceId ||
+                oldValue.level != newValue.level ||
+                oldValue.mountRemainsDuration != newValue.mountRemainsDuration ||
+                oldValue.currentHp != newValue.currentHp;
         }
     }
 

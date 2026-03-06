@@ -447,7 +447,9 @@ namespace MultiplayerARPG
 
         private void OnMountChange(bool isInitial, CharacterMount oldMount, CharacterMount mount)
         {
-            IsRecaching = true;
+            // Only recache when mount type/source/level changes (not timer/HP updates)
+            if (oldMount.type != mount.type || oldMount.sourceId != mount.sourceId || oldMount.level != mount.level)
+                IsRecaching = true;
             if (onMountChange != null)
                 onMountChange.Invoke(mount);
         }
