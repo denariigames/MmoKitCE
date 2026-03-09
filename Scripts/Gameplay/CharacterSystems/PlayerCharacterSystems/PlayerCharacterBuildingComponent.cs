@@ -237,7 +237,7 @@ namespace MultiplayerARPG
                 return;
             }
 
-            if (storageEntity.Lockable && storageEntity.IsLocked && !storageEntity.LockPassword.Equals(password))
+            if (storageEntity.Lockable && storageEntity.IsLocked && !string.IsNullOrEmpty(storageEntity.LockPassword) && !string.Equals(storageEntity.LockPassword, password))
             {
                 GameInstance.ServerGameMessageHandlers.SendGameMessage(ConnectionId, UITextKeys.UI_ERROR_WRONG_BUILDING_PASSWORD);
                 return;
@@ -284,7 +284,7 @@ namespace MultiplayerARPG
                 return;
             }
 
-            if (doorEntity.Lockable && doorEntity.IsLocked && !doorEntity.LockPassword.Equals(password))
+            if (doorEntity.Lockable && doorEntity.IsLocked && !string.IsNullOrEmpty(doorEntity.LockPassword) && !string.Equals(doorEntity.LockPassword, password))
             {
                 GameInstance.ServerGameMessageHandlers.SendGameMessage(ConnectionId, UITextKeys.UI_ERROR_WRONG_BUILDING_PASSWORD);
                 return;
