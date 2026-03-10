@@ -186,6 +186,8 @@ namespace MultiplayerARPG
             string id;
             using (Utf16ValueStringBuilder strBuilder = ZString.CreateStringBuilder(true))
             {
+                strBuilder.Append(EntityTypes.Monster);
+                strBuilder.Append('_');
                 strBuilder.Append(ObjectId);
                 id = strBuilder.ToString();
             }
