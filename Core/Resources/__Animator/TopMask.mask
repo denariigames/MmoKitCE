@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!319 &31900000
+AvatarMask:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: TopMask
+  m_Mask: 00000000010000000100000000000000000000000100000001000000010000000100000000000000000000000100000001000000
+  m_Elements:
+  - m_Path: 
+    m_Weight: 1
+  - m_Path: Root_M
+    m_Weight: 0
+  - m_Path: Root_M/Hip_L
+    m_Weight: 0
+  - m_Path: Root_M/Hip_L/HipL_Parent
+    m_Weight: 0
+  - m_Path: Root_M/Hip_L/Knee_L
+    m_Weight: 0
+  - m_Path: Root_M/Hip_L/Knee_L/Ankle_L
+    m_Weight: 0
+  - m_Path: Root_M/Hip_L/Knee_L/Ankle_L/Toes_L
+    m_Weight: 0
+  - m_Path: Root_M/Hip_L/Knee_L/Ankle_L/Toes_L/ToesEnd_L
+    m_Weight: 0
+  - m_Path: Root_M/Hip_L/Knee_L/KneeL_parent
+    m_Weight: 0
+  - m_Path: Root_M/Hip_R
+    m_Weight: 0
+  - m_Path: Root_M/Hip_R/HipR_Parent
+    m_Weight: 0
+  - m_Path: Root_M/Hip_R/Knee_R
+    m_Weight: 0
+  - m_Path: Root_M/Hip_R/Knee_R/Ankle_R
+    m_Weight: 0
+  - m_Path: Root_M/Hip_R/Knee_R/Ankle_R/Toes_R
+    m_Weight: 0
+  - m_Path: Root_M/Hip_R/Knee_R/Ankle_R/Toes_R/ToesEnd_R
+    m_Weight: 0
+  - m_Path: Root_M/Hip_R/Knee_R/KneeR_parent
+    m_Weight: 0
+  - m_Path: Root_M/PropC_Parent
+    m_Weight: 0
+  - m_Path: Root_M/PropL_Parent
+    m_Weight: 0
+  - m_Path: Root_M/PropR_Parent
+    m_Weight: 0
+  - m_Path: Root_M/Root_Parent
+    m_Weight: 0
+  - m_Path: Root_M/Spine1_M
+    m_Weight: 0
+  - m_Path: Root_M/Spine1_M/Chest_M
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Chest_Parent
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Neck_M
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Neck_M/Head_M
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Neck_M/Head_Parent
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/PropBack
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_L
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_L/Shoulder_L
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_L/Shoulder_L/Elbow_L
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_L/Shoulder_L/Elbow_L/ElbowL_Parent
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_L/Shoulder_L/Elbow_L/Wrist_L
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_L/Shoulder_L/Elbow_L/Wrist_L/Shield_Parent
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_L/Shoulder_L/Elbow_L/Wrist_L/WeaponL_Parent
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_L/Shoulder_L/ShoulderL_Parent
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_R
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_R/Shoulder_R
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_R/Shoulder_R/Elbow_R
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_R/Shoulder_R/Elbow_R/ElbowR_Parent
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_R/Shoulder_R/Elbow_R/Wrist_R
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_R/Shoulder_R/Elbow_R/Wrist_R/WeaponR_Parent
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Chest_M/Scapula_R/Shoulder_R/ShoulderR_Parent
+    m_Weight: 1
+  - m_Path: Root_M/Spine1_M/Spine_Parent
+    m_Weight: 1

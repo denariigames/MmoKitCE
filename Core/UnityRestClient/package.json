@@ -1,0 +1,15 @@
+{
+    "name": "com.insthync.unity-rest-client",
+    "version": "1.0.1",
+    "displayName": "Unity REST Client",
+    "description": "A simple rest client for Unity",
+    "unity": "2019.1",
+    "author": {
+        "name": "Ittipon Teerapruettikulchai",
+        "email": "ittipon.bay@gmail.com",
+        "url": "https://github.com/insthync"
+    },
+    "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "2.0.0"
+    }
+}
