@@ -12,9 +12,9 @@ MmoKitCE_Settings.unitypackage will install base project settings. After your pr
 
 The original Kit had additional settings which were not included in CE: AudioManager, EditorBuildSettings, EditorSettings, GraphicSettings, ShaderGraphSettings, UnityConnectSettings, VersionControlSettings
 
-### Preparing MmoKitCE Repo
+### Updating MmoKitCE Repo
 
-CE consists of upstreams which are setup as follows:
+CE pulls from several repos as subtrees, forking from original UnityMultiplayerARPG repos. 
 
 ```sh
 $ git remote add core https://github.com/denariigames/UnityMultiplayerARPG_Core.git
@@ -23,9 +23,16 @@ $ git subtree add --prefix=Core core upstream
 $ git subtree add --prefix=MMO mmo upstream
 ```
 
+To pull the latest changes from upstream repos,
+
+```sh
+$ git subtree pull --prefix=Core core upstream
+$ git subtree pull --prefix=MMO mmo upstream
+```
+
 ### Preparing Upstream Repos
 
-CE pulls from several repos as subtrees, forking from original UnityMultiplayerARPG repos. The main branch in each repo reflects what is in the source repo, while the upstream branch is a flattened version with no submodules and any CE modifications from the original repo.
+The main branch in each repo forks from a source repo, while the upstream branch is a flattened version with no submodules and any CE modifications from the original repo.
 
 To prepare the upstream branch,
 
