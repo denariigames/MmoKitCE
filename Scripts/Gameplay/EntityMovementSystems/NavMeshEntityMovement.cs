@@ -130,85 +130,13 @@ namespace MultiplayerARPG
 
         public override void OnIdentityInitialize()
         {
-            RemoveTickEvents();
             Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
-            _logicUpdater = Entity.Manager.LogicUpdater;
-            AddTickEvents();
             Entity.CurrentGameManager.EntityMovementDataHandlers.TryAdd(ObjectId, this);
         }
 
         public override void OnNetworkDestroy(byte reasons)
         {
-            RemoveTickEvents();
             Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
-        }
-
-        private void AddTickEvents()
-        {
-            if (_logicUpdater == null)
-                return;
-            _logicUpdater.OnTick += OnTickServer;
-            _logicUpdater.OnTick += OnTickClient;
-        }
-
-        private void RemoveTickEvents()
-        {
-            if (_logicUpdater == null)
-                return;
-            _logicUpdater.OnTick -= OnTickServer;
-            _logicUpdater.OnTick -= OnTickClient;
-        }
-
-        private void OnTickServer(LogicUpdater updater)
-        {
-            if (!IsServer)
-                return;
-            if (!Entity.isActiveAndEnabled)
-                return;
-            if (!isActiveAndEnabled)
-                return;
-            if (!Entity.IsUpdateEntityComponents)
-                return;
-            SendServerState(Entity.Manager.ServerTimestamp);
-        }
-
-        private void OnTickClient(LogicUpdater updater)
-        {
-            if (IsServer)
-                return;
-            if (!IsOwnerClient)
-                return;
-            if (!Entity.isActiveAndEnabled)
-                return;
-            if (!isActiveAndEnabled)
-                return;
-            SendClientState(Entity.Manager.ServerTimestamp);
-        }
-
-        private void SendClientState(long writeTimestamp)
-        {
-            EntityMovementDataBuffers.StateDataWriter.Reset();
-            if (WriteClientState(writeTimestamp, EntityMovementDataBuffers.StateDataWriter, out bool shouldSendReliably))
-            {
-                TransportHandler.WritePacket(EntityMovementDataBuffers.StateMessageWriter, GameNetworkingConsts.EntityState);
-                EntityMovementDataBuffers.StateMessageWriter.PutPackedUInt(Entity.ObjectId);
-                EntityMovementDataBuffers.StateMessageWriter.PutPackedLong(writeTimestamp);
-                EntityMovementDataBuffers.StateMessageWriter.Put(EntityMovementDataBuffers.StateDataWriter.Data, 0, EntityMovementDataBuffers.StateDataWriter.Length);
-                Entity.ClientSendMessage(BaseGameEntity.MOVEMENT_DATA_CHANNEL, shouldSendReliably ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Unreliable, EntityMovementDataBuffers.StateMessageWriter);
-            }
-        }
-
-        private void SendServerState(long writeTimestamp)
-        {
-            EntityMovementDataBuffers.StateDataWriter.Reset();
-            if (WriteServerState(writeTimestamp, EntityMovementDataBuffers.StateDataWriter, out bool shouldSendReliably))
-            {
-                TransportHandler.WritePacket(EntityMovementDataBuffers.StateMessageWriter, GameNetworkingConsts.EntityState);
-                EntityMovementDataBuffers.StateMessageWriter.PutPackedUInt(Entity.ObjectId);
-                EntityMovementDataBuffers.StateMessageWriter.PutPackedLong(writeTimestamp);
-                EntityMovementDataBuffers.StateMessageWriter.Put(EntityMovementDataBuffers.StateDataWriter.Data, 0, EntityMovementDataBuffers.StateDataWriter.Length);
-                Entity.ServerSendMessageToSubscribers(BaseGameEntity.MOVEMENT_DATA_CHANNEL, shouldSendReliably ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Unreliable, EntityMovementDataBuffers.StateMessageWriter);
-            }
         }
 
         public void KeyMovement(Vector3 moveDirection, MovementState movementState)
@@ -670,6 +598,7 @@ namespace MultiplayerARPG
 
         public async void ReadServerStateAtClient(long peerTimestamp, NetDataReader reader)
         {
+            reader.ClientReadSyncTransformMessage3D(out MovementState movementState, out ExtraMovementState extraMovementState, out Vector3 position, out float yAngle, out List<EntityMovementForceApplier> movementForceAppliers);
             if (IsServer)
             {
                 // Don't read and apply transform, because it was done at server
@@ -680,7 +609,6 @@ namespace MultiplayerARPG
                 // Not ready to apply transform
                 return;
             }
-            reader.ClientReadSyncTransformMessage3D(out MovementState movementState, out ExtraMovementState extraMovementState, out Vector3 position, out float yAngle, out List<EntityMovementForceApplier> movementForceAppliers);
             _movementForceAppliers.Clear();
             _movementForceAppliers.AddRange(movementForceAppliers);
             if (movementState.Has(MovementState.IsTeleport))
