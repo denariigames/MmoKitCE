@@ -25,9 +25,6 @@ namespace MultiplayerARPG
             ActionRequested,
         }
 
-        public const float DETECT_MOUSE_DRAG_DISTANCE_SQUARED = 100f;
-        public const float DETECT_MOUSE_HOLD_DURATION = 1f;
-
         [Header("Camera Controls Prefabs")]
         [SerializeField]
         protected FollowCameraControls gameplayCameraPrefab;
@@ -92,6 +89,15 @@ namespace MultiplayerARPG
         protected bool uiNotBlockForMobile = true;
         [SerializeField]
         protected bool uiNotBlockForConsole = false;
+        [SerializeField]
+        protected string[] mobileInputAxisNames = new string[]
+        {
+            "Horizontal",
+            "Vertical",
+            "Mouse X",
+            "Mouse Y",
+            "Mouse ScrollWheel",
+        };
 
         #region Events
         /// <summary>
