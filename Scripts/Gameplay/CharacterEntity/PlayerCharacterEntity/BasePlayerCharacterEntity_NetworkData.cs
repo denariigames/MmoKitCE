@@ -438,15 +438,26 @@ namespace MultiplayerARPG
             userCash.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
             partyId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             guildId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
+            persistChannel.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
+            persistChannel.redundancyCount = 0;
+            persistMapName.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
+            persistMapName.redundancyCount = 0;
+            persistPosition.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
+            persistPosition.redundancyCount = 0;
+            persistSafeArea.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
+            persistSafeArea.redundancyCount = 0;
 #if !DISABLE_DIFFER_MAP_RESPAWNING
             respawnMapName.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
+            respawnMapName.redundancyCount = 0;
             respawnPosition.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
+            respawnPosition.redundancyCount = 0;
 #endif
             iconDataId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             frameDataId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             backgroundDataId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             titleDataId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             lastDeadTime.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
+            lastDeadTime.redundancyCount = 0;
 #if !DISABLE_CLASSIC_PK
             isPkOn.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             pkPoint.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
