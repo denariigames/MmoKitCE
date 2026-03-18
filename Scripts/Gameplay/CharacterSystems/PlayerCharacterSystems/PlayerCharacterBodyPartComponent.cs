@@ -132,7 +132,6 @@ namespace MultiplayerARPG
                 _isInitialized = true;
                 _models = GetComponentsInChildren<BaseCharacterModel>(true);
                 SetupEvents();
-                ApplyModelAndColorBySavedData();
             }
         }
 
@@ -157,7 +156,7 @@ namespace MultiplayerARPG
                 SetupCharacterModelEvents(_models[i]);
             }
 #if !DISABLE_CUSTOM_CHARACTER_DATA
-            Entity.onPublicIntsOperation -= OnPublicIntsOperation;
+            Entity.onSetup += OnSetup;
             Entity.onPublicIntsOperation += OnPublicIntsOperation;
 #endif
         }
@@ -172,6 +171,7 @@ namespace MultiplayerARPG
                 }
             }
 #if !DISABLE_CUSTOM_CHARACTER_DATA
+            Entity.onSetup -= OnSetup;
             Entity.onPublicIntsOperation -= OnPublicIntsOperation;
 #endif
         }
@@ -282,6 +282,11 @@ namespace MultiplayerARPG
             HashSet<string> unequippingSockets)
         {
             characterModel.SetupEquippingModels(cancellationTokenSource, showingModels, storingModels, unequippingSockets, options[_currentModelIndex].models, CreateFakeEquipPosition(), CreateFakeCharacterItem(), false, 0, OnShowEquipmentModel).Forget();
+        }
+
+        private void OnSetup()
+        {
+            ApplyModelAndColorBySavedData();
         }
 
         private void OnPublicIntsOperation(LiteNetLibSyncListOp operation, int index, CharacterDataInt32 oldItem, CharacterDataInt32 newItem)
