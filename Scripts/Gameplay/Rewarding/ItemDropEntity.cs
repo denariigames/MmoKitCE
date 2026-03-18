@@ -238,6 +238,12 @@ namespace MultiplayerARPG
             itemDropData.onChange += OnItemDropDataChange;
         }
 
+        protected override void EntityOnDestroy()
+        {
+            base.EntityOnDestroy();
+            itemDropData.onChange -= OnItemDropDataChange;
+        }
+
         public virtual void SetSpawnArea(GameSpawnArea<ItemDropEntity> spawnArea, ItemDropEntity spawnPrefab, int spawnLevel, Vector3 spawnPosition)
         {
             SpawnArea = spawnArea;
@@ -282,12 +288,6 @@ namespace MultiplayerARPG
         {
             if (onPickedUp != null)
                 onPickedUp.Invoke();
-        }
-
-        protected override void EntityOnDestroy()
-        {
-            base.EntityOnDestroy();
-            itemDropData.onChange -= OnItemDropDataChange;
         }
 
         protected virtual async void OnItemDropDataChange(bool isInitial, ItemDropData oldItemDropData, ItemDropData itemDropData)

@@ -148,6 +148,12 @@ namespace MultiplayerARPG
             amount.onChange += OnAmountChange;
         }
 
+        protected override void EntityOnDestroy()
+        {
+            base.EntityOnDestroy();
+            amount.onChange -= OnAmountChange;
+        }
+
         public virtual void SetSpawnArea(GameSpawnArea<BaseRewardDropEntity> spawnArea, BaseRewardDropEntity spawnPrefab, int spawnLevel, Vector3 spawnPosition)
         {
             SpawnArea = spawnArea;
@@ -180,12 +186,6 @@ namespace MultiplayerARPG
         {
             if (onSpawned != null)
                 onSpawned.Invoke();
-        }
-
-        protected override void EntityOnDestroy()
-        {
-            base.EntityOnDestroy();
-            amount.onChange -= OnAmountChange;
         }
 
         public void CallRpcOnPickedUp()
