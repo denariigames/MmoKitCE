@@ -202,6 +202,11 @@ namespace MultiplayerARPG
             Entity.CurrentGameManager.EntityMovementDataHandlers.TryAdd(ObjectId, this);
         }
 
+        public void OnNetworkDestroy(byte reasons)
+        {
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
+        }
+
         public void OnSetOwnerClient(bool isOwnerClient)
         {
             NavPaths = null;
@@ -213,7 +218,6 @@ namespace MultiplayerARPG
             NetworkedTransform.onReadInterpBuffer -= NetworkedTransform_onReadInterpBuffer;
             NetworkedTransform.onValidateInterpolation -= NetworkedTransform_onValidateInterpolation;
             NetworkedTransform.onInterpolate -= NetworkedTransform_onInterpolate;
-            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
         }
 
         protected void NetworkedTransform_onWriteSyncBuffer(NetDataWriter writer, uint tick)

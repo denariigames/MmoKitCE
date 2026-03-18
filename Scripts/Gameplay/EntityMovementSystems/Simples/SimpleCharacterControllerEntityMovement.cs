@@ -248,6 +248,11 @@ namespace MultiplayerARPG
             Functions.OnIdentityInitialize();
         }
 
+        public override void OnNetworkDestroy(byte reasons)
+        {
+            Functions.OnNetworkDestroy(reasons);
+        }
+
         public override void OnSetOwnerClient(bool isOwnerClient)
         {
             Functions.OnSetOwnerClient(isOwnerClient);
