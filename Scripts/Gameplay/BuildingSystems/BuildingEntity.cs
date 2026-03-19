@@ -362,10 +362,12 @@ namespace MultiplayerARPG
             _buildingMaterials.Add(material);
         }
 
-        public override void OnSetup()
+        protected override void SetupNetElements()
         {
-            base.OnSetup();
+            base.SetupNetElements();
+            parentId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             parentId.onChange += OnParentIdChange;
+            parentId.redundancyCount = 0;
         }
 
         protected override void EntityOnDestroy()

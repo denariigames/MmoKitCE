@@ -100,7 +100,7 @@ namespace MultiplayerARPG
 
         private void Entity_onNotifyEnemySpottedByAlly(BaseCharacterEntity ally, BaseCharacterEntity enemy)
         {
-            if ((Entity.Summoner != null && Entity.Summoner == ally) ||
+            if ((Entity.SummonerEntity != null && Entity.SummonerEntity == ally) ||
                 Entity.Characteristic == MonsterCharacteristic.Assist)
                 Entity.SetAttackTarget(enemy);
         }
@@ -155,13 +155,13 @@ namespace MultiplayerARPG
                 Entity.SetSmoothTurnSpeed(turnSmoothSpeed);
 
                 Vector3 currentPosition = Entity.MovementTransform.position;
-                if (Entity.Summoner != null)
+                if (Entity.SummonerEntity != null)
                 {
                     if (!UpdateAttackEnemy(deltaTime, currentPosition))
                     {
                         UpdateEnemyFindingActivity(deltaTime);
 
-                        if (Vector3.Distance(currentPosition, Entity.Summoner.EntityTransform.position) > CurrentGameInstance.minFollowSummonerDistance)
+                        if (Vector3.Distance(currentPosition, Entity.SummonerEntity.EntityTransform.position) > CurrentGameInstance.minFollowSummonerDistance)
                             FollowSummoner();
                         else
                             UpdateWanderDestinationRandomingActivity(deltaTime);
@@ -396,10 +396,10 @@ namespace MultiplayerARPG
             _randomedWanderDelay = Random.Range(randomWanderDelayMin, randomWanderDelayMax);
             Vector3 randomPosition;
             // Random position around summoner or around spawn point
-            if (Entity.Summoner != null)
+            if (Entity.SummonerEntity != null)
             {
                 // Random position around summoner
-                randomPosition = CurrentGameplayRule.GetSummonPosition(Entity.Summoner);
+                randomPosition = CurrentGameplayRule.GetSummonPosition(Entity.SummonerEntity);
             }
             else
             {
@@ -422,10 +422,10 @@ namespace MultiplayerARPG
         {
             Vector3 randomPosition;
             // Random position around summoner or around spawn point
-            if (Entity.Summoner != null)
+            if (Entity.SummonerEntity != null)
             {
                 // Random position around summoner
-                randomPosition = CurrentGameplayRule.GetSummonPosition(Entity.Summoner);
+                randomPosition = CurrentGameplayRule.GetSummonPosition(Entity.SummonerEntity);
             }
             else
             {
@@ -453,7 +453,7 @@ namespace MultiplayerARPG
 
             // Aggressive monster or summoned monster will find target to attack
             bool isAggressive = Entity.Characteristic == MonsterCharacteristic.Aggressive;
-            if (!isAggressive && Entity.Summoner == null)
+            if (!isAggressive && Entity.SummonerEntity == null)
                 return false;
 
             if (!Entity.TryGetTargetEntity(out IDamageableEntity targetEntity) ||
@@ -479,7 +479,7 @@ namespace MultiplayerARPG
                     isAggressive = isAggressive || aggressiveWhileSummoned;
                     // Find enemy around summoner
                     _enemies.AddRange(Entity.FindAliveEntities<DamageableEntity>(
-                        Entity.Summoner.EntityTransform.position,
+                        Entity.SummonerEntity.EntityTransform.position,
                         CharacterDatabase.SummonedVisualRange,
                         false, /* Don't find an allies */
                         isAggressive,  /* Find an enemies */
@@ -521,7 +521,7 @@ namespace MultiplayerARPG
                     continue;
                 }
                 tempBuildingEntity = tempEntity as BuildingEntity;
-                if (isAttackBuilding && isSummonedAndSummonerExisted && tempBuildingEntity != null && Entity.Summoner.Id == tempBuildingEntity.CreatorId)
+                if (isAttackBuilding && isSummonedAndSummonerExisted && tempBuildingEntity != null && Entity.SummonerEntity.Id == tempBuildingEntity.CreatorId)
                 {
                     // If building was built by summoner, skip it
                     continue;

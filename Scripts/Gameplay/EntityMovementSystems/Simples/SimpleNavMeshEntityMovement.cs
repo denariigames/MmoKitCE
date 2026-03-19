@@ -15,7 +15,7 @@ namespace MultiplayerARPG
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent))]
     [RequireComponent(typeof(LiteNetLibTransform))]
-    public class SimpleNavMeshEntityMovement : BaseNetworkedGameEntityComponent<BaseGameEntity>, IEntityMovementComponent, IManagedUpdate
+    public class SimpleNavMeshEntityMovement : BaseNetworkedGameEntityComponent<BaseGameEntity>, IEntityMovementComponent, IEntityMovementDataHandler, IManagedUpdate
     {
         protected const float MIN_MAGNITUDE_TO_DETERMINE_MOVING = 0.01f;
         protected const float MIN_DIRECTION_SQR_MAGNITUDE = 0.0001f;
@@ -113,6 +113,17 @@ namespace MultiplayerARPG
         {
             CacheNavMeshAgent.enabled = false;
             UpdateManager.Unregister(this);
+        }
+
+        public override void OnIdentityInitialize()
+        {
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryAdd(ObjectId, this);
+        }
+
+        public override void OnNetworkDestroy(byte reasons)
+        {
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
         }
 
         public bool CanSimulateMovement()

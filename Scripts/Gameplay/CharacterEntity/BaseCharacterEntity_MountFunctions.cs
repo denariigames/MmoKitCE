@@ -76,8 +76,8 @@ namespace MultiplayerARPG
 
 
             VehicleEntity vehicle = spawnObj.GetComponent<VehicleEntity>();
-            vehicle.InitStats();
             vehicle.Level = level;
+            vehicle.InitStats();
             if (currentHp <= 0f)
                 currentHp = vehicle.MaxHp;
             vehicle.CurrentHp = currentHp;

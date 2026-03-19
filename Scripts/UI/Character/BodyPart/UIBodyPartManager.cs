@@ -127,6 +127,8 @@ namespace MultiplayerARPG
             PlayerCharacterBodyPartComponent[] comps = _model.transform.root.GetComponentsInChildren<PlayerCharacterBodyPartComponent>();
             for (int i = 0; i < comps.Length; ++i)
             {
+                if (!comps[i].enabled)
+                    continue;
                 if (!modelSettingId.Equals(comps[i].modelSettingId))
                     continue;
                 comps[i].SetupCharacterModelEvents(model);

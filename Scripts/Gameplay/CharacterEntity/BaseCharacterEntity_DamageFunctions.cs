@@ -6,7 +6,10 @@ namespace MultiplayerARPG
 {
     public partial class BaseCharacterEntity
     {
-        public void ValidateRecovery(EntityInfo instigator)
+        protected int _beforeDamageReceivedHp;
+        protected readonly Dictionary<string, ReceivedDamageRecord> _receivedDamageRecords = new Dictionary<string, ReceivedDamageRecord>();
+
+        public virtual void ValidateRecovery(EntityInfo instigator)
         {
             if (!IsServer)
                 return;
@@ -61,6 +64,7 @@ namespace MultiplayerARPG
                 skillUsages.Clear();
             }
             CallRpcOnDead();
+            _receivedDamageRecords.Clear();
         }
 
         public virtual void OnRespawn()
@@ -187,11 +191,19 @@ namespace MultiplayerARPG
             CurrentHp -= totalDamage;
         }
 
+        public override void ReceivingDamage(HitBoxPosition position, Vector3 fromPosition, EntityInfo instigator, Dictionary<DamageElement, MinMaxFloat> damageAmounts, CharacterItem weapon, BaseSkill skill, int skillLevel)
+        {
+            _beforeDamageReceivedHp = CurrentHp;
+            base.ReceivingDamage(position, fromPosition, instigator, damageAmounts, weapon, skill, skillLevel);
+        }
+
         public override void ReceivedDamage(HitBoxPosition position, Vector3 fromPosition, EntityInfo instigator, Dictionary<DamageElement, MinMaxFloat> damageAmounts, CombatAmountType combatAmountType, int totalDamage, CharacterItem weapon, BaseSkill skill, int skillLevel, CharacterBuff buff, bool isDamageOverTime = false)
         {
+            RecordRecivingDamage(instigator, totalDamage);
             base.ReceivedDamage(position, fromPosition, instigator, damageAmounts, combatAmountType, totalDamage, weapon, skill, skillLevel, buff, isDamageOverTime);
-            instigator.TryGetEntity(out BaseCharacterEntity attackerCharacter);
-            CurrentGameInstance.GameplayRule.OnCharacterReceivedDamage(attackerCharacter, this, combatAmountType, totalDamage, weapon, skill, skillLevel, buff, isDamageOverTime);
+            BaseCharacterEntity attackerCharacter = null;
+            if (instigator.TryGetEntity(out attackerCharacter))
+                CurrentGameInstance.GameplayRule.OnCharacterReceivedDamage(attackerCharacter, this, combatAmountType, totalDamage, weapon, skill, skillLevel, buff, isDamageOverTime);
 
             if (combatAmountType == CombatAmountType.Miss)
                 return;
@@ -217,6 +229,64 @@ namespace MultiplayerARPG
                 if (skill != null && buff.IsEmpty())
                     skill.OnSkillAttackHit(skillLevel, instigator, weapon, this);
             }
+        }
+
+        public void RecordRecivingDamage(EntityInfo instigator, int damage)
+        {
+            if (instigator == null)
+                return;
+
+            // If summoned by someone, summoner is attacker
+            if (instigator.HasSummoner)
+                instigator = instigator.Summoner;
+
+            if (instigator == null || instigator.Id == null)
+                return;
+
+            // Add received damage entry
+            if (damage > _beforeDamageReceivedHp)
+                damage = _beforeDamageReceivedHp;
+            if (_receivedDamageRecords.TryGetValue(instigator.Id, out ReceivedDamageRecord receivedDamageRecord))
+            {
+                receivedDamageRecord.Damage += damage;
+            }
+            else
+            {
+                receivedDamageRecord = new ReceivedDamageRecord();
+                receivedDamageRecord.Damage = damage;
+            }
+            receivedDamageRecord.Instigator = instigator;
+            receivedDamageRecord.UpdatedTime = Time.unscaledTime;
+            _receivedDamageRecords[instigator.Id] = receivedDamageRecord;
+        }
+
+        public void GetReceivedDamageRecords(List<ReceivedDamageRecord> sortedReceivedDamageRecords)
+        {
+            sortedReceivedDamageRecords.Clear();
+            foreach (ReceivedDamageRecord receivedDamageRecord in _receivedDamageRecords.Values)
+            {
+                sortedReceivedDamageRecords.Add(receivedDamageRecord);
+            }
+        }
+
+        public void GetSortedReceivedDamageRecordsByDamage(List<ReceivedDamageRecord> sortedReceivedDamageRecords)
+        {
+            sortedReceivedDamageRecords.Clear();
+            foreach (ReceivedDamageRecord receivedDamageRecord in _receivedDamageRecords.Values)
+            {
+                sortedReceivedDamageRecords.Add(receivedDamageRecord);
+            }
+            sortedReceivedDamageRecords.Sort((x, y) => y.Damage.CompareTo(x.Damage));
+        }
+
+        public void GetSortedReceivedDamageRecordsByTime(List<ReceivedDamageRecord> sortedReceivedDamageRecords)
+        {
+            sortedReceivedDamageRecords.Clear();
+            foreach (ReceivedDamageRecord receivedDamageRecord in _receivedDamageRecords.Values)
+            {
+                sortedReceivedDamageRecords.Add(receivedDamageRecord);
+            }
+            sortedReceivedDamageRecords.Sort((x, y) => y.UpdatedTime.CompareTo(x.UpdatedTime));
         }
     }
 }

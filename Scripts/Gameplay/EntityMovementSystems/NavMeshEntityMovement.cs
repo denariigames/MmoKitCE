@@ -10,7 +10,7 @@ using UnityEngine.AI;
 namespace MultiplayerARPG
 {
     [RequireComponent(typeof(NavMeshAgent))]
-    public class NavMeshEntityMovement : BaseNetworkedGameEntityComponent<BaseGameEntity>, IEntityMovementComponent, IManagedUpdate
+    public class NavMeshEntityMovement : BaseNetworkedGameEntityComponent<BaseGameEntity>, IEntityMovementComponent, IEntityMovementDataHandler, IManagedUpdate
     {
         protected const float MIN_MAGNITUDE_TO_DETERMINE_MOVING = 0.01f;
         protected const float MIN_DISTANCE_TO_SIMULATE_MOVEMENT = 0.01f;
@@ -40,6 +40,8 @@ namespace MultiplayerARPG
         public ExtraMovementState ExtraMovementState { get; protected set; }
         public DirectionVector2 Direction2D { get { return Vector2.down; } set { } }
         public float CurrentMoveSpeed { get { return CacheNavMeshAgent.isStopped ? 0f : CacheNavMeshAgent.speed; } }
+
+        private LogicUpdater _logicUpdater;
 
         // Input codes
         protected bool _isDashing;
@@ -123,6 +125,17 @@ namespace MultiplayerARPG
         {
             CacheNavMeshAgent.enabled = false;
             UpdateManager.Unregister(this);
+        }
+
+        public override void OnIdentityInitialize()
+        {
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryAdd(ObjectId, this);
+        }
+
+        public override void OnNetworkDestroy(byte reasons)
+        {
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
         }
 
         public void KeyMovement(Vector3 moveDirection, MovementState movementState)
@@ -584,6 +597,7 @@ namespace MultiplayerARPG
 
         public async void ReadServerStateAtClient(long peerTimestamp, NetDataReader reader)
         {
+            reader.ClientReadSyncTransformMessage3D(out MovementState movementState, out ExtraMovementState extraMovementState, out Vector3 position, out float yAngle, out List<EntityMovementForceApplier> movementForceAppliers);
             if (IsServer)
             {
                 // Don't read and apply transform, because it was done at server
@@ -594,7 +608,6 @@ namespace MultiplayerARPG
                 // Not ready to apply transform
                 return;
             }
-            reader.ClientReadSyncTransformMessage3D(out MovementState movementState, out ExtraMovementState extraMovementState, out Vector3 position, out float yAngle, out List<EntityMovementForceApplier> movementForceAppliers);
             _movementForceAppliers.Clear();
             _movementForceAppliers.AddRange(movementForceAppliers);
             if (movementState.Has(MovementState.IsTeleport))

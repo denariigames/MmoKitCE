@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using Insthync.UnityEditorUtils;
+﻿using Insthync.UnityEditorUtils;
 using LiteNetLibManager;
 using System.Collections.Generic;
 using UnityEngine;
@@ -38,6 +37,8 @@ namespace MultiplayerARPG
         protected SyncFieldUInt targetEntityId = new SyncFieldUInt();
         [SerializeField]
         protected SyncFieldCharacterMount mount = new SyncFieldCharacterMount();
+        [SerializeField]
+        protected SyncFieldCharacterSummoner summoner = new SyncFieldCharacterSummoner();
 
         [Category(101, "Sync Lists", false)]
         [SerializeField]
@@ -141,6 +142,65 @@ namespace MultiplayerARPG
             {
                 mount.Value = value;
             }
+        }
+
+        public CharacterSummoner Summoner
+        {
+            get { return summoner.Value; }
+            set { summoner.Value = value; }
+        }
+
+        private BaseCharacterEntity _summonerEntity;
+        public BaseCharacterEntity SummonerEntity
+        {
+            get
+            {
+                if (IsSummoned && _summonerEntity == null)
+                {
+                    LiteNetLibIdentity identity;
+                    if (Manager.Assets.TryGetSpawnedObject(Summoner.objectId, out identity))
+                        _summonerEntity = identity.GetComponent<BaseCharacterEntity>();
+                }
+                return _summonerEntity;
+            }
+            protected set
+            {
+                _summonerEntity = value;
+                if (IsServer)
+                {
+                    Summoner = new CharacterSummoner()
+                    {
+                        type = Summoner.type,
+                        objectId = _summonerEntity != null ? _summonerEntity.ObjectId : 0,
+                    };
+                }
+            }
+        }
+
+        public SummonType SummonType
+        {
+            get { return Summoner.type; }
+            protected set
+            {
+                if (IsServer)
+                {
+                    Summoner = new CharacterSummoner()
+                    {
+                        type = value,
+                        objectId = Summoner.objectId,
+                    };
+                }
+            }
+        }
+
+        public bool IsSummoned
+        {
+            get { return SummonType != SummonType.None; }
+        }
+
+        public bool IsSummonedAndSummonerExisted
+        {
+            get { return IsSummoned && SummonerEntity != null; }
         }
 
         public IList<EquipWeapons> SelectableWeaponSets
@@ -257,6 +317,7 @@ namespace MultiplayerARPG
             base.SetupNetElements();
             // Sync fields
             id.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
+            id.redundancyCount = 0;
             level.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             exp.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             isInvincible.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
@@ -271,6 +332,7 @@ namespace MultiplayerARPG
             aimPosition.syncMode = LiteNetLibSyncFieldMode.ClientMulticast;
             targetEntityId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             mount.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
+            summoner.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             // Sync lists
             selectableWeaponSets.forOwnerOnly = false;
             attributes.forOwnerOnly = false;
@@ -280,14 +342,10 @@ namespace MultiplayerARPG
             equipItems.forOwnerOnly = false;
             nonEquipItems.forOwnerOnly = true;
             summons.forOwnerOnly = true;
-        }
 
-        public override void OnSetup()
-        {
-            base.OnSetup();
             // On data changed events
-            id.onChange += OnIdChange;
             syncTitle.onChange += OnCharacterNameChange;
+            id.onChange += OnIdChange;
             level.onChange += OnLevelChange;
             exp.onChange += OnExpChange;
             isInvincible.onChange += OnIsInvincibleChange;
@@ -302,6 +360,7 @@ namespace MultiplayerARPG
             aimPosition.onChange += OnAimPositionChange;
             targetEntityId.onChange += OnTargetEntityIdChange;
             mount.onChange += OnMountChange;
+            summoner.onChange += OnSummonerChange;
             // On list changed events
             selectableWeaponSets.onOperation += OnSelectableWeaponSetsOperation;
             attributes.onOperation += OnAttributesOperation;
@@ -333,6 +392,7 @@ namespace MultiplayerARPG
             aimPosition.onChange -= OnAimPositionChange;
             targetEntityId.onChange -= OnTargetEntityIdChange;
             mount.onChange -= OnMountChange;
+            summoner.onChange -= OnSummonerChange;
             // On list changed events
             selectableWeaponSets.onOperation -= OnSelectableWeaponSetsOperation;
             attributes.onOperation -= OnAttributesOperation;
@@ -452,6 +512,15 @@ namespace MultiplayerARPG
                 IsRecaching = true;
             if (onMountChange != null)
                 onMountChange.Invoke(mount);
+        }
+
+        private void OnSummonerChange(bool isInitial, CharacterSummoner oldSummoner, CharacterSummoner mount)
+        {
+            // Only recache when mount type/source/level changes (not timer/HP updates)
+            if (oldSummoner.type != mount.type || oldSummoner.objectId != mount.objectId)
+                IsRecaching = true;
+            if (onSummonerChange != null)
+                onSummonerChange.Invoke(mount);
         }
         #endregion
 

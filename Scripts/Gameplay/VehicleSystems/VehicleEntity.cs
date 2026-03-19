@@ -130,14 +130,14 @@ namespace MultiplayerARPG
             isInvincible.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             currentHp.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             passengerIds.forOwnerOnly = false;
+            passengerIds.onOperation += OnPassengerIdsOperation;
         }
 
-        public override void OnSetup()
+        public override void OnIdentityInitialize()
         {
-            base.OnSetup();
+            base.OnIdentityInitialize();
             InitStats();
             SpawnPosition = EntityTransform.position;
-            passengerIds.onOperation += OnPassengerIdsOperation;
             if (IsServer)
             {
                 // Prepare passengers data, add data at server then it wil be synced to clients

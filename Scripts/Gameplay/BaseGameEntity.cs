@@ -3,7 +3,6 @@ using Insthync.ManagedUpdating;
 using Insthync.UnityEditorUtils;
 using LiteNetLib;
 using LiteNetLibManager;
-using LiteNetLib.Utils;
 using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
@@ -16,8 +15,6 @@ namespace MultiplayerARPG
     {
         public const byte MOVEMENT_DATA_CHANNEL = 2;
         public const byte ACTION_DATA_CHANNEL = 3;
-        protected static readonly NetDataWriter s_EntityStateMessageWriter = new NetDataWriter();
-        protected static readonly NetDataWriter s_EntityStateDataWriter = new NetDataWriter();
         protected static readonly ProfilerMarker s_EntityUpdateProfilerMarker = new ProfilerMarker("BaseGameEntity - EntityUpdate");
         protected static readonly ProfilerMarker s_OnUpdateInvokeProfilerMarker = new ProfilerMarker("BaseGameEntity - OnUpdateInvoke");
         protected static readonly ProfilerMarker s_ComponentsChangedStateUpdateProfilerMarker = new ProfilerMarker("BaseGameEntity - ComponentsChangedStateUpdate");
@@ -193,7 +190,7 @@ namespace MultiplayerARPG
         public readonly HashSet<object> MovementDisablers = new HashSet<object>();
         public bool DisableMovement => MovementDisablers.Count > 0;
 
-        protected virtual bool IsUpdateEntityComponents
+        public virtual bool IsUpdateEntityComponents
         {
             get
             {
@@ -203,7 +200,6 @@ namespace MultiplayerARPG
             }
         }
 
-        protected LogicUpdater _logicUpdater;
         protected bool _isTeleporting;
         protected bool _stillMoveAfterTeleport;
         protected Vector3 _teleportingPosition;
@@ -264,32 +260,6 @@ namespace MultiplayerARPG
         {
             if (onIdentityInitialize != null)
                 onIdentityInitialize.Invoke();
-            if (_logicUpdater == null)
-            {
-                _logicUpdater = Manager.LogicUpdater;
-                _logicUpdater.OnTick += OnTickServer;
-                _logicUpdater.OnTick += OnTickClient;
-            }
-        }
-
-        private void OnTickServer(LogicUpdater updater)
-        {
-            if (!isActiveAndEnabled)
-                return;
-            if (!IsServer)
-                return;
-            SendServerState(Manager.LocalTick);
-        }
-
-        private void OnTickClient(LogicUpdater updater)
-        {
-            if (!isActiveAndEnabled)
-                return;
-            if (IsServer)
-                return;
-            if (!IsOwnerClient)
-                return;
-            SendClientState(Manager.LocalTick);
         }
 
         private void OnDestroy()
@@ -299,11 +269,6 @@ namespace MultiplayerARPG
                 onDestroy.Invoke();
             this.InvokeInstanceDevExtMethods("OnDestroy");
             Clean();
-            if (_logicUpdater != null)
-            {
-                _logicUpdater.OnTick -= OnTickServer;
-                _logicUpdater.OnTick -= OnTickClient;
-            }
         }
         protected virtual void EntityOnDestroy()
         {
@@ -340,27 +305,31 @@ namespace MultiplayerARPG
         protected virtual void OnDrawGizmosSelected()
         {
         }
+
+        protected virtual void OnValidate()
+        {
+        }
 #endif
 
-        public override void OnSetOwnerClient(bool isOwnerClient)
-        {
-            EntityOnSetOwnerClient();
-            if (onSetOwnerClient != null)
-                onSetOwnerClient.Invoke();
-        }
-
-        protected virtual void EntityOnSetOwnerClient()
+        public override sealed void OnSetOwnerClient(bool isOwnerClient)
         {
             foreach (GameObject ownerObject in ownerObjects)
             {
                 if (ownerObject == null) continue;
-                ownerObject.SetActive(IsOwnerClient);
+                ownerObject.SetActive(isOwnerClient);
             }
             foreach (GameObject nonOwnerObject in nonOwnerObjects)
             {
                 if (nonOwnerObject == null) continue;
-                nonOwnerObject.SetActive(!IsOwnerClient);
+                nonOwnerObject.SetActive(!isOwnerClient);
             }
+            EntityOnSetOwnerClient(isOwnerClient);
+            if (onSetOwnerClient != null)
+                onSetOwnerClient.Invoke();
+        }
+
+        protected virtual void EntityOnSetOwnerClient(bool isOwnerClient)
+        {
         }
 
         public void ManagedUpdate()
@@ -490,75 +459,20 @@ namespace MultiplayerARPG
             }
         }
 
-        public virtual void SendClientState(long writeTimestamp)
+        public override sealed void OnSetup()
         {
-            if (Movement != null && Movement.enabled)
-            {
-                bool shouldSendReliably;
-                s_EntityStateDataWriter.Reset();
-                if (Movement.WriteClientState(writeTimestamp, s_EntityStateDataWriter, out shouldSendReliably))
-                {
-                    TransportHandler.WritePacket(s_EntityStateMessageWriter, GameNetworkingConsts.EntityState);
-                    s_EntityStateMessageWriter.PutPackedUInt(ObjectId);
-                    s_EntityStateMessageWriter.PutPackedLong(writeTimestamp);
-                    s_EntityStateMessageWriter.Put(s_EntityStateDataWriter.Data, 0, s_EntityStateDataWriter.Length);
-                    ClientSendMessage(MOVEMENT_DATA_CHANNEL, shouldSendReliably ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Sequenced, s_EntityStateMessageWriter);
-                }
-            }
-        }
-
-        public virtual void SendServerState(long writeTimestamp)
-        {
-            if (Movement != null && Movement.enabled)
-            {
-                bool shouldSendReliably;
-                s_EntityStateDataWriter.Reset();
-                if (Movement.WriteServerState(writeTimestamp, s_EntityStateDataWriter, out shouldSendReliably))
-                {
-                    TransportHandler.WritePacket(s_EntityStateMessageWriter, GameNetworkingConsts.EntityState);
-                    s_EntityStateMessageWriter.PutPackedUInt(ObjectId);
-                    s_EntityStateMessageWriter.PutPackedLong(writeTimestamp);
-                    s_EntityStateMessageWriter.Put(s_EntityStateDataWriter.Data, 0, s_EntityStateDataWriter.Length);
-                    ServerSendMessageToSubscribers(MOVEMENT_DATA_CHANNEL, shouldSendReliably ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Sequenced, s_EntityStateMessageWriter);
-                }
-            }
-        }
-
-        public virtual void ReadClientStateAtServer(long peerTimestamp, NetDataReader reader)
-        {
-            if (Movement != null)
-                Movement.ReadClientStateAtServer(peerTimestamp, reader);
-        }
-
-        public virtual void ReadServerStateAtClient(long peerTimestamp, NetDataReader reader)
-        {
-            if (Movement != null)
-                Movement.ReadServerStateAtClient(peerTimestamp, reader);
-        }
-
-        protected virtual void OnValidate()
-        {
-#if UNITY_EDITOR
-            SetupNetElements();
-#endif
-        }
-
-        public override void OnSetup()
-        {
-            base.OnSetup();
-
             if (onSetup != null)
                 onSetup.Invoke();
-
             SetupNetElements();
+            if (onSetupNetElements != null)
+                onSetupNetElements.Invoke();
         }
 
         protected virtual void SetupNetElements()
         {
-            if (onSetupNetElements != null)
-                onSetupNetElements.Invoke();
             syncMetaDataId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             syncTitle.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
+            syncTitle.redundancyCount = 0;
             syncOverrideInput.syncMode = LiteNetLibSyncFieldMode.ServerToOwnerClient;
             syncOverrideMoveSpeed.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             syncOverrideJumpHeight.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
