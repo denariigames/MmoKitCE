@@ -233,8 +233,10 @@ namespace MultiplayerARPG
             if (SpawnArea == null)
                 SpawnPosition = EntityTransform.position;
             if (IsServer)
+            {
                 InitStats();
-            Id = GetId();
+                Id = GetId();
+            }
         }
 
         private async void InstantiateMonsterCharacterObjects()
