@@ -1,6 +1,25 @@
-## Installing CE
+![image](MmoKitCE.png)
 
-MmoKitCE_Settings.unitypackage will install base project settings. After your project is up and running, you can safely delete this file. The following settings will be overwritten by this process:
+**MmoKitCE** is an _opinonated_ community edition distribution of [MMORPG Kit](https://github.com/suriyun-mmorpg/UnityMultiplayerARPG_Core). Kit developer Ittipon Teerapruettikulchai ([insthync](https://github.com/insthync)) open sourced his work after removing the asset from the Unity store, and we former customers are eternally grateful for this generosity. CE will continue to pull improvements and fixes from his core repos into this distribution.
+
+The guiding principle behind CE are the three "S"es, and any changes from the core repos will be towards these goals:
+
+- Scalability
+- Stability
+- Security
+
+No other feature requests or enhancements will be considered unless it moves CE closer toward these goals. In fact, core functionality may be _removed_ if it helps improve in these regards.
+
+## Installing MmoKitCE
+
+The preferred method of installing CE is with a git subrepo within your project Assets directory.
+
+```sh
+$ cd <your project>/Assets
+$ git clone https://github.com/denariigames/MmoKitCE.git
+```
+
+CE includes a MmoKitCE_Settings.unitypackage which will install base project settings. After your project is up and running, you can safely delete this file. The following settings will be overwritten by this process:
 
 - ProjectSettings/DynamicsManager.asset
 - ProjectSettings/InputManager.asset
@@ -12,7 +31,16 @@ MmoKitCE_Settings.unitypackage will install base project settings. After your pr
 
 The original Kit had additional settings which were not included in CE: AudioManager, EditorBuildSettings, EditorSettings, GraphicSettings, ShaderGraphSettings, UnityConnectSettings, VersionControlSettings
 
-### Updating MmoKitCE Repo
+## Updating MmoKitCE
+
+To update CE, simply use a git pull.
+
+```sh
+$ cd <your project>/Assets/MmoKitCE
+$ git pull
+```
+
+## Contributing to MmoKitCE
 
 CE pulls from several repos as subtrees, forking from original UnityMultiplayerARPG repos. 
 
