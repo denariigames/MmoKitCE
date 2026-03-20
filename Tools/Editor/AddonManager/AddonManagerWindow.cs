@@ -60,7 +60,7 @@ namespace MmoKitCE.AddonManager
 		private List<PackageInfo> packages = new List<PackageInfo>();
 		private PackageInfo selectedPackage = null;
 
-		[MenuItem("MMORPG KIT/MmoKitCE/Addon Manager", false, 15000)]
+		[MenuItem("MMORPG KIT/MmoKitCE/Addon Manager", false, -100)]
 		public static void ShowWindow()
 		{
 			GetWindow<AddonManagerWindow>("Addon Manager");
@@ -80,7 +80,7 @@ namespace MmoKitCE.AddonManager
 		private void OnEnable()
 		{
 			//Load textures
-			logoIcon = Resources.Load<Texture2D>("LogoIcon");
+			logoIcon = Resources.Load<Texture2D>("MmoKitCE");
 			checkIcon = Resources.Load<Texture2D>("CheckIcon");
 			updateIcon = Resources.Load<Texture2D>("UpdateIcon");
 			reloadIcon = Resources.Load<Texture2D>("ReloadIcon");
