@@ -1,0 +1,415 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id           String   @id @default(cuid()) @db.VarChar(40)
+  username     String?  @unique @db.VarChar(128)
+  display_name String?  @db.VarChar(255)
+  avatar_url   String?  @db.VarChar(512)
+  email        String?  @unique @db.VarChar(255)
+  facebook_id  String?  @unique @db.VarChar(128)
+  google_id    String?  @unique @db.VarChar(128)
+  apple_id     String?  @unique @db.VarChar(128)
+  steam_id     String?  @unique @db.VarChar(128)
+  custom_id    String?  @unique @db.VarChar(128)
+  password     String?  @db.VarChar(128)
+  access_token String?  @db.VarChar(128)
+  create_time  DateTime @default(now()) @db.Timestamptz()
+  update_time  DateTime @default(now()) @updatedAt @db.Timestamptz()
+  is_verify    Boolean  @default(false)
+  verify_time  DateTime @default("1970-01-01T00:00:00+00:00") @db.Timestamptz()
+  is_disable   Boolean  @default(false)
+  disable_time DateTime @default("1970-01-01T00:00:00+00:00") @db.Timestamptz()
+}
+
+model user_accesses {
+  id         String @id @db.VarChar(40)
+  level      Int    @default(0) @db.Integer()
+  unban_time BigInt @default(0) @db.BigInt()
+}
+
+model user_currencies {
+  id   String @id @db.VarChar(40)
+  gold Int    @default(0) @db.Integer()
+  cash Int    @default(0) @db.Integer()
+}
+
+model characters {
+  id                 String   @id @db.VarChar(40)
+  user_id            String   @db.VarChar(40)
+  entity_id          Int      @default(0) @db.Integer()
+  data_id            Int      @default(0) @db.Integer()
+  faction_id         Int      @default(0) @db.Integer()
+  character_name     String   @unique @db.VarChar(32)
+  level              Int      @default(1) @db.Integer()
+  exp                Int      @default(0) @db.Integer()
+  current_hp         Int      @default(0) @db.Integer()
+  current_mp         Int      @default(0) @db.Integer()
+  current_stamina    Int      @default(0) @db.Integer()
+  current_food       Int      @default(0) @db.Integer()
+  current_water      Int      @default(0) @db.Integer()
+  equip_weapon_set   Int      @default(0) @db.SmallInt()
+  stat_point         Float    @default(0) @db.Real()
+  skill_point        Float    @default(0) @db.Real()
+  gold               Int      @default(0) @db.Integer()
+  party_id           Int      @default(0) @db.Integer()
+  guild_id           Int      @default(0) @db.Integer()
+  guild_role         Int      @default(0) @db.Integer()
+  shared_guild_exp   Int      @default(0) @db.Integer()
+  current_channel    String   @default("") @db.VarChar(50)
+  current_map_name   String   @default("") @db.VarChar(50)
+  current_position_x Float    @default(0) @db.Real()
+  current_position_y Float    @default(0) @db.Real()
+  current_position_z Float    @default(0) @db.Real()
+  current_rotation_x Float    @default(0) @db.Real()
+  current_rotation_y Float    @default(0) @db.Real()
+  current_rotation_z Float    @default(0) @db.Real()
+  current_safe_area  String   @default("") @db.VarChar(50)
+  respawn_map_name   String   @default("") @db.VarChar(50)
+  respawn_position_x Float    @default(0) @db.Real()
+  respawn_position_y Float    @default(0) @db.Real()
+  respawn_position_z Float    @default(0) @db.Real()
+  icon_data_id       Int      @default(0) @db.Integer()
+  frame_data_id      Int      @default(0) @db.Integer()
+  title_data_id      Int      @default(0) @db.Integer()
+  reputation         Int      @default(0) @db.Integer()
+  last_dead_time     BigInt   @default(0) @db.BigInt()
+  unmute_time        BigInt   @default(0) @db.BigInt()
+  create_time        DateTime @default(now()) @db.Timestamptz()
+  update_time        DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_appearances {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_attributes {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_buffs {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_currencies {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_hotkeys {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_equip_items {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_selectable_weapon_sets {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_non_equip_items {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_protected_non_equip_items {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_mount {
+  id                     String   @id @db.VarChar(40)
+  type                   Int      @default(0) @db.SmallInt()
+  source_id              String   @default("") @db.VarChar(40)
+  mount_remains_duration Float    @default(0) @db.Real()
+  level                  Int      @default(1) @db.Integer()
+  current_hp             Int      @default(0) @db.Integer()
+  update_time            DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_quests {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_skills {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_skill_usages {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_summons {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_private_booleans {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_private_float32s {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_private_int32s {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_public_booleans {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_public_float32s {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_public_int32s {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_server_booleans {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_server_float32s {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_server_int32s {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_summon_buffs {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model character_pk {
+  id                           String  @id @db.VarChar(40)
+  is_pk_on                     Boolean @default(false) @db.Boolean()
+  last_pk_on_time              Int     @default(0) @db.Integer()
+  pk_point                     Int     @default(0) @db.Integer()
+  consecutive_pk_kills         Int     @default(0) @db.Integer()
+  highest_pk_point             Int     @default(0) @db.Integer()
+  highest_consecutive_pk_kills Int     @default(0) @db.Integer()
+}
+
+model character_combat_stats {
+  id                       String @id @db.VarChar(40)
+  player_kills             Int    @default(0) @db.Integer()
+  player_headshots         Int    @default(0) @db.Integer()
+  player_assists           Int    @default(0) @db.Integer()
+  zombie_kills             Int    @default(0) @db.Integer()
+  zombie_headshots         Int    @default(0) @db.Integer()
+  zombie_assists           Int    @default(0) @db.Integer()
+  highest_player_kills     Int    @default(0) @db.Integer()
+  highest_player_headshots Int    @default(0) @db.Integer()
+  highest_player_assists   Int    @default(0) @db.Integer()
+  highest_zombie_kills     Int    @default(0) @db.Integer()
+  highest_zombie_headshots Int    @default(0) @db.Integer()
+  highest_zombie_assists   Int    @default(0) @db.Integer()
+  player_killed            Int    @default(0) @db.Integer()
+  player_killed_headshots  Int    @default(0) @db.Integer()
+}
+
+model friends {
+  character_id_1 String   @db.VarChar(40)
+  character_id_2 String   @db.VarChar(40)
+  state          Int      @default(0) @db.SmallInt()
+  create_time    DateTime @default(now()) @db.Timestamptz()
+  update_time    DateTime @default(now()) @updatedAt @db.Timestamptz()
+
+  @@id([character_id_1, character_id_2])
+}
+
+model guilds {
+  id                   Int     @id @default(autoincrement()) @db.Integer()
+  guild_name           String  @unique @db.VarChar(32)
+  leader_id            String  @db.VarChar(40)
+  level                Int     @default(1) @db.Integer()
+  exp                  Int     @default(0) @db.Integer()
+  skill_point          Int     @default(0) @db.Integer()
+  guild_message        String  @default("") @db.VarChar(40)
+  guild_message_2      String  @default("") @db.VarChar(40)
+  gold                 Int     @default(0) @db.Integer()
+  score                Int     @default(0) @db.Integer()
+  options              String  @default("") @db.Text()
+  auto_accept_requests Boolean @default(false)
+  rank                 Int     @default(0) @db.Integer()
+  current_members      Int     @default(0) @db.Integer()
+  max_members          Int     @default(0) @db.Integer()
+}
+
+model guild_requests {
+  id           Int      @db.Integer()
+  requester_id String   @db.VarChar(40)
+  create_time  DateTime @default(now()) @db.Timestamptz()
+
+  @@id([id, requester_id])
+}
+
+model guild_roles {
+  id                   Int     @db.Integer()
+  role                 Int     @db.Integer()
+  name                 String  @unique @db.VarChar(50)
+  can_invite           Boolean @default(false)
+  can_kick             Boolean @default(false)
+  can_use_storage      Boolean @default(false)
+  share_exp_percentage Int     @default(0) @db.Integer()
+
+  @@id([id, role])
+}
+
+model guild_skills {
+  id          Int      @db.Integer()
+  data_id     Int      @db.Integer()
+  level       Int      @db.Integer()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+
+  @@id([id, data_id])
+}
+
+model mails {
+  id          BigInt    @id @default(autoincrement()) @db.BigInt()
+  event_id    String    @default("") @db.VarChar(50)
+  sender_id   String    @default("") @db.VarChar(40)
+  sender_name String    @default("") @db.VarChar(32)
+  receiver_id String    @default("") @db.VarChar(40)
+  title       String    @default("") @db.VarChar(50)
+  content     String    @default("") @db.Text()
+  gold        Int       @default(0) @db.Integer()
+  cash        Int       @default(0) @db.Integer()
+  currencies  String    @default("") @db.Text()
+  items       String    @default("") @db.Text()
+  is_read     Boolean   @default(false) @db.Boolean()
+  read_time   DateTime? @db.Timestamptz()
+  is_claim    Boolean   @default(false) @db.Boolean()
+  claim_time  DateTime? @db.Timestamptz()
+  is_delete   Boolean   @default(false) @db.Boolean()
+  delete_time DateTime? @db.Timestamptz()
+  sent_time   DateTime  @default(now()) @db.Timestamptz()
+}
+
+model parties {
+  id         Int     @id @default(autoincrement()) @db.Integer()
+  share_exp  Boolean @default(false) @db.Boolean()
+  share_item Boolean @default(false) @db.Boolean()
+  leader_id  String  @db.VarChar(40)
+}
+
+model storage_guilds {
+  id          Int      @id @db.Integer()
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model storage_users {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model storage_buildings {
+  id          String   @id @db.VarChar(40)
+  data        Json     @db.JsonB()
+  update_time DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model storage_reservation_guilds {
+  id          Int    @id @db.Integer()
+  reserver_id String @db.VarChar(40)
+}
+
+model storage_reservation_users {
+  id          String @id @db.VarChar(40)
+  reserver_id String @db.VarChar(40)
+}
+
+model storage_reservation_buildings {
+  id          String @id @db.VarChar(40)
+  reserver_id String @db.VarChar(40)
+}
+
+model buildings {
+  id               String   @id @db.VarChar(40)
+  channel          String   @default("default") @db.VarChar(50)
+  parent_id        String   @default("") @db.VarChar(40)
+  entity_id        Int      @default(0)
+  current_hp       Int      @default(0)
+  remains_lifetime Float    @default(0) @db.Real()
+  map_name         String   @db.VarChar(50)
+  position_x       Float    @default(0) @db.Real()
+  position_y       Float    @default(0) @db.Real()
+  position_z       Float    @default(0) @db.Real()
+  rotation_x       Float    @default(0) @db.Real()
+  rotation_y       Float    @default(0) @db.Real()
+  rotation_z       Float    @default(0) @db.Real()
+  is_locked        Boolean  @default(false)
+  lock_password    String   @default("") @db.VarChar(6)
+  creator_id       String   @default("") @db.VarChar(40)
+  creator_name     String   @default("") @db.VarChar(32)
+  extra_data       String   @db.Text()
+  is_scene_object  Boolean  @default(false)
+  create_time      DateTime @default(now()) @db.Timestamptz()
+  update_time      DateTime @default(now()) @updatedAt @db.Timestamptz()
+}
+
+model server_statistic {
+  id         Int @id @default(autoincrement()) @db.Integer()
+  user_count Int @default(0)
+}
