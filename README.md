@@ -1,6 +1,6 @@
 # MmoKitCE: A Unity MMO framework designed to scale, stay stable, and remain secure
 
-![image](MmoKitCE.png)
+![image](Resources/MmoKitCE.png)
 
 **MmoKitCE** is an _opinonated_ community edition distribution of [MMORPG Kit](https://github.com/suriyun-mmorpg/UnityMultiplayerARPG_Core). After the original asset was removed from the Unity Asset Store, Ittipon Teerapruettikulchai ([insthync](https://github.com/insthync)) open sourced his work. MmoKitCE exists to preserve, improve, and evolve this foundation, and will continue to pull improvements and fixes from his core repos into this distribution where it makes sense.
 
@@ -74,8 +74,10 @@ CE pulls from several repos as subtrees, forking from original UnityMultiplayerA
 ```sh
 $ git remote add core https://github.com/denariigames/UnityMultiplayerARPG_Core.git
 $ git remote add mmo https://github.com/denariigames/UnityMultiplayerARPG_MMO.git
+$ git remote add mmodb https://github.com/denariigames/UnityMultiplayerARPG_DatabaseManagerSource.git
 $ git subtree add --prefix=Core core upstream
 $ git subtree add --prefix=MMO mmo upstream
+$ git subtree add --prefix=MMO_DB mmodb upstream
 ```
 
 To pull the latest changes from upstream repos,
@@ -83,6 +85,7 @@ To pull the latest changes from upstream repos,
 ```sh
 $ git subtree pull --prefix=Core core upstream
 $ git subtree pull --prefix=MMO mmo upstream
+$ git subtree pull --prefix=MMO_DB mmodb upstream
 ```
 
 ### Preparing Upstream Repos
