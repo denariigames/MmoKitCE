@@ -74,9 +74,11 @@ CE pulls from several repos as subtrees, forking from original UnityMultiplayerA
 ```sh
 $ git remote add core https://github.com/denariigames/UnityMultiplayerARPG_Core.git
 $ git remote add mmo https://github.com/denariigames/UnityMultiplayerARPG_MMO.git
+$ git remote add mmosrv https://github.com/denariigames/UnityMultiplayerARPG_MMOSource.git
 $ git remote add mmodb https://github.com/denariigames/UnityMultiplayerARPG_DatabaseManagerSource.git
 $ git subtree add --prefix=Core core upstream
 $ git subtree add --prefix=MMO mmo upstream
+$ git subtree add --prefix=MMO_SRV mmosrv upstream
 $ git subtree add --prefix=MMO_DB mmodb upstream
 ```
 
@@ -85,6 +87,7 @@ To pull the latest changes from upstream repos,
 ```sh
 $ git subtree pull --prefix=Core core upstream
 $ git subtree pull --prefix=MMO mmo upstream
+$ git subtree pull --prefix=MMO_SRV mmosrv upstream
 $ git subtree pull --prefix=MMO_DB mmodb upstream
 ```
 
