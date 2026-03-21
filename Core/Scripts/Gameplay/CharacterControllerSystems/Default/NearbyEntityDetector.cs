@@ -584,7 +584,7 @@ namespace MultiplayerARPG
         private void SortNearestActivatableEntity<T>(List<T> entities) where T : IBaseActivatableEntity
         {
             if (entities.Count > 1)
-                entities.Sort(_activatableEntityDistanceComparer);
+                entities.Sort((x, y) => _activatableEntityDistanceComparer.Compare(x, y));
         }
 
         private sealed class BaseGameEntityDistanceComparer : IComparer<BaseGameEntity>
