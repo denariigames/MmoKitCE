@@ -42,10 +42,6 @@
 	path = SharedData
 	url = https://github.com/suriyun-mmorpg/UnityMultiplayerARPG_SharedData.git
 	branch = litenetlib
-[submodule "AddressableAssetTools"]
-	path = AddressableAssetTools
-	url = https://github.com/insthync/unity-addressable-asset-tools.git
-	branch = main
 [submodule "SpatialPartitioningSystems"]
 	path = SpatialPartitioningSystems
 	url = https://github.com/insthync/unity-spatial-partitioning-systems.git
