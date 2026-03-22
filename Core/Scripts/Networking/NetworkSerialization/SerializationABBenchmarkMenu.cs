@@ -9,7 +9,7 @@ namespace MultiplayerARPG
 {
     public static class SerializationABBenchmarkMenu
     {
-        [MenuItem("MMORPG Kit/MmoKitCE/Networking/Run Serialization A-B Benchmark")]
+        [MenuItem("MMORPG KIT/MmoKitCE/Networking/Run Serialization A-B Benchmark")]
         public static void RunSerializationABBenchmark()
         {
             bool originalQuantizedMovementVectors = EntityMovementFunctions.UseQuantizedMovementVectors;
