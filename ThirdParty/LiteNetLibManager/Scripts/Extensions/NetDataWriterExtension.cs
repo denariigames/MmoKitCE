@@ -1,4 +1,6 @@
-﻿using LiteNetLibManager.Serialization;
+﻿// cf scalabilty: #10
+
+using LiteNetLibManager.Serialization;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -256,6 +258,27 @@ namespace LiteNetLib.Utils
             writer.Put((byte)((value >> 40) & 0xFF));
             writer.Put((byte)((value >> 48) & 0xFF));
             writer.Put((byte)((value >> 56) & 0xFF));
+        }
+        #endregion
+
+        #region Quantized Movement
+        /// <summary>
+        /// Writes a quantized Vector2 using packed ints. Precision is units per integer step.
+        /// </summary>
+        public static void PutQuantizedVector2(this NetDataWriter writer, Vector2 value, float precision = 100f)
+        {
+            writer.PutPackedInt(Mathf.RoundToInt(value.x * precision));
+            writer.PutPackedInt(Mathf.RoundToInt(value.y * precision));
+        }
+
+        /// <summary>
+        /// Writes a quantized Vector3 using packed ints. Precision is units per integer step.
+        /// </summary>
+        public static void PutQuantizedVector3(this NetDataWriter writer, Vector3 value, float precision = 100f)
+        {
+            writer.PutPackedInt(Mathf.RoundToInt(value.x * precision));
+            writer.PutPackedInt(Mathf.RoundToInt(value.y * precision));
+            writer.PutPackedInt(Mathf.RoundToInt(value.z * precision));
         }
         #endregion
     }

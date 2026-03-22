@@ -1,4 +1,6 @@
-﻿using LiteNetLibManager;
+﻿// cf scalabilty: #10
+
+using LiteNetLibManager;
 using LiteNetLib.Utils;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,6 +10,15 @@ namespace MultiplayerARPG
 {
     public static class EntityMovementFunctions
     {
+        #region Quantization Settings
+        /// <summary>
+        /// Optional wire-format toggle. Keep false for strict backward compatibility.
+        /// Enable on both client and server to use packed list counts for movement force appliers.
+        /// </summary>
+        public static bool UseQuantizedMovementVectors = false;
+        public static float QuantizedMovementPrecision = 100f;
+        #endregion
+
         internal const int FIND_GROUND_HIT_ARRAY_LENGTH = 16;
         internal static readonly Vector3[] s_changePoseRaycastOffsets = new Vector3[]
         {
@@ -82,7 +93,7 @@ namespace MultiplayerARPG
             if (!inputState.Has(EntityMovementInputState.IsStopped))
                 writer.Put((byte)movementInput.ExtraMovementState);
             if (inputState.Has(EntityMovementInputState.PositionChanged))
-                writer.PutVector3(movementInput.Position);
+                WritePosition3D(writer, movementInput.Position);
             if (inputState.Has(EntityMovementInputState.RotationChanged))
                 writer.PutPackedInt(GetCompressedAngle(movementInput.YAngle));
         }
@@ -97,7 +108,7 @@ namespace MultiplayerARPG
             else
                 entityMovementInput.ExtraMovementState = ExtraMovementState.None;
             if (inputState.Has(EntityMovementInputState.PositionChanged))
-                entityMovementInput.Position = reader.GetVector3();
+                entityMovementInput.Position = ReadPosition3D(reader);
             if (inputState.Has(EntityMovementInputState.RotationChanged))
                 entityMovementInput.YAngle = GetDecompressedAngle(reader.GetPackedInt());
         }
@@ -113,7 +124,7 @@ namespace MultiplayerARPG
             if (!inputState.Has(EntityMovementInputState.IsStopped))
                 writer.Put((byte)movementInput.ExtraMovementState);
             if (inputState.Has(EntityMovementInputState.PositionChanged))
-                writer.PutVector2(movementInput.Position);
+                WritePosition2D(writer, movementInput.Position);
             writer.Put(movementInput.Direction2D);
         }
 
@@ -127,7 +138,7 @@ namespace MultiplayerARPG
             else
                 entityMovementInput.ExtraMovementState = ExtraMovementState.None;
             if (inputState.Has(EntityMovementInputState.PositionChanged))
-                entityMovementInput.Position = reader.GetVector2();
+                entityMovementInput.Position = ReadPosition2D(reader);
             entityMovementInput.Direction2D = reader.Get<DirectionVector2>();
         }
         #endregion
@@ -139,7 +150,7 @@ namespace MultiplayerARPG
                 return;
             writer.PutPackedUInt((uint)movement.MovementState);
             writer.Put((byte)movement.ExtraMovementState);
-            writer.PutVector3(movement.Entity.EntityTransform.position);
+            WritePosition3D(writer, movement.Entity.EntityTransform.position);
             writer.PutPackedInt(GetCompressedAngle(movement.Entity.EntityTransform.eulerAngles.y));
             writer.PutList(movementForceAppliers);
         }
@@ -150,7 +161,7 @@ namespace MultiplayerARPG
                 return;
             writer.PutPackedUInt((uint)movement.MovementState);
             writer.Put((byte)movement.ExtraMovementState);
-            writer.PutVector3(movement.Entity.EntityTransform.position);
+            WritePosition3D(writer, movement.Entity.EntityTransform.position);
             writer.PutPackedInt(GetCompressedAngle(movement.Entity.EntityTransform.eulerAngles.y));
         }
 
@@ -158,7 +169,7 @@ namespace MultiplayerARPG
         {
             movementState = (MovementState)reader.GetPackedUInt();
             extraMovementState = (ExtraMovementState)reader.GetByte();
-            position = reader.GetVector3();
+            position = ReadPosition3D(reader);
             yAngle = GetDecompressedAngle(reader.GetPackedInt());
         }
 
@@ -166,7 +177,7 @@ namespace MultiplayerARPG
         {
             movementState = (MovementState)reader.GetPackedUInt();
             extraMovementState = (ExtraMovementState)reader.GetByte();
-            position = reader.GetVector3();
+            position = ReadPosition3D(reader);
             yAngle = GetDecompressedAngle(reader.GetPackedInt());
             movementForceAppliers = reader.GetList<EntityMovementForceApplier>();
         }
@@ -179,7 +190,7 @@ namespace MultiplayerARPG
                 return;
             writer.PutPackedUInt((uint)movement.MovementState);
             writer.Put((byte)movement.ExtraMovementState);
-            writer.PutVector2(movement.Entity.EntityTransform.position);
+            WritePosition2D(writer, movement.Entity.EntityTransform.position);
             writer.Put(movement.Direction2D);
             writer.PutList(movementForceAppliers);
         }
@@ -190,7 +201,7 @@ namespace MultiplayerARPG
                 return;
             writer.PutPackedUInt((uint)movement.MovementState);
             writer.Put((byte)movement.ExtraMovementState);
-            writer.PutVector2(movement.Entity.EntityTransform.position);
+            WritePosition2D(writer, movement.Entity.EntityTransform.position);
             writer.Put(movement.Direction2D);
         }
 
@@ -198,7 +209,7 @@ namespace MultiplayerARPG
         {
             movementState = (MovementState)reader.GetPackedUInt();
             extraMovementState = (ExtraMovementState)reader.GetByte();
-            position = reader.GetVector2();
+            position = ReadPosition2D(reader);
             direction2D = reader.Get<DirectionVector2>();
         }
 
@@ -206,7 +217,7 @@ namespace MultiplayerARPG
         {
             movementState = (MovementState)reader.GetPackedUInt();
             extraMovementState = (ExtraMovementState)reader.GetByte();
-            position = reader.GetVector2();
+            position = ReadPosition2D(reader);
             direction2D = reader.Get<DirectionVector2>();
             movementForceAppliers = reader.GetList<EntityMovementForceApplier>();
         }
@@ -386,6 +397,43 @@ namespace MultiplayerARPG
             ArrayPool<float>.Shared.Return(crawlRaycastDegrees);
         }
 #endif
+        #endregion
+
+        #region Quantized Movement Vector Helpers
+        private static void WritePosition3D(NetDataWriter writer, Vector3 position)
+        {
+            if (UseQuantizedMovementVectors)
+                writer.PutQuantizedVector3(position, GetQuantizedPrecision());
+            else
+                writer.PutVector3(position);
+        }
+
+        private static void WritePosition2D(NetDataWriter writer, Vector2 position)
+        {
+            if (UseQuantizedMovementVectors)
+                writer.PutQuantizedVector2(position, GetQuantizedPrecision());
+            else
+                writer.PutVector2(position);
+        }
+
+        private static Vector3 ReadPosition3D(NetDataReader reader)
+        {
+            return UseQuantizedMovementVectors
+                ? reader.GetQuantizedVector3(GetQuantizedPrecision())
+                : reader.GetVector3();
+        }
+
+        private static Vector2 ReadPosition2D(NetDataReader reader)
+        {
+            return UseQuantizedMovementVectors
+                ? reader.GetQuantizedVector2(GetQuantizedPrecision())
+                : reader.GetVector2();
+        }
+
+        private static float GetQuantizedPrecision()
+        {
+            return Mathf.Max(1f, QuantizedMovementPrecision);
+        }
         #endregion
     }
 }
