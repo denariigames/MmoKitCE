@@ -1,4 +1,6 @@
-﻿using LiteNetLibManager.Serialization;
+﻿// cf scalabilty: #10
+
+using LiteNetLibManager.Serialization;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -203,6 +205,29 @@ namespace LiteNetLib.Utils
                 return a1 + (((ulong)a2) << 8) + (((ulong)a3) << 16) + (((ulong)a4) << 24) + (((ulong)a5) << 32) + (((ulong)a6) << 40) + (((ulong)a7) << 48) + (((ulong)a8) << 56);
             }
             throw new System.IndexOutOfRangeException("ReadPackedULong() failure: " + a0);
+        }
+        #endregion
+
+        #region Quantized Movement
+        /// <summary>
+        /// Reads a quantized Vector2 written via PutQuantizedVector2.
+        /// </summary>
+        public static Vector2 GetQuantizedVector2(this NetDataReader reader, float precision = 100f)
+        {
+            return new Vector2(
+                reader.GetPackedInt() / precision,
+                reader.GetPackedInt() / precision);
+        }
+
+        /// <summary>
+        /// Reads a quantized Vector3 written via PutQuantizedVector3.
+        /// </summary>
+        public static Vector3 GetQuantizedVector3(this NetDataReader reader, float precision = 100f)
+        {
+            return new Vector3(
+                reader.GetPackedInt() / precision,
+                reader.GetPackedInt() / precision,
+                reader.GetPackedInt() / precision);
         }
         #endregion
     }
