@@ -592,7 +592,7 @@ namespace MultiplayerARPG
                 int positionBeforeRead = reader.Position;
                 if (!_entityMovementDataHandlers.TryGetValue(objectId, out IEntityMovementDataHandler dataHandler))
                 {
-                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, entity movement not found.");
+                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, entity movement not found: {objectId}.");
                     reader.SetPosition(positionBeforeRead);
                     reader.SkipBytes(dataLength);
                     continue;
@@ -604,7 +604,7 @@ namespace MultiplayerARPG
                 }
                 catch
                 {
-                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, error occurs while reading.");
+                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, error occurs while reading: {objectId}.");
                     reader.SetPosition(positionBeforeRead);
                     reader.SkipBytes(dataLength);
                 }
@@ -615,7 +615,7 @@ namespace MultiplayerARPG
         {
             if (IsServer)
                 return;
-            BasePlayerCharacterEntity entity = GameInstance.PlayingCharacterEntity;
+            BaseGameEntity entity = GetSyncTransformEntity(GameInstance.PlayingCharacterEntity);
             if (entity == null)
                 return;
             if (!_entityMovementDataHandlers.TryGetValue(entity.ObjectId, out IEntityMovementDataHandler dataHandler))
@@ -628,6 +628,29 @@ namespace MultiplayerARPG
             EntityMovementDataBuffers.StateMessageWriter.PutPackedUInt(entity.ObjectId);
             EntityMovementDataBuffers.StateMessageWriter.Put(EntityMovementDataBuffers.StateDataWriter.Data, 0, EntityMovementDataBuffers.StateDataWriter.Length);
             ClientSendMessage(BaseGameEntity.MOVEMENT_DATA_CHANNEL, shouldSendReliably ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Unreliable, EntityMovementDataBuffers.StateMessageWriter);
+        }
+
+        private BaseGameEntity GetSyncTransformEntity(BaseGameEntity entity)
+        {
+            if (entity == null)
+                return null;
+            IVehicleEntity passengingVehicleEntity;
+            do
+            {
+                passengingVehicleEntity = entity.PassengingVehicleEntity;
+                if (passengingVehicleEntity.IsNull())
+                {
+                    // No passenging vehicle, no changes to syncing entity
+                    break;
+                }
+                if (!passengingVehicleEntity.IsDriver(entity.PassengingVehicleSeatIndex))
+                {
+                    // Passenging on vehicle, but not a driver, do not sync
+                    return null;
+                }
+                entity = passengingVehicleEntity.Entity;
+            } while (true);
+            return entity;
         }
 
         internal void SendServerEntityMovementState(long writeTimestamp)
