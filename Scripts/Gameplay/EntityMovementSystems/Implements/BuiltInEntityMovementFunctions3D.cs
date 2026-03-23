@@ -229,6 +229,7 @@ namespace MultiplayerARPG
         public void OnSetOwnerClient(bool isOwnerClient)
         {
             NavPaths = null;
+            _simulatingKeyMovement = false;
         }
 
         public void OnAnimatorMove()
