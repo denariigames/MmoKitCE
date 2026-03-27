@@ -1,4 +1,6 @@
-﻿using Insthync.DevExtension;
+﻿// CE scalability: #6
+
+using Insthync.DevExtension;
 using Insthync.ManagedUpdating;
 using Insthync.UnityEditorUtils;
 using LiteNetLib;
@@ -194,7 +196,9 @@ namespace MultiplayerARPG
         {
             get
             {
-                if (IsServer && IsOwnedByServer && Identity.CountSubscribers() == 0)
+                // #6: Respect NeedsServerUpdateWhenUnobserved. If an entity needs background simulation 
+                // while unobserved, do not force-disable its update components.
+                if (IsServer && IsOwnedByServer && Identity.CountSubscribers() == 0 && !NeedsServerUpdateWhenUnobserved)
                     return false;
                 return true;
             }
@@ -332,8 +336,13 @@ namespace MultiplayerARPG
         {
         }
 
+        // #6: Override to keep server simulation running while unobserved (no subscribers).
+        protected virtual bool NeedsServerUpdateWhenUnobserved => false;
         public void ManagedUpdate()
         {
+            // #6: Unobserved early-out (interest management)
+            if (IsServer && IsOwnedByServer && Identity.CountSubscribers() == 0 && !NeedsServerUpdateWhenUnobserved)
+                return;
             using (s_EntityUpdateProfilerMarker.Auto())
             {
                 try
@@ -405,9 +414,15 @@ namespace MultiplayerARPG
             }
         }
 
+        // #6:
+        // - We always apply authoritative late-update actions (vehicle seat snap + teleport execution)
+        //   even while unobserved, to prevent "catch up"/"time stopped" issues.
+        // - We still gate any additional late-update work + late-update events when unobserved.
         public void ManagedLateUpdate()
         {
             bool isUpdateEntityComponents = IsUpdateEntityComponents;
+            bool shouldSkipObservedLateUpdate = IsServer && IsOwnedByServer && Identity.CountSubscribers() == 0 && !NeedsServerUpdateWhenUnobserved;
+
             using (s_ComponentsChangedStateUpdateProfilerMarker.Auto())
             {
                 if (!_wasUpdateEntityComponents.HasValue || _wasUpdateEntityComponents.Value != isUpdateEntityComponents)
@@ -421,13 +436,24 @@ namespace MultiplayerARPG
             {
                 try
                 {
-                    EntityLateUpdate();
+                    // #6: Always apply authoritative actions.
+                    ApplyAuthoritativeLateUpdate();
+
+                    // #6: Skip extra late-update work when unobserved.
+                    if (!shouldSkipObservedLateUpdate)
+                        EntityLateUpdate();
                 }
                 catch (System.Exception ex)
                 {
                     Logging.LogException(LogTag, ex);
                 }
             }
+
+
+            // #6
+            if (shouldSkipObservedLateUpdate)
+                return;
+
             using (s_OnLateUpdateInvokeProfilerMarker.Auto())
             {
                 if (onLateUpdate != null)
@@ -435,7 +461,10 @@ namespace MultiplayerARPG
             }
         }
 
-        protected virtual void EntityLateUpdate()
+        /// <summary>
+        /// #6: Runs authoritative late-update actions that must remain correct even while unobserved.
+        /// </summary>
+        private void ApplyAuthoritativeLateUpdate()
         {
             if (PassengingVehicleSeat != null)
             {
@@ -457,6 +486,14 @@ namespace MultiplayerARPG
                 Teleport(_teleportingPosition, _teleportingRotation, _stillMoveAfterTeleport);
                 _isTeleporting = false;
             }
+        }
+
+        protected virtual void EntityLateUpdate()
+        {
+            // #6: Intentionally empty.
+            // Implement additional late-update work here.
+            // Authoritative actions (vehicle seat snap + teleport execution) are applied
+            // unconditionally by ManagedLateUpdate() via ApplyAuthoritativeLateUpdate().
         }
 
         public override sealed void OnSetup()
