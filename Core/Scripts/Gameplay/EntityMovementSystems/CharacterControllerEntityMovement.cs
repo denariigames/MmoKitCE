@@ -256,6 +256,16 @@ namespace MultiplayerARPG
             UpdateManager.Unregister(this);
         }
 
+        public override void OnIdentityInitialize()
+        {
+            Functions.OnIdentityInitialize();
+        }
+
+        public override void OnNetworkDestroy(byte reasons)
+        {
+            Functions.OnNetworkDestroy(reasons);
+        }
+
         public override void OnSetOwnerClient(bool isOwnerClient)
         {
             Functions.OnSetOwnerClient(isOwnerClient);
@@ -456,26 +466,6 @@ namespace MultiplayerARPG
         public void OnJumpForceApplied(float verticalVelocity)
         {
             _forceUngroundCountdown = forceUngroundAfterJumpDuration;
-        }
-
-        public bool WriteClientState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
-        {
-            return Functions.WriteClientState(writeTimestamp, writer, out shouldSendReliably);
-        }
-
-        public bool WriteServerState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
-        {
-            return Functions.WriteServerState(writeTimestamp, writer, out shouldSendReliably);
-        }
-
-        public void ReadClientStateAtServer(long peerTimestamp, NetDataReader reader)
-        {
-            Functions.ReadClientStateAtServer(peerTimestamp, reader);
-        }
-
-        public void ReadServerStateAtClient(long peerTimestamp, NetDataReader reader)
-        {
-            Functions.ReadServerStateAtClient(peerTimestamp, reader);
         }
 
         public void StopMove()

@@ -4,6 +4,7 @@ namespace MultiplayerARPG
 {
     public partial interface IBuiltInEntityMovement3D
     {
+        bool isActiveAndEnabled { get; }
         bool GroundCheck();
         bool AirborneCheck();
         void SetPosition(Vector3 position);

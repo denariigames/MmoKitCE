@@ -107,9 +107,9 @@ namespace MultiplayerARPG
             CurrentHp = MaxHp;
         }
 
-        public override void OnSetup()
+        public override void OnIdentityInitialize()
         {
-            base.OnSetup();
+            base.OnIdentityInitialize();
             if (SpawnArea == null)
                 SpawnPosition = EntityTransform.position;
             if (IsServer)

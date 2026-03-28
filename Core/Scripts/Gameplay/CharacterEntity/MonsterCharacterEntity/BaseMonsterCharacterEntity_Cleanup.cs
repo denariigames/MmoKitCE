@@ -15,6 +15,9 @@ namespace MultiplayerARPG
 #endif
             _looters?.Clear();
             _droppingItems?.Clear();
+
+            InstantiatedObjects.DestroyAndNullify();
+            InstantiatedObjects.Clear();
         }
     }
 }

@@ -88,9 +88,10 @@ namespace MultiplayerARPG
                 CurrentGameManager.LagCompensationManager.AddDamageableEntity(this);
         }
 
-        public override void OnSetup()
+        protected override void SetupNetElements()
         {
-            base.OnSetup();
+            base.SetupNetElements();
+            currentHp.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             currentHp.onChange += OnCurrentHpChange;
         }
 

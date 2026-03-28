@@ -7,8 +7,8 @@ namespace MultiplayerARPG
 {
     public class ThrowableDamageInfo : BaseCustomDamageInfo
     {
-        public float throwForce;
-        public float throwableLifeTime;
+        public float throwForce = 15f;
+        public float throwableLifeTime = 2f;
 #if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
 #if !DISABLE_ADDRESSABLES
         [AddressableAssetConversion(nameof(addressableThrowableDamageEntity))]

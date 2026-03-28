@@ -4,11 +4,10 @@ using LiteNetLibManager;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Serialization;
 
 namespace MultiplayerARPG
 {
-    public partial class BuiltInSimpleEntityMovementFunctions3D
+    public partial class BuiltInSimpleEntityMovementFunctions3D : IEntityMovementDataHandler
     {
         protected const int FORCE_GROUNDED_FRAMES_AFTER_TELEPORT = 3;
         protected const float MIN_MAGNITUDE_TO_DETERMINE_MOVING = 0.01f;
@@ -81,6 +80,8 @@ namespace MultiplayerARPG
 
         public BaseGameEntity Entity { get; protected set; }
         public CharacterLadderComponent LadderComponent { get; protected set; }
+        public uint ObjectId { get { return Entity.ObjectId; } }
+        public long ConnectionId { get { return Entity.ConnectionId; } }
         public bool IsServer => Entity.IsServer;
         public bool IsClient => Entity.IsClient;
         public bool IsOwnerClient => Entity.IsOwnerClient;
@@ -193,6 +194,17 @@ namespace MultiplayerARPG
             _verticalVelocity = 0;
             _lastTeleportFrame = Time.frameCount;
             _previousPosition = EntityTransform.position;
+        }
+
+        public void OnIdentityInitialize()
+        {
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryAdd(ObjectId, this);
+        }
+
+        public void OnNetworkDestroy(byte reasons)
+        {
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
         }
 
         public void OnSetOwnerClient(bool isOwnerClient)

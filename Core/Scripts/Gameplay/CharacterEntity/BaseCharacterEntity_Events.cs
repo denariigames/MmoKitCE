@@ -33,6 +33,7 @@ namespace MultiplayerARPG
         public event System.Action<AimPosition> onAimPositionChange;
         public event System.Action<uint> onTargetEntityIdChange;
         public event System.Action<CharacterMount> onMountChange;
+        public event System.Action<CharacterSummoner> onSummonerChange;
         // Sync lists
         public event LiteNetLibSyncList<EquipWeapons>.OnOperationDelegate onSelectableWeaponSetsOperation;
         public event LiteNetLibSyncList<CharacterAttribute>.OnOperationDelegate onAttributesOperation;

@@ -8,10 +8,10 @@ namespace MultiplayerARPG
     public class MissileDamageInfo : BaseCustomDamageInfo
     {
         [Tooltip("If this is TRUE, it will hit only selected target, if no selected target it will hit 1 random target")]
-        public bool hitOnlySelectedTarget;
-        public float missileDistance;
-        public float missileSpeed;
-        public bool isHeadshotInstantDeath;
+        public bool hitOnlySelectedTarget = false;
+        public float missileDistance = 10f;
+        public float missileSpeed = 10f;
+        public bool isHeadshotInstantDeath = false;
 #if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
 #if !DISABLE_ADDRESSABLES
         [AddressableAssetConversion(nameof(addressableMissileDamageEntity))]
