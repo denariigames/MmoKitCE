@@ -1,8 +1,5 @@
 ﻿using Cysharp.Text;
 using Insthync.UnityEditorUtils;
-using LiteNetLibManager;
-using LiteNetLib;
-using LiteNetLib.Utils;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -342,44 +339,6 @@ namespace MultiplayerARPG
                 if (_countDownToUpdateAmmoSim <= 0)
                     UpdateAmmoSim();
             }
-        }
-
-        public override void SendClientState(long writeTimestamp)
-        {
-            s_EntityStateDataWriter.Reset();
-            if (!Movement.IsNull() && Movement.enabled && Movement.WriteClientState(writeTimestamp, s_EntityStateDataWriter, out bool shouldSendReliably))
-            {
-                TransportHandler.WritePacket(s_EntityStateMessageWriter, GameNetworkingConsts.EntityState);
-                s_EntityStateMessageWriter.PutPackedUInt(ObjectId);
-                s_EntityStateMessageWriter.PutPackedLong(writeTimestamp);
-                s_EntityStateMessageWriter.Put(s_EntityStateDataWriter.Data, 0, s_EntityStateDataWriter.Length);
-                ClientSendMessage(MOVEMENT_DATA_CHANNEL, shouldSendReliably ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Sequenced, s_EntityStateMessageWriter);
-            }
-        }
-
-        public override void SendServerState(long writeTimestamp)
-        {
-            s_EntityStateDataWriter.Reset();
-            if (!Movement.IsNull() && Movement.enabled && Movement.WriteServerState(writeTimestamp, s_EntityStateDataWriter, out bool shouldSendReliably))
-            {
-                TransportHandler.WritePacket(s_EntityStateMessageWriter, GameNetworkingConsts.EntityState);
-                s_EntityStateMessageWriter.PutPackedUInt(ObjectId);
-                s_EntityStateMessageWriter.PutPackedLong(writeTimestamp);
-                s_EntityStateMessageWriter.Put(s_EntityStateDataWriter.Data, 0, s_EntityStateDataWriter.Length);
-                ServerSendMessageToSubscribers(MOVEMENT_DATA_CHANNEL, shouldSendReliably ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Sequenced, s_EntityStateMessageWriter);
-            }
-        }
-
-        public override void ReadClientStateAtServer(long peerTimestamp, NetDataReader reader)
-        {
-            if (Movement != null)
-                Movement.ReadClientStateAtServer(peerTimestamp, reader);
-        }
-
-        public override void ReadServerStateAtClient(long peerTimestamp, NetDataReader reader)
-        {
-            if (Movement != null)
-                Movement.ReadServerStateAtClient(peerTimestamp, reader);
         }
 
         public override void PlayJumpAnimation()

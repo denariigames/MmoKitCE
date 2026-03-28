@@ -56,6 +56,9 @@ namespace MultiplayerARPG
             onPublicIntsOperation = null;
             onPublicFloatsOperation = null;
 #endif
+
+            InstantiatedObjects.DestroyAndNullify();
+            InstantiatedObjects.Clear();
         }
     }
 }

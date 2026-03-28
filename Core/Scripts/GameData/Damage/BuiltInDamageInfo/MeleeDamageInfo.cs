@@ -8,10 +8,10 @@ namespace MultiplayerARPG
     {
         [Tooltip("If this is TRUE, it will hit only selected target, if no selected target it will hit 1 random target")]
         public bool hitOnlySelectedTarget;
-        public float hitDistance;
-        private float originOffsets = 1f;
+        public float hitDistance = 5f;
         [Min(10f)]
-        public float hitFov;
+        public float hitFov = 60f;
+        public float originOffsets = 1f;
         public ImpactEffects impactEffects;
 
         public override void PrepareRelatesData()

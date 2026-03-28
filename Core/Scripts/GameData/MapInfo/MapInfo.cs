@@ -136,7 +136,7 @@ namespace MultiplayerARPG
             if (monsterCharacter.IsSummonedAndSummonerExisted)
             {
                 // If summoned by someone, will have same allies with summoner
-                return targetEntity.Id.Equals(monsterCharacter.Summoner.Id) || monsterCharacter.Summoner.IsAlly(targetEntity);
+                return targetEntity.Id.Equals(monsterCharacter.SummonerEntity.Id) || monsterCharacter.SummonerEntity.IsAlly(targetEntity);
             }
 
             if (targetEntity.Type == EntityTypes.Player && targetEntity.TryGetEntity(out BasePlayerCharacterEntity targetPlayer))
@@ -244,7 +244,7 @@ namespace MultiplayerARPG
             if (monsterCharacter.IsSummonedAndSummonerExisted)
             {
                 // If summoned by someone, will have same enemies with summoner
-                return monsterCharacter.Summoner.IsEnemy(targetEntity);
+                return monsterCharacter.SummonerEntity.IsEnemy(targetEntity);
             }
 
             if (targetEntity.Type == EntityTypes.Player && targetEntity.TryGetEntity(out BasePlayerCharacterEntity targetPlayer))

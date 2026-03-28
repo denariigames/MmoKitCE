@@ -111,16 +111,11 @@ namespace MultiplayerARPG
         protected List<StorageConvertItemsEntry> _preparedConvertItems = new List<StorageConvertItemsEntry>();
         protected float _convertCountDown = 1f;
 
-        public override void OnSetup()
-        {
-            base.OnSetup();
-            isTurnOn.onChange += OnIsTurnOnChange;
-        }
-
         protected override void SetupNetElements()
         {
             base.SetupNetElements();
             isTurnOn.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
+            isTurnOn.onChange += OnIsTurnOnChange;
             turnOnElapsed.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
         }
 

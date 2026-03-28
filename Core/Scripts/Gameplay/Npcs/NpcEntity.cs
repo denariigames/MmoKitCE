@@ -114,11 +114,6 @@ namespace MultiplayerARPG
                 GameInstance.AddNpcDialogs(startDialog);
             if (graph != null)
                 GameInstance.AddNpcDialogs(graph.GetDialogs());
-        }
-
-        public override void OnSetup()
-        {
-            base.OnSetup();
             InstantiateNpcObjects();
         }
 

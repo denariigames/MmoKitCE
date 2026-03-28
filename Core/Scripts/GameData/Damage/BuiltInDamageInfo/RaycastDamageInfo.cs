@@ -8,9 +8,9 @@ namespace MultiplayerARPG
 {
     public class RaycastDamageInfo : BaseCustomDamageInfo
     {
-        public float missileDistance;
-        public float missileSpeed;
-        public bool isHeadshotInstantDeath;
+        public float missileDistance = 10f;
+        public float missileSpeed = 10f;
+        public bool isHeadshotInstantDeath = false;
 #if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
 #if !DISABLE_ADDRESSABLES
         [AddressableAssetConversion(nameof(addressableProjectEffect))]
@@ -35,7 +35,7 @@ namespace MultiplayerARPG
             get => addressableProjectEffect;
         }
 #endif
-        public byte pierceThroughEntities;
+        public byte pierceThroughEntities = 0;
         public ImpactEffects impactEffects;
 
         public override void PrepareRelatesData()

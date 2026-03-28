@@ -243,6 +243,16 @@ namespace MultiplayerARPG
             UpdateManager.Unregister(this);
         }
 
+        public override void OnIdentityInitialize()
+        {
+            Functions.OnIdentityInitialize();
+        }
+
+        public override void OnNetworkDestroy(byte reasons)
+        {
+            Functions.OnNetworkDestroy(reasons);
+        }
+
         public override void OnSetOwnerClient(bool isOwnerClient)
         {
             Functions.OnSetOwnerClient(isOwnerClient);
