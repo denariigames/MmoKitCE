@@ -28,14 +28,20 @@ One of the biggest changes in the Community Edition is the introduction of the *
 
 1. **Install dependencies**
 
+<img width="631" height="263" alt="install-package" src="https://github.com/user-attachments/assets/6e63c1d8-7f65-4b10-9bcc-8bca07cbfe5e" />
+
 Open Window → **Package Manager** and click **Add package from git URL**
 ```
-https://github.com/denariigames/MmoKitCE_Installer?path=com.mmokitce.installer
+https://github.com/denariigames/MmoKitCE_Installer.git
 ```
 
 2. **Apply recommended project settings**
 
-A setup wizard will appear automatically after the package is installed. Click **Import Settings** to install base project settings. The following settings will be overwritten by this process:
+<img width="609" height="512" alt="setup-wizard" src="https://github.com/user-attachments/assets/cab53039-f83f-4034-82d3-d3a101b6afb2" />
+
+A setup wizard will appear automatically after the package is installed. If the Wizard does not appear or is inadventently closed, you can reopen at Window → MMORPG KIT → MMOKitCE → **Show Setup Wizard**
+
+Click **Import Settings** to install base project settings. The following settings will be overwritten by this process:
 
  - ProjectSettings/DynamicsManager.asset
  - ProjectSettings/InputManager.asset
