@@ -75,11 +75,12 @@ namespace MultiplayerARPG
                 foreach (NearbyEntityDetector entityDetector in _detectors)
                 {
                     entityDetector.DetectEntities();
+                    entityDetector.SortNearestAllEntity();
                 }
             }
             foreach (NearbyEntityDetector entityDetector in _detectors)
             {
-                entityDetector.RemoveInactiveAndSortNearestAllEntity();
+                entityDetector.RemoveInactiveAllEntity();
             }
         }
     }
