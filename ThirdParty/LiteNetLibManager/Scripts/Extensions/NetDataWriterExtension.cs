@@ -1,4 +1,4 @@
-﻿// cf scalabilty: #10
+﻿// ce scalabilty: #15
 
 using LiteNetLibManager.Serialization;
 using System;

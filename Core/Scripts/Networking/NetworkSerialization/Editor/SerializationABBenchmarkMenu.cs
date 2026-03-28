@@ -1,4 +1,4 @@
-// cf scalabilty: #10
+// ce scalabilty: #15
 
 using LiteNetLib.Utils;
 using System.Collections.Generic;

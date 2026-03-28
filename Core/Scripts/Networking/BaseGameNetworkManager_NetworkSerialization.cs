@@ -1,4 +1,4 @@
-// cf scalabilty: #10
+// ce scalabilty: #15
 
 using UnityEngine;
 
@@ -17,8 +17,9 @@ namespace MultiplayerARPG
         [SerializeField] private float quantizedMovementVectorPrecision = 100f;
 
         // Initialize components and register messages after network initialization
-        protected new virtual void Start()
+        protected override void Start()
         {
+            base.Start();
             ApplySerializationOptions();
         }
 
