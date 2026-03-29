@@ -1,33 +1,33 @@
-﻿using Insthync.ManagedUpdating;
+﻿// ce scalability: #4 adds ServerTickDriver and removes UpdateManager
+
 using UnityEngine;
 
 namespace MultiplayerARPG
 {
-    public class CharacterRecoveryComponent : BaseGameEntityComponent<BaseCharacterEntity>, IManagedUpdate
+    public class CharacterRecoveryComponent : BaseGameEntityComponent<BaseCharacterEntity>
     {
         private float _updatingTime;
-        private float _deltaTime;
         private CharacterRecoveryData _recoveryData;
         private bool _isClearRecoveryData;
 
-        private void Awake()
+        private void Start()
         {
             _recoveryData = new CharacterRecoveryData(Entity);
-            UpdateManager.Register(this);
+            CharacterRecoveryTickDriver.Register(this);
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            UpdateManager.Unregister(this);
+            CharacterRecoveryTickDriver.Unregister(this);
         }
 
-        public void ManagedUpdate()
+        public void TickRecovery(float deltaTime)
         {
+            if (Entity == null || _recoveryData == null)
+                return;
             if (!Entity.IsServer)
                 return;
-
-            _deltaTime = Time.unscaledDeltaTime;
 
             if (Entity.IsDead())
             {
@@ -40,7 +40,7 @@ namespace MultiplayerARPG
             }
             _isClearRecoveryData = false;
 
-            _updatingTime += _deltaTime;
+            _updatingTime += deltaTime;
             if (_updatingTime >= CurrentGameplayRule.GetRecoveryUpdateDuration())
             {
                 _recoveryData.RecoveryingHp = CurrentGameplayRule.GetRecoveryHpPerSeconds(Entity);
@@ -51,6 +51,7 @@ namespace MultiplayerARPG
                 _recoveryData.DecreasingStamina = CurrentGameplayRule.GetDecreasingStaminaPerSeconds(Entity);
                 _recoveryData.DecreasingFood = CurrentGameplayRule.GetDecreasingFoodPerSeconds(Entity);
                 _recoveryData.DecreasingWater = CurrentGameplayRule.GetDecreasingWaterPerSeconds(Entity);
+
                 _recoveryData.Apply(_updatingTime);
                 _updatingTime = 0;
             }

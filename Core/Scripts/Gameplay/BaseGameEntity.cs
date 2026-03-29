@@ -1,4 +1,4 @@
-﻿// CE scalability: #6
+﻿// CE scalability: #4, #6
 
 using Insthync.DevExtension;
 using Insthync.ManagedUpdating;
@@ -8,6 +8,7 @@ using LiteNetLibManager;
 using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 
 namespace MultiplayerARPG
@@ -288,6 +289,15 @@ namespace MultiplayerARPG
             EntityOnEnable();
             if (onEnable != null)
                 onEnable.Invoke();
+
+            // Player-only optimization: on dedicated/headless servers, keep players out of UpdateManager
+            // and drive them from ServerTickScheduler via PlayerMobilesTickDriver.
+            if (this is BasePlayerCharacterEntity player && PlayerMobilesTickDriver.ShouldTickDriveOnThisRuntime())
+            {
+                PlayerMobilesTickDriver.Register(player);
+                return;
+            }
+
             UpdateManager.Register(DefaultExecutionOrders.BASE_GAME_ENTITY, this);
         }
         protected virtual void EntityOnEnable() { }
@@ -297,6 +307,14 @@ namespace MultiplayerARPG
             EntityOnDisable();
             if (onDisable != null)
                 onDisable.Invoke();
+
+            // Player-only optimization: unregister from tick driver when applicable
+            if (this is BasePlayerCharacterEntity player && PlayerMobilesTickDriver.ShouldTickDriveOnThisRuntime())
+            {
+                PlayerMobilesTickDriver.Unregister(player);
+                return;
+            }
+
             UpdateManager.Unregister(DefaultExecutionOrders.BASE_GAME_ENTITY, this);
         }
         protected virtual void EntityOnDisable() { }
@@ -366,7 +384,14 @@ namespace MultiplayerARPG
             UpdateMovementEnabling();
             UpdateOverrideInput();
 
-            if (Model != null && (IsClient || GameInstance.Singleton.updateAnimationAtServer))
+            // #4
+            // NOTE (Headless early-out): Do NOT run animation updates on headless/dedicated servers.
+            // - Keeps LAN hosted (client+server in same process) working because IsClient==true there.
+            // - Avoids wasting CPU on servers where animation is never rendered.
+            bool isHeadlessRuntime = Application.isBatchMode || SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null;
+            bool shouldUpdateAnimation = IsClient || (GameInstance.Singleton.updateAnimationAtServer && !isHeadlessRuntime);
+
+            if (Model != null && shouldUpdateAnimation)
             {
                 if (Model is IMoveableModel moveableModel)
                 {
