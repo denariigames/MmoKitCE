@@ -8,7 +8,6 @@ using LiteNetLibManager;
 using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 
 namespace MultiplayerARPG
@@ -384,14 +383,7 @@ namespace MultiplayerARPG
             UpdateMovementEnabling();
             UpdateOverrideInput();
 
-            // #4
-            // NOTE (Headless early-out): Do NOT run animation updates on headless/dedicated servers.
-            // - Keeps LAN hosted (client+server in same process) working because IsClient==true there.
-            // - Avoids wasting CPU on servers where animation is never rendered.
-            bool isHeadlessRuntime = Application.isBatchMode || SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null;
-            bool shouldUpdateAnimation = IsClient || (GameInstance.Singleton.updateAnimationAtServer && !isHeadlessRuntime);
-
-            if (Model != null && shouldUpdateAnimation)
+            if (Model != null && (IsClient || GameInstance.Singleton.updateAnimationAtServer))
             {
                 if (Model is IMoveableModel moveableModel)
                 {
