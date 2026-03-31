@@ -22,9 +22,6 @@ namespace MultiplayerARPG
             Vector3 angles = transform.eulerAngles;
             yaw = angles.y;
             pitch = angles.x;
-
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
         }
 
         private void Update()
@@ -42,6 +39,14 @@ namespace MultiplayerARPG
 
                 yaw += mouseX;
                 pitch -= mouseY;
+
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
             }
 
             pitch = Mathf.Clamp(pitch, minY, maxY);
