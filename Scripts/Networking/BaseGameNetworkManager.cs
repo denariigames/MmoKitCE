@@ -1147,12 +1147,23 @@ namespace MultiplayerARPG
             progress = 1f;
             onSpawnEntitiesProgress.Invoke(sceneName, false, true, progress);
             // If it's server (not host) spawn simple camera controller
-            if (!IsClient && GameInstance.Singleton.serverCharacterPrefab != null &&
+            if (!IsClient &&
                 SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null)
             {
                 if (LogInfo)
                     Logging.Log(LogTag, "Spawning server character");
-                Instantiate(GameInstance.Singleton.serverCharacterPrefab, MapInfo.StartPosition, Quaternion.identity);
+                Vector3 startPosition = MapInfo != null ? MapInfo.StartPosition : Vector3.zero;
+                if (GameInstance.Singleton.serverCharacterPrefab != null)
+                {
+                    Instantiate(GameInstance.Singleton.serverCharacterPrefab, startPosition, Quaternion.identity);
+                }
+                else
+                {
+                    GameObject serverCharacter = new GameObject("_SERVER_CHARACTER");
+                    serverCharacter.AddComponent<ServerCharacter>();
+                    serverCharacter.AddComponent<Camera>();
+                    serverCharacter.tag = "MainCamera";
+                }
             }
             await UniTask.NextFrame();
             // Entities were spawned
