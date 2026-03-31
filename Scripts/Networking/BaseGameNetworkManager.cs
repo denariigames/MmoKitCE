@@ -1147,8 +1147,7 @@ namespace MultiplayerARPG
             progress = 1f;
             onSpawnEntitiesProgress.Invoke(sceneName, false, true, progress);
             // If it's server (not host) spawn simple camera controller
-            if (!IsClient &&
-                SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null)
+            if (!IsClient && SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null)
             {
                 if (LogInfo)
                     Logging.Log(LogTag, "Spawning server character");
