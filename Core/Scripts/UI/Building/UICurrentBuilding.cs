@@ -85,7 +85,14 @@ namespace MultiplayerARPG
             bool isCreator = _buildingEntity.IsCreator(GameInstance.PlayingCharacterEntity);
             bool lockable = !_buildingEntity.IsLocked && _buildingEntity.Lockable && isCreator;
             bool unlockable = _buildingEntity.IsLocked && _buildingEntity.Lockable && isCreator;
-            bool repairable = _buildingEntity.CanRepairByMenu() && _buildingEntity.TryGetRepairAmount(GameInstance.PlayingCharacterEntity, out _, out _);
+            bool repairable = false;
+            if (_buildingEntity.CanRepairByMenu())
+            {
+                string partId = Controller != null && Controller.SelectedGameEntityObjectId == _buildingEntity.ObjectId
+                    ? Controller.SelectedSegmentedPartId
+                    : string.Empty;
+                repairable = _buildingEntity.TryGetRepairAmount(GameInstance.PlayingCharacterEntity, partId, out _, out _);
+            }
             bool destroyable = isCreator;
             bool passwordDefinable = _buildingEntity.IsLocked && isCreator;
             bool activatable = _buildingEntity.CanActivate();
