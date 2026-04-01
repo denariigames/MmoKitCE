@@ -121,18 +121,9 @@ namespace MultiplayerARPG
                 return false;
             }
 
-            DamageableHitBox hitBox = damageableEntity.HitBoxes[hitBoxIndex];
-            if (!hitValidateData.DamageInfo?.IsHitValid(hitValidateData, hitData, hitBox) ?? false)
-            {
-                // Not valid
+            DamageableHitBox hitBox = SelectValidatedHitBox(attacker, hitValidateData, hitData, damageableEntity, hitBoxIndex);
+            if (hitBox == null)
                 return false;
-            }
-
-            if (!IsHit(attacker, hitValidateData, hitData, hitBox))
-            {
-                // Not hit
-                return false;
-            }
 
             string hitId = HitRegistrationUtils.MakeHitRegId(hitData.TriggerIndex, hitData.SpreadIndex);
             if (!hitValidateData.HitsCount.TryGetValue(hitId, out int hitCount))
@@ -146,6 +137,48 @@ namespace MultiplayerARPG
             hitBox.ReceiveDamage(attacker.EntityTransform.position, attacker.GetInfo(), hitValidateData.DamageAmounts[hitData.TriggerIndex], hitValidateData.Weapon, hitValidateData.Skill, hitValidateData.SkillLevel, hitData.SimulateSeed);
             hitValidateData.HitObjects.Add(hitObjectId);
             return true;
+        }
+
+        private DamageableHitBox SelectValidatedHitBox(BaseGameEntity attacker, HitValidateData hitValidateData, HitRegisterData hitData, DamageableEntity damageableEntity, int requestedHitBoxIndex)
+        {
+            EntityInfo attackerInfo = attacker.GetInfo();
+
+            bool IsHitBoxValidAndHittable(DamageableHitBox candidate)
+            {
+                if (candidate == null)
+                    return false;
+                if (!candidate.CanReceiveDamageFrom(attackerInfo))
+                    return false;
+                if (!hitValidateData.DamageInfo?.IsHitValid(hitValidateData, hitData, candidate) ?? false)
+                    return false;
+                return IsHit(attacker, hitValidateData, hitData, candidate);
+            }
+
+            // Use requested index when valid and hittable.
+            if (requestedHitBoxIndex >= 0 && requestedHitBoxIndex < damageableEntity.HitBoxes.Length)
+            {
+                DamageableHitBox indexedHitBox = damageableEntity.HitBoxes[requestedHitBoxIndex];
+                if (IsHitBoxValidAndHittable(indexedHitBox))
+                    return indexedHitBox;
+            }
+
+            // Fallback: pick nearest hittable+valid hitbox by reported hit point.
+            Vector3 referencePoint = hitData.HitDestination ?? hitData.HitOrigin;
+            DamageableHitBox bestHitBox = null;
+            float bestDistanceSqr = float.MaxValue;
+            for (int i = 0; i < damageableEntity.HitBoxes.Length; ++i)
+            {
+                DamageableHitBox candidate = damageableEntity.HitBoxes[i];
+                if (!IsHitBoxValidAndHittable(candidate))
+                    continue;
+                Vector3 candidatePosition = candidate.CacheTransform != null ? candidate.CacheTransform.position : candidate.transform.position;
+                float distanceSqr = (candidatePosition - referencePoint).sqrMagnitude;
+                if (distanceSqr >= bestDistanceSqr)
+                    continue;
+                bestDistanceSqr = distanceSqr;
+                bestHitBox = candidate;
+            }
+            return bestHitBox;
         }
 
         private bool IsHit(BaseGameEntity attacker, HitValidateData hitValidateData, HitRegisterData hitData, DamageableHitBox hitBox)
