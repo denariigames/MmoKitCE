@@ -73,6 +73,31 @@ namespace LiteNetLib.Utils
             writer.Put(value.y);
             writer.Put(value.z);
         }
+        /// <summary>
+        /// Puts a quantized Vector3 into the writer. The values are quantized based on the specified cell size and maximum value.
+        public static void PutQuantizedVector3(this NetDataWriter writer, Vector3 value, int cellSize = 128)
+        {
+            ushort x = Quantize(value.x, cellSize);
+            ushort y = Quantize(value.y, cellSize);
+            ushort z = Quantize(value.z, cellSize);
+
+            byte[] bytes = new byte[6];
+            bytes[0] = (byte)(x & 0xFF);
+            bytes[1] = (byte)(x >> 8);
+            bytes[2] = (byte)(y & 0xFF);
+            bytes[3] = (byte)(y >> 8);
+            bytes[4] = (byte)(z & 0xFF);
+            bytes[5] = (byte)(z >> 8);
+
+            writer.Put(bytes);
+        }
+
+        /// <summary>
+        /// Quantizes a float value based on the specified cell size and maximum value. The result is a ushort that represents the quantized value.
+        static ushort Quantize(float value, float cellSize, ushort maxValue = 65535)
+        {
+            return (ushort)Mathf.Clamp(Mathf.RoundToInt((value / cellSize) * maxValue), 0, maxValue);
+        }
 
         public static void PutVector3Int(this NetDataWriter writer, Vector3Int value)
         {

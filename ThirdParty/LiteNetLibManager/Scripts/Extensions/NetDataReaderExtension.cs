@@ -64,6 +64,20 @@ namespace LiteNetLib.Utils
             return new Vector3(reader.GetFloat(), reader.GetFloat(), reader.GetFloat());
         }
 
+        /// <summary>
+        /// Get quantized Vector3, the precision is determined by cellSize and maxValue, for example, if cellSize is 128 and maxValue is 65535, the precision is about 0.002f (128 / 65535).
+        public static Vector3 GetQuantizedVector3(this NetDataReader reader, ushort cellsize = 128)
+        {
+            return new Vector3(Dequantize(reader.GetUShort(), cellsize), Dequantize(reader.GetUShort(), cellsize), Dequantize(reader.GetUShort(), cellsize));
+        }
+
+        /// <summary>
+        /// Get quantized float, the precision is determined by cellSize and maxValue, for example, if cellSize is 128 and maxValue is 65535, the precision is about 0.002f (128 / 65535).
+        static float Dequantize(float value, ushort cellsize, ushort maxValue = 65535)
+        {
+            return (value / maxValue) * cellsize;
+        }
+
         public static Vector3Int GetVector3Int(this NetDataReader reader)
         {
             return new Vector3Int(reader.GetInt(), reader.GetInt(), reader.GetInt());

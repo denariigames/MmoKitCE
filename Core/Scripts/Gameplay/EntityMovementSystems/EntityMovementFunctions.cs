@@ -1,8 +1,8 @@
-﻿using LiteNetLibManager;
-using LiteNetLib.Utils;
+﻿using LiteNetLib.Utils;
+using LiteNetLibManager;
+using System.Buffers;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Buffers;
 
 namespace MultiplayerARPG
 {
@@ -139,7 +139,16 @@ namespace MultiplayerARPG
                 return;
             writer.PutPackedUInt((uint)movement.MovementState);
             writer.Put((byte)movement.ExtraMovementState);
-            writer.PutVector3(movement.Entity.EntityTransform.position);
+            //get cell id and local position to reduce the amount of data to sync
+            if (!DefaultGridManagerComponent.Instance.IsDisabled)
+            {
+                GetCellIdAndLocalPosition(movement.Entity.EntityTransform.position, out byte cellId, out Vector3 localposition);
+                writer.Put(cellId);
+                writer.PutQuantizedVector3(localposition);
+            }
+            else
+                writer.PutVector3(movement.Entity.EntityTransform.position);
+
             writer.PutPackedInt(GetCompressedAngle(movement.Entity.EntityTransform.eulerAngles.y));
             writer.PutList(movementForceAppliers);
         }
@@ -166,7 +175,14 @@ namespace MultiplayerARPG
         {
             movementState = (MovementState)reader.GetPackedUInt();
             extraMovementState = (ExtraMovementState)reader.GetByte();
-            position = reader.GetVector3();
+            if (!DefaultGridManagerComponent.Instance.IsDisabled)
+            {
+                byte cellId = reader.GetByte();
+                position = DefaultGridManagerComponent.Instance.GetWorldPosition(cellId, reader.GetQuantizedVector3(DefaultGridManagerComponent.Instance.CellSize));
+            }
+            else
+                position = reader.GetVector3();
+
             yAngle = GetDecompressedAngle(reader.GetPackedInt());
             movementForceAppliers = reader.GetList<EntityMovementForceApplier>();
         }
@@ -215,12 +231,12 @@ namespace MultiplayerARPG
         #region Helpers
         public static int GetCompressedAngle(float angle)
         {
-            return Mathf.RoundToInt(angle * 1000);
+            return Mathf.RoundToInt(angle * 6);
         }
 
         public static float GetDecompressedAngle(int compressedAngle)
         {
-            return (float)compressedAngle * 0.001f;
+            return (float)compressedAngle / 6;
         }
 
         public static bool AllowToChangePose(this IEntityMovement movement, float height, float radius, int layerMask)
@@ -386,6 +402,15 @@ namespace MultiplayerARPG
             ArrayPool<float>.Shared.Return(crawlRaycastDegrees);
         }
 #endif
+        #endregion
+
+        #region Transform Player position into Cell and quantized
+        public static void GetCellIdAndLocalPosition(Vector3 position, out byte cellId, out Vector3 localposition)
+        {
+            cellId = DefaultGridManagerComponent.Instance.GetCellId(position);
+
+            localposition = DefaultGridManagerComponent.Instance.GetCellLocalPosition(cellId, position);
+        }
         #endregion
     }
 }
