@@ -22,21 +22,25 @@ namespace MultiplayerARPG
 
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Melee), nameof(DamageType.Missile) })]
         [Tooltip("If this is TRUE, it will hit only selected target, if no selected target it will hit 1 random target")]
-        public bool hitOnlySelectedTarget;
+        public bool hitOnlySelectedTarget = false;
 
         [Tooltip("Distance to start an attack, this is NOT distance to hit and apply damage, this value should be less than `hitDistance` or `missileDistance` to make sure it will hit the enemy properly. If this value <= 0 or > `hitDistance` or `missileDistance` it will re-calculate by `hitDistance` or `missileDistance`")]
-        public float startAttackDistance;
+        public float startAttackDistance = 0.5f;
 
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Melee) })]
-        public float hitDistance;
+        public float hitDistance = 2f;
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Melee) })]
         [Min(10f)]
-        public float hitFov;
+        public float hitFov = 60f;
+        [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Melee) })]
+        public float originOffsets = 1f;
 
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Missile), nameof(DamageType.Raycast) })]
-        public float missileDistance;
+        public float missileDistance = 10f;
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Missile), nameof(DamageType.Raycast) })]
-        public float missileSpeed;
+        public float missileSpeed = 10f;
+        [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Missile), nameof(DamageType.Raycast) })]
+        public bool isHeadshotInstantDeath = true;
 #if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Missile) })]
         public MissileDamageEntity missileDamageEntity;
@@ -55,14 +59,14 @@ namespace MultiplayerARPG
         public AssetReferenceProjectileEffect addressableProjectEffect;
 #endif
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Raycast) })]
-        public byte pierceThroughEntities;
+        public byte pierceThroughEntities = 0;
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Melee), nameof(DamageType.Raycast) })]
         public ImpactEffects impactEffects;
 
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Throwable) })]
-        public float throwForce;
+        public float throwForce = 15f;
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Throwable) })]
-        public float throwableLifeTime;
+        public float throwableLifeTime = 2f;
 #if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
         [StringShowConditional(nameof(damageType), new string[] { nameof(DamageType.Throwable) })]
         public ThrowableDamageEntity throwableDamageEntity;
@@ -110,6 +114,7 @@ namespace MultiplayerARPG
                         RaycastDamageInfo tempRaycastDamageInfo = ScriptableObject.CreateInstance<RaycastDamageInfo>();
                         tempRaycastDamageInfo.missileDistance = missileDistance;
                         tempRaycastDamageInfo.missileSpeed = missileSpeed;
+                        tempRaycastDamageInfo.isHeadshotInstantDeath = isHeadshotInstantDeath;
 #if !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
                         tempRaycastDamageInfo.projectileEffect = projectileEffect;
 #endif
@@ -128,6 +133,7 @@ namespace MultiplayerARPG
                         tempMissileDamageInfo.hitOnlySelectedTarget = hitOnlySelectedTarget;
                         tempMissileDamageInfo.missileDistance = missileDistance;
                         tempMissileDamageInfo.missileSpeed = missileSpeed;
+                        tempMissileDamageInfo.isHeadshotInstantDeath = isHeadshotInstantDeath;
 #if !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
                         tempMissileDamageInfo.missileDamageEntity = missileDamageEntity;
 #endif
@@ -144,6 +150,7 @@ namespace MultiplayerARPG
                         tempMeleeDamageInfo.hitOnlySelectedTarget = hitOnlySelectedTarget;
                         tempMeleeDamageInfo.hitDistance = hitDistance;
                         tempMeleeDamageInfo.hitFov = hitFov;
+                        tempMeleeDamageInfo.originOffsets = originOffsets;
                         tempMeleeDamageInfo.impactEffects = impactEffects;
                         _builtInDamageInfo = tempMeleeDamageInfo;
                     }

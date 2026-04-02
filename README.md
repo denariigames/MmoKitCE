@@ -28,14 +28,20 @@ One of the biggest changes in the Community Edition is the introduction of the *
 
 1. **Install dependencies**
 
+<img width="631" height="263" alt="install-package" src="https://github.com/user-attachments/assets/6e63c1d8-7f65-4b10-9bcc-8bca07cbfe5e" />
+
 Open Window → **Package Manager** and click **Add package from git URL**
 ```
-https://github.com/denariigames/MmoKitCE_Installer?path=com.mmokitce.installer
+https://github.com/denariigames/MmoKitCE_Installer.git
 ```
 
 2. **Apply recommended project settings**
 
-A setup wizard will appear automatically after the package is installed. Click **Import Settings** to install base project settings. The following settings will be overwritten by this process:
+<img width="609" height="512" alt="setup-wizard" src="https://github.com/user-attachments/assets/cab53039-f83f-4034-82d3-d3a101b6afb2" />
+
+A setup wizard will appear automatically after the package is installed. If the Wizard does not appear or is inadventently closed, you can reopen at Window → MMORPG KIT → MMOKitCE → **Show Setup Wizard**
+
+Click **Import Settings** to install base project settings. The following settings will be overwritten by this process:
 
  - ProjectSettings/DynamicsManager.asset
  - ProjectSettings/InputManager.asset
@@ -65,68 +71,6 @@ To update CE, simply use a git pull.
 ```sh
 $ cd <your project>/Assets/MmoKitCE
 $ git pull
-```
-
-## Contributing to MmoKitCE
-
-CE pulls from several repos as subtrees, forking from original UnityMultiplayerARPG repos. 
-
-```sh
-$ git remote add core https://github.com/denariigames/UnityMultiplayerARPG_Core.git
-$ git remote add mmo https://github.com/denariigames/UnityMultiplayerARPG_MMO.git
-$ git remote add mmosrv https://github.com/denariigames/UnityMultiplayerARPG_MMOSource.git
-$ git remote add mmodb https://github.com/denariigames/UnityMultiplayerARPG_DatabaseManagerSource.git
-$ git subtree add --prefix=Core core upstream
-$ git subtree add --prefix=MMO mmo upstream
-$ git subtree add --prefix=MMO_SRV mmosrv upstream
-$ git subtree add --prefix=MMO_DB mmodb upstream
-```
-
-To pull the latest changes from upstream repos,
-
-```sh
-$ git subtree pull --prefix=Core core upstream
-$ git subtree pull --prefix=MMO mmo upstream
-$ git subtree pull --prefix=MMO_SRV mmosrv upstream
-$ git subtree pull --prefix=MMO_DB mmodb upstream
-```
-
-### Preparing Upstream Repos
-
-The main branch in each repo forks from a source repo, while the upstream branch is a flattened version with no submodules and any CE modifications from the original repo.
-
-To prepare the upstream branch,
-
-1. Switch to upstream branch. **All work is done in upstream branch, main is only to pull from suriyun.**
-```sh
-$ git checkout upstream
-```
-
-2. Expand submodules.
-```sh
-$ git submodule update --init --recursive
-```
-
-3. Recursively delete .git and .gitignore from submodules. Note this will throw an error that the formerly removed .git is no longer present. Keep running until command returns empty (nothing more to process).
-```sh
-$ git submodule foreach --recursive 'rm -rf .git'
-$ git submodule foreach --recursive 'rm -rf .gitignore'
-```
-
-4. Remove .gitmodules
-```sh
-$ rm -f .gitmodules
-```
-
-5. Clean gitlink entries and submodule markers
-```sh
-$ git rm --cached -r . 2>/dev/null || true 
-```
-
-6. Add flattened submodules and commit
-```sh
-$ git add .
-$ git commit -m"core upstream"
 ```
 
 ## Thanks

@@ -746,6 +746,8 @@ namespace MultiplayerARPG
             PlayerCharacterBodyPartComponent[] comps = characterModel.GetComponentsInChildren<PlayerCharacterBodyPartComponent>();
             for (int i = 0; i < comps.Length; ++i)
             {
+                if (!comps[i].enabled)
+                    continue;
                 comps[i].SetupCharacterModelEvents(characterModel);
                 comps[i].ApplyModelAndColorBySavedData(data.PublicInts);
             }

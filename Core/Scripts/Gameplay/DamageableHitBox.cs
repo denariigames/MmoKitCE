@@ -177,6 +177,12 @@ namespace MultiplayerARPG
         protected List<TransformHistory> _histories = new List<TransformHistory>();
         protected Vector3 _boundsOffset;
         protected Vector3 _boundsSize;
+        private BuildingEntity _segmentedDamageRoot;
+        private string _segmentedPartId;
+        /// <summary>
+        /// The segmented part id
+        /// </summary>
+        public string SegmentedPartId => _segmentedPartId;
 
 #if UNITY_EDITOR
         [Header("Rewind Debugging")]
@@ -294,6 +300,25 @@ namespace MultiplayerARPG
             Index = index;
         }
 
+        public void OverrideDamageableEntity(DamageableEntity damageableEntity)
+        {
+            _damageableEntity = damageableEntity;
+            if (_damageableEntity == null)
+                return;
+            gameObject.tag = _damageableEntity.gameObject.tag;
+            gameObject.layer = _damageableEntity.gameObject.layer;
+        }
+
+        public void OverrideSegmentedDamageTarget(BuildingEntity rootBuildingEntity, string partId)
+        {
+            _segmentedDamageRoot = rootBuildingEntity;
+            _segmentedPartId = partId;
+            // Ensure targeting/selection still works even if this hitbox was created
+            // from a visual-only finalized part and has no local DamageableEntity.
+            if (_damageableEntity == null && rootBuildingEntity != null)
+                _damageableEntity = rootBuildingEntity;
+        }
+
 #if UNITY_EDITOR
         protected virtual void OnDrawGizmos()
         {
@@ -311,11 +336,20 @@ namespace MultiplayerARPG
 
         public virtual bool CanReceiveDamageFrom(EntityInfo instigator)
         {
+            if (_segmentedDamageRoot != null)
+                return _segmentedDamageRoot.CanReceiveDamageFrom(instigator);
             return DamageableEntity == null ? false : DamageableEntity.CanReceiveDamageFrom(instigator);
         }
 
         public virtual void ReceiveDamage(Vector3 fromPosition, EntityInfo instigator, Dictionary<DamageElement, MinMaxFloat> damageAmounts, CharacterItem weapon, BaseSkill skill, int skillLevel, int randomSeed)
         {
+            if (_segmentedDamageRoot != null)
+            {
+                if (!_segmentedDamageRoot.IsServer || !CanReceiveDamageFrom(instigator))
+                    return;
+                ReceiveDamageWithoutConditionCheck(fromPosition, instigator, damageAmounts, weapon, skill, skillLevel, randomSeed);
+                return;
+            }
             if (DamageableEntity == null || !DamageableEntity.IsServer || this.IsDead() || !CanReceiveDamageFrom(instigator))
                 return;
             ReceiveDamageWithoutConditionCheck(fromPosition, instigator, damageAmounts, weapon, skill, skillLevel, randomSeed);
@@ -323,35 +357,39 @@ namespace MultiplayerARPG
 
         public virtual void ReceiveDamageWithoutConditionCheck(Vector3 fromPosition, EntityInfo instigator, Dictionary<DamageElement, MinMaxFloat> damageAmounts, CharacterItem weapon, BaseSkill skill, int skillLevel, int randomSeed)
         {
+            // Receive damage to a segmented part
+            if (_segmentedDamageRoot != null)
+            {
+                _segmentedDamageRoot.ReceiveSegmentedPartDamage(_segmentedPartId, position, fromPosition, instigator, damageAmounts, weapon, skill, skillLevel, randomSeed, damageRate);
+                return;
+            }
             if (DamageableEntity.IsHitBoxesOverridedByVehicle())
                 return;
-            using (CollectionPool<Dictionary<DamageElement, MinMaxFloat>, KeyValuePair<DamageElement, MinMaxFloat>>.Get(out Dictionary<DamageElement, MinMaxFloat> modifiedDamageAmounts))
+            Dictionary<DamageElement, MinMaxFloat> multipliedDamageAmounts;
+            if (damageAmounts != null)
             {
-                if (damageAmounts != null)
+                multipliedDamageAmounts = new Dictionary<DamageElement, MinMaxFloat>(damageAmounts);
+                List<DamageElement> keys = new List<DamageElement>(multipliedDamageAmounts.Keys);
+                foreach (DamageElement key in keys)
                 {
-                    modifiedDamageAmounts = new Dictionary<DamageElement, MinMaxFloat>(damageAmounts);
-                    List<DamageElement> keys = new List<DamageElement>(modifiedDamageAmounts.Keys);
-                    foreach (DamageElement key in keys)
-                    {
-                        modifiedDamageAmounts[key] = modifiedDamageAmounts[key] * damageRate;
-                    }
+                    multipliedDamageAmounts[key] = multipliedDamageAmounts[key] * damageRate;
                 }
-                else
-                {
-                    modifiedDamageAmounts = new Dictionary<DamageElement, MinMaxFloat>();
-                }
-                if (DamageableEntity is IVehicleEntity vehicleEntity)
-                {
-                    for (byte i = 0; i < vehicleEntity.Seats.Count; ++i)
-                    {
-                        if (!vehicleEntity.Seats[i].overridePassengerHitBoxes)
-                            continue;
-                        if (vehicleEntity.GetPassenger(i) is DamageableEntity damageablePassenger)
-                            damageablePassenger.ApplyDamage(position, fromPosition, instigator, modifiedDamageAmounts, weapon, skill, skillLevel, randomSeed);
-                    }
-                }
-                DamageableEntity.ApplyDamage(position, fromPosition, instigator, modifiedDamageAmounts, weapon, skill, skillLevel, randomSeed);
             }
+            else
+            {
+                multipliedDamageAmounts = new Dictionary<DamageElement, MinMaxFloat>();
+            }
+            if (DamageableEntity is IVehicleEntity vehicleEntity)
+            {
+                for (byte i = 0; i < vehicleEntity.Seats.Count; ++i)
+                {
+                    if (!vehicleEntity.Seats[i].overridePassengerHitBoxes)
+                        continue;
+                    if (vehicleEntity.GetPassenger(i) is DamageableEntity damageablePassenger)
+                        damageablePassenger.ApplyDamage(position, fromPosition, instigator, multipliedDamageAmounts, weapon, skill, skillLevel, randomSeed);
+                }
+            }
+            DamageableEntity.ApplyDamage(position, fromPosition, instigator, multipliedDamageAmounts, weapon, skill, skillLevel, randomSeed);
         }
 
         public virtual void PrepareRelatesData()

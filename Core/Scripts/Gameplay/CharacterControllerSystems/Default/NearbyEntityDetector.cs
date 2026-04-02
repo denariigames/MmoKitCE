@@ -1,4 +1,6 @@
-﻿using LiteNetLibManager;
+// CE scalability: #12
+
+using LiteNetLibManager;
 using System.Buffers;
 using System.Collections.Generic;
 using UnityEngine;
@@ -40,8 +42,23 @@ namespace MultiplayerARPG
         public readonly List<IActivatableEntity> activatableEntities = new List<IActivatableEntity>();
         public readonly List<IHoldActivatableEntity> holdActivatableEntities = new List<IHoldActivatableEntity>();
         public readonly List<IPickupActivatableEntity> pickupActivatableEntities = new List<IPickupActivatableEntity>();
+        private readonly HashSet<BaseCharacterEntity> _characterSet = new HashSet<BaseCharacterEntity>();
+        private readonly HashSet<BasePlayerCharacterEntity> _playerSet = new HashSet<BasePlayerCharacterEntity>();
+        private readonly HashSet<BaseMonsterCharacterEntity> _monsterSet = new HashSet<BaseMonsterCharacterEntity>();
+        private readonly HashSet<NpcEntity> _npcSet = new HashSet<NpcEntity>();
+        private readonly HashSet<ItemDropEntity> _itemDropSet = new HashSet<ItemDropEntity>();
+        private readonly HashSet<BaseRewardDropEntity> _rewardDropSet = new HashSet<BaseRewardDropEntity>();
+        private readonly HashSet<BuildingEntity> _buildingSet = new HashSet<BuildingEntity>();
+        private readonly HashSet<VehicleEntity> _vehicleSet = new HashSet<VehicleEntity>();
+        private readonly HashSet<WarpPortalEntity> _warpPortalSet = new HashSet<WarpPortalEntity>();
+        private readonly HashSet<ItemsContainerEntity> _itemsContainerSet = new HashSet<ItemsContainerEntity>();
+        private readonly HashSet<IActivatableEntity> _activatableEntitySet = new HashSet<IActivatableEntity>();
+        private readonly HashSet<IHoldActivatableEntity> _holdActivatableEntitySet = new HashSet<IHoldActivatableEntity>();
+        private readonly HashSet<IPickupActivatableEntity> _pickupActivatableEntitySet = new HashSet<IPickupActivatableEntity>();
         private readonly HashSet<Collider> _excludeColliders = new HashSet<Collider>();
         private readonly HashSet<Collider2D> _excludeCollider2Ds = new HashSet<Collider2D>();
+        private readonly BaseGameEntityDistanceComparer _baseGameEntityDistanceComparer = new BaseGameEntityDistanceComparer();
+        private readonly ActivatableEntityDistanceComparer _activatableEntityDistanceComparer = new ActivatableEntityDistanceComparer();
 
         public System.Action onUpdateList;
 
@@ -63,27 +80,40 @@ namespace MultiplayerARPG
         {
             characters.Nullify();
             characters?.Clear();
+            _characterSet.Clear();
             players.Nullify();
             players?.Clear();
+            _playerSet.Clear();
             monsters.Nullify();
             monsters?.Clear();
+            _monsterSet.Clear();
             npcs.Nullify();
             npcs?.Clear();
+            _npcSet.Clear();
             itemDrops.Nullify();
             itemDrops?.Clear();
+            _itemDropSet.Clear();
             rewardDrops.Nullify();
             rewardDrops?.Clear();
+            _rewardDropSet.Clear();
             buildings.Nullify();
             buildings?.Clear();
+            _buildingSet.Clear();
             vehicles.Nullify();
             vehicles?.Clear();
+            _vehicleSet.Clear();
             warpPortals.Nullify();
             warpPortals?.Clear();
+            _warpPortalSet.Clear();
             itemsContainers.Nullify();
             itemsContainers?.Clear();
+            _itemsContainerSet.Clear();
             activatableEntities?.Clear();
+            _activatableEntitySet.Clear();
             holdActivatableEntities?.Clear();
+            _holdActivatableEntitySet.Clear();
             pickupActivatableEntities?.Clear();
+            _pickupActivatableEntitySet.Clear();
         }
 
 
@@ -132,19 +162,46 @@ namespace MultiplayerARPG
 
         internal void RemoveInactiveAndSortNearestAllEntity()
         {
-            RemoveInactiveAndSortNearestEntity(characters);
-            RemoveInactiveAndSortNearestEntity(players);
-            RemoveInactiveAndSortNearestEntity(monsters);
-            RemoveInactiveAndSortNearestEntity(npcs);
-            RemoveInactiveAndSortNearestEntity(itemDrops);
-            RemoveInactiveAndSortNearestEntity(rewardDrops);
-            RemoveInactiveAndSortNearestEntity(buildings);
-            RemoveInactiveAndSortNearestEntity(vehicles);
-            RemoveInactiveAndSortNearestEntity(warpPortals);
-            RemoveInactiveAndSortNearestEntity(itemsContainers);
-            RemoveInactiveAndSortNearestActivatableEntity(activatableEntities);
-            RemoveInactiveAndSortNearestActivatableEntity(holdActivatableEntities);
-            RemoveInactiveAndSortNearestActivatableEntity(pickupActivatableEntities);
+            RemoveInactiveAllEntity();
+            SortNearestAllEntity();
+        }
+
+        internal void RemoveInactiveAllEntity()
+        {
+            RemoveInactiveEntity(characters, _characterSet);
+            RemoveInactiveEntity(players, _playerSet);
+            RemoveInactiveEntity(monsters, _monsterSet);
+            RemoveInactiveEntity(npcs, _npcSet);
+            RemoveInactiveEntity(itemDrops, _itemDropSet);
+            RemoveInactiveEntity(rewardDrops, _rewardDropSet);
+            RemoveInactiveEntity(buildings, _buildingSet);
+            RemoveInactiveEntity(vehicles, _vehicleSet);
+            RemoveInactiveEntity(warpPortals, _warpPortalSet);
+            RemoveInactiveEntity(itemsContainers, _itemsContainerSet);
+            RemoveInactiveActivatableEntity(activatableEntities, _activatableEntitySet);
+            RemoveInactiveActivatableEntity(holdActivatableEntities, _holdActivatableEntitySet);
+            RemoveInactiveActivatableEntity(pickupActivatableEntities, _pickupActivatableEntitySet);
+        }
+
+        internal void SortNearestAllEntity()
+        {
+            Vector3 playerPosition = GameInstance.PlayingCharacterEntity.EntityTransform.position;
+            _baseGameEntityDistanceComparer.PlayerPosition = playerPosition;
+            _activatableEntityDistanceComparer.PlayerPosition = playerPosition;
+
+            SortNearestEntity(characters);
+            SortNearestEntity(players);
+            SortNearestEntity(monsters);
+            SortNearestEntity(npcs);
+            SortNearestEntity(itemDrops);
+            SortNearestEntity(rewardDrops);
+            SortNearestEntity(buildings);
+            SortNearestEntity(vehicles);
+            SortNearestEntity(warpPortals);
+            SortNearestEntity(itemsContainers);
+            SortNearestActivatableEntity(activatableEntities);
+            SortNearestActivatableEntity(holdActivatableEntities);
+            SortNearestActivatableEntity(pickupActivatableEntities);
         }
 
         public bool AddEntity(GameObject other)
@@ -166,77 +223,77 @@ namespace MultiplayerARPG
             bool foundSomething = false;
             if (player != null)
             {
-                if (!characters.Contains(player))
+                if (_characterSet.Add(player))
                     characters.Add(player);
-                if (!players.Contains(player))
+                if (_playerSet.Add(player))
                     players.Add(player);
                 foundSomething = true;
             }
             if (monster != null)
             {
-                if (!characters.Contains(monster))
+                if (_characterSet.Add(monster))
                     characters.Add(monster);
-                if (!monsters.Contains(monster))
+                if (_monsterSet.Add(monster))
                     monsters.Add(monster);
                 foundSomething = true;
             }
             if (npc != null)
             {
-                if (!npcs.Contains(npc))
+                if (_npcSet.Add(npc))
                     npcs.Add(npc);
                 foundSomething = true;
             }
             if (itemDrop != null)
             {
-                if (!itemDrops.Contains(itemDrop))
+                if (_itemDropSet.Add(itemDrop))
                     itemDrops.Add(itemDrop);
                 foundSomething = true;
             }
             if (rewardDrop != null)
             {
-                if (!rewardDrops.Contains(rewardDrop))
+                if (_rewardDropSet.Add(rewardDrop))
                     rewardDrops.Add(rewardDrop);
                 foundSomething = true;
             }
             if (building != null)
             {
-                if (!buildings.Contains(building))
+                if (_buildingSet.Add(building))
                     buildings.Add(building);
                 foundSomething = true;
             }
             if (vehicle != null)
             {
-                if (!vehicles.Contains(vehicle))
+                if (_vehicleSet.Add(vehicle))
                     vehicles.Add(vehicle);
                 foundSomething = true;
             }
             if (warpPortal != null)
             {
-                if (!warpPortals.Contains(warpPortal))
+                if (_warpPortalSet.Add(warpPortal))
                     warpPortals.Add(warpPortal);
                 foundSomething = true;
             }
             if (itemsContainer != null)
             {
-                if (!itemsContainers.Contains(itemsContainer))
+                if (_itemsContainerSet.Add(itemsContainer))
                     itemsContainers.Add(itemsContainer);
                 foundSomething = true;
             }
             if (!activatableEntity.IsNull())
             {
-                if (!activatableEntities.Contains(activatableEntity))
+                if (_activatableEntitySet.Add(activatableEntity))
                     activatableEntities.Add(activatableEntity);
                 foundSomething = true;
             }
             if (!holdActivatableEntity.IsNull())
             {
-                if (!holdActivatableEntities.Contains(holdActivatableEntity))
+                if (_holdActivatableEntitySet.Add(holdActivatableEntity))
                     holdActivatableEntities.Add(holdActivatableEntity);
                 foundSomething = true;
             }
             if (!pickupActivatableEntity.IsNull())
             {
-                if (!pickupActivatableEntities.Contains(pickupActivatableEntity))
+                if (_pickupActivatableEntitySet.Add(pickupActivatableEntity))
                     pickupActivatableEntities.Add(pickupActivatableEntity);
                 foundSomething = true;
             }
@@ -261,29 +318,67 @@ namespace MultiplayerARPG
 
             bool removeSomething = false;
             if (player != null)
+            {
+                _characterSet.Remove(player);
+                _playerSet.Remove(player);
                 removeSomething = removeSomething || characters.Remove(player) && players.Remove(player);
+            }
             if (monster != null)
+            {
+                _characterSet.Remove(monster);
+                _monsterSet.Remove(monster);
                 removeSomething = removeSomething || characters.Remove(monster) && monsters.Remove(monster);
+            }
             if (npc != null)
+            {
+                _npcSet.Remove(npc);
                 removeSomething = removeSomething || npcs.Remove(npc);
+            }
             if (itemDrop != null)
+            {
+                _itemDropSet.Remove(itemDrop);
                 removeSomething = removeSomething || itemDrops.Remove(itemDrop);
+            }
             if (rewardDrop != null)
+            {
+                _rewardDropSet.Remove(rewardDrop);
                 removeSomething = removeSomething || rewardDrops.Remove(rewardDrop);
+            }
             if (building != null)
+            {
+                _buildingSet.Remove(building);
                 removeSomething = removeSomething || buildings.Remove(building);
+            }
             if (vehicle != null)
+            {
+                _vehicleSet.Remove(vehicle);
                 removeSomething = removeSomething || vehicles.Remove(vehicle);
+            }
             if (warpPortal != null)
+            {
+                _warpPortalSet.Remove(warpPortal);
                 removeSomething = removeSomething || warpPortals.Remove(warpPortal);
+            }
             if (itemsContainer != null)
+            {
+                _itemsContainerSet.Remove(itemsContainer);
                 removeSomething = removeSomething || itemsContainers.Remove(itemsContainer);
+            }
             if (!activatableEntity.IsNull())
+            {
+                _activatableEntitySet.Remove(activatableEntity);
                 removeSomething = removeSomething || activatableEntities.Remove(activatableEntity);
+            }
             if (!holdActivatableEntity.IsNull())
+            {
+                _holdActivatableEntitySet.Remove(holdActivatableEntity);
                 removeSomething = removeSomething || holdActivatableEntities.Remove(holdActivatableEntity);
+            }
             if (!pickupActivatableEntity.IsNull())
+            {
+                _pickupActivatableEntitySet.Remove(pickupActivatableEntity);
                 removeSomething = removeSomething || pickupActivatableEntities.Remove(pickupActivatableEntity);
+            }
             return removeSomething;
         }
 
@@ -442,62 +537,93 @@ namespace MultiplayerARPG
             }
         }
 
-        private void RemoveInactiveAndSortNearestEntity<T>(List<T> entities) where T : BaseGameEntity
+        private void RemoveInactiveEntity<T>(List<T> entities, HashSet<T> entitiesSet) where T : BaseGameEntity
         {
-            T temp;
             bool hasUpdate = false;
             for (int i = entities.Count - 1; i >= 0; --i)
             {
-                if (entities[i] == null || !entities[i].gameObject.activeInHierarchy)
+                T entity = entities[i];
+                // ReferenceEquals avoids Unity's overloaded == which can behave
+                // unexpectedly on destroyed objects during HashSet operations.
+                if (ReferenceEquals(entity, null) || entity == null || !entity.gameObject.activeInHierarchy)
                 {
+                    if (!ReferenceEquals(entity, null))
+                        entitiesSet.Remove(entity);
                     entities.RemoveAt(i);
                     hasUpdate = true;
                 }
             }
             if (hasUpdate && onUpdateList != null)
                 onUpdateList.Invoke();
-            for (int i = 0; i < entities.Count; i++)
+        }
+
+        private void RemoveInactiveActivatableEntity<T>(List<T> entities, HashSet<T> entitiesSet) where T : IBaseActivatableEntity
+        {
+            bool hasUpdate = false;
+            for (int i = entities.Count - 1; i >= 0; --i)
             {
-                for (int j = 0; j < entities.Count - 1; j++)
+                T entity = entities[i];
+                bool isTrulyNull = ReferenceEquals(entity, null);
+                if (isTrulyNull || entity == null || (entity is Object unityObj && unityObj == null) ||
+                    !entity.EntityGameObject.activeInHierarchy)
                 {
-                    if (Vector3.Distance(entities[j].transform.position, GameInstance.PlayingCharacterEntity.EntityTransform.position) >
-                        Vector3.Distance(entities[j + 1].transform.position, GameInstance.PlayingCharacterEntity.EntityTransform.position))
-                    {
-                        temp = entities[j + 1];
-                        entities[j + 1] = entities[j];
-                        entities[j] = temp;
-                    }
+                    if (!isTrulyNull)
+                        entitiesSet.Remove(entity);
+                    entities.RemoveAt(i);
+                    hasUpdate = true;
                 }
+            }
+            if (hasUpdate && onUpdateList != null)
+                onUpdateList.Invoke();
+        }
+
+        private void SortNearestEntity<T>(List<T> entities) where T : BaseGameEntity
+        {
+            if (entities.Count > 1)
+                entities.Sort(_baseGameEntityDistanceComparer);
+        }
+
+        private void SortNearestActivatableEntity<T>(List<T> entities) where T : IBaseActivatableEntity
+        {
+            if (entities.Count > 1)
+                entities.Sort((x, y) => _activatableEntityDistanceComparer.Compare(x, y));
+        }
+
+        private sealed class BaseGameEntityDistanceComparer : IComparer<BaseGameEntity>
+        {
+            public Vector3 PlayerPosition;
+
+            public int Compare(BaseGameEntity x, BaseGameEntity y)
+            {
+                if (ReferenceEquals(x, y))
+                    return 0;
+                if (x == null)
+                    return 1;
+                if (y == null)
+                    return -1;
+
+                float xSqrDistance = (x.transform.position - PlayerPosition).sqrMagnitude;
+                float ySqrDistance = (y.transform.position - PlayerPosition).sqrMagnitude;
+                return xSqrDistance.CompareTo(ySqrDistance);
             }
         }
 
-        private void RemoveInactiveAndSortNearestActivatableEntity<T>(List<T> entities) where T : IBaseActivatableEntity
+        private sealed class ActivatableEntityDistanceComparer : IComparer<IBaseActivatableEntity>
         {
-            T temp;
-            bool hasUpdate = false;
-            for (int i = entities.Count - 1; i >= 0; --i)
+            public Vector3 PlayerPosition;
+
+            public int Compare(IBaseActivatableEntity x, IBaseActivatableEntity y)
             {
-                if (entities[i] == null || (entities[i] is Object unityObj && unityObj == null) ||
-                    !entities[i].EntityGameObject.activeInHierarchy)
-                {
-                    entities.RemoveAt(i);
-                    hasUpdate = true;
-                }
-            }
-            if (hasUpdate && onUpdateList != null)
-                onUpdateList.Invoke();
-            for (int i = 0; i < entities.Count; i++)
-            {
-                for (int j = 0; j < entities.Count - 1; j++)
-                {
-                    if (Vector3.Distance(entities[j].EntityTransform.position, GameInstance.PlayingCharacterEntity.EntityTransform.position) >
-                        Vector3.Distance(entities[j + 1].EntityTransform.position, GameInstance.PlayingCharacterEntity.EntityTransform.position))
-                    {
-                        temp = entities[j + 1];
-                        entities[j + 1] = entities[j];
-                        entities[j] = temp;
-                    }
-                }
+                if (ReferenceEquals(x, y))
+                    return 0;
+                if (x == null || (x is Object xUnityObj && xUnityObj == null))
+                    return 1;
+                if (y == null || (y is Object yUnityObj && yUnityObj == null))
+                    return -1;
+
+                float xSqrDistance = (x.EntityTransform.position - PlayerPosition).sqrMagnitude;
+                float ySqrDistance = (y.EntityTransform.position - PlayerPosition).sqrMagnitude;
+                return xSqrDistance.CompareTo(ySqrDistance);
             }
         }
     }

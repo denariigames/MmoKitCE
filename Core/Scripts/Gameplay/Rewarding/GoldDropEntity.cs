@@ -32,7 +32,7 @@ namespace MultiplayerARPG
         protected override bool ProceedPickingUpAtServer_Implementation(BaseCharacterEntity characterEntity, out UITextKeys message)
         {
             BaseCharacterEntity rewardingCharacter = characterEntity;
-            if (characterEntity is BaseMonsterCharacterEntity monsterCharacterEntity && monsterCharacterEntity.Summoner is BasePlayerCharacterEntity summonerCharacterEntity)
+            if (characterEntity is BaseMonsterCharacterEntity monsterCharacterEntity && monsterCharacterEntity.SummonerEntity is BasePlayerCharacterEntity summonerCharacterEntity)
                 rewardingCharacter = summonerCharacterEntity;
             CurrentGameplayRule.RewardGold(rewardingCharacter, Amount, Multiplier, GivenType, GiverLevel, SourceLevel, out int rewardedGold);
             rewardingCharacter.OnRewardGold(GivenType, rewardedGold);

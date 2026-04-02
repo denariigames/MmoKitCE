@@ -1,4 +1,4 @@
-﻿using Insthync.AddressableAssetTools;
+using Insthync.AddressableAssetTools;
 using LiteNetLibManager;
 using UnityEngine;
 
@@ -125,23 +125,30 @@ namespace MultiplayerARPG
             buildingSaveData.Rotation = rotation;
             buildingSaveData.CreatorId = Entity.Id;
             buildingSaveData.CreatorName = Entity.CharacterName;
-            await CurrentGameManager.CreateBuildingEntity(buildingSaveData, false);
+            BuildingEntity createdBuilding = await CurrentGameManager.CreateBuildingEntity(buildingSaveData, false);
+            if (createdBuilding != null &&
+                !string.IsNullOrEmpty(buildingSaveData.ParentId) &&
+                Manager.TryGetEntityByObjectId(parentObjectId, out BuildingEntity parentBuilding))
+            {
+                // Root placements stay as normal entities; child placements are finalized immediately.
+                parentBuilding.FinalizeChildrenAsVisuals();
+            }
 #endif
         }
 
-        public bool CallCmdRepairBuilding(uint objectId)
+        public bool CallCmdRepairBuilding(uint objectId, string partId)
         {
             if (!CurrentGameplayRule.CanInteractEntity(Entity, objectId))
             {
                 ClientGenericActions.ClientReceiveGameMessage(UITextKeys.UI_ERROR_CHARACTER_IS_TOO_FAR);
                 return false;
             }
-            RPC(CmdRepairBuilding, objectId);
+            RPC(CmdRepairBuilding, objectId, partId);
             return true;
         }
 
         [ServerRpc]
-        protected void CmdRepairBuilding(uint objectId)
+        protected void CmdRepairBuilding(uint objectId, string partId)
         {
 #if UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES
             if (!Entity.CanDoActions())
@@ -159,7 +166,7 @@ namespace MultiplayerARPG
                 return;
             }
 
-            if (!buildingEntity.Repair(Entity, out UITextKeys errorMessage))
+            if (!buildingEntity.Repair(Entity, partId, out UITextKeys errorMessage))
             {
                 GameInstance.ServerGameMessageHandlers.SendGameMessage(ConnectionId, errorMessage);
                 return;
@@ -167,19 +174,19 @@ namespace MultiplayerARPG
 #endif
         }
         
-        public bool CallCmdDestroyBuilding(uint objectId)
+        public bool CallCmdDestroyBuilding(uint objectId, string partId = "")
         {
             if (!CurrentGameplayRule.CanInteractEntity(Entity, objectId))
             {
                 ClientGenericActions.ClientReceiveGameMessage(UITextKeys.UI_ERROR_CHARACTER_IS_TOO_FAR);
                 return false;
             }
-            RPC(CmdDestroyBuilding, objectId);
+            RPC(CmdDestroyBuilding, objectId, partId);
             return true;
         }
 
         [ServerRpc]
-        protected void CmdDestroyBuilding(uint objectId)
+        protected void CmdDestroyBuilding(uint objectId, string partId)
         {
 #if UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES
             if (!Entity.CanDoActions())
@@ -203,7 +210,53 @@ namespace MultiplayerARPG
                 return;
             }
 
+            if (!string.IsNullOrEmpty(partId))
+            {
+                if (buildingEntity.DestroySegmentedPart(partId))
+                    return;
+            }
+
             buildingEntity.Destroy();
+#endif
+        }
+
+         public bool CallCmdFinalizeBuilding(uint objectId)
+        {
+            if (!CurrentGameplayRule.CanInteractEntity(Entity, objectId))
+            {
+                ClientGenericActions.ClientReceiveGameMessage(UITextKeys.UI_ERROR_CHARACTER_IS_TOO_FAR);
+                return false;
+            }
+            RPC(CmdFinalizeBuilding, objectId);
+            return true;
+        }
+
+        [ServerRpc]
+        protected void CmdFinalizeBuilding(uint objectId)
+        {
+#if UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES
+            if (!Entity.CanDoActions())
+                return;
+
+            if (!Manager.TryGetEntityByObjectId(objectId, out BuildingEntity buildingEntity))
+            {
+                // Can't find the entity
+                return;
+            }
+
+            if (!Entity.IsGameEntityInDistance(buildingEntity))
+            {
+                GameInstance.ServerGameMessageHandlers.SendGameMessage(ConnectionId, UITextKeys.UI_ERROR_CHARACTER_IS_TOO_FAR);
+                return;
+            }
+
+            if (!buildingEntity.IsCreator(Entity))
+            {
+                // Character is not the creator
+                return;
+            }
+
+            buildingEntity.FinalizeChildrenAsVisuals();
 #endif
         }
 

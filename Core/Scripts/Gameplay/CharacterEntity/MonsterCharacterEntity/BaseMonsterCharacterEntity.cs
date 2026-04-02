@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Pool;
 using UnityEngine.Serialization;
 
 namespace MultiplayerARPG
@@ -16,8 +17,6 @@ namespace MultiplayerARPG
     {
         public const float TELEPORT_TO_SUMMONER_DELAY = 5f;
         protected static readonly ProfilerMarker s_UpdateProfilerMarker = new ProfilerMarker("BaseMonsterCharacterEntity - Update");
-
-        public readonly Dictionary<BaseCharacterEntity, ReceivedDamageRecord> receivedDamageRecords = new Dictionary<BaseCharacterEntity, ReceivedDamageRecord>();
 
         [Category("Character Settings")]
         [SerializeField]
@@ -40,12 +39,6 @@ namespace MultiplayerARPG
         protected UnityEvent onSpawned = new UnityEvent();
         public UnityEvent OnSpawned { get { return onSpawned; } }
 
-        [Category("Sync Fields")]
-        [SerializeField]
-        protected SyncFieldUInt summonerObjectId = new SyncFieldUInt();
-        [SerializeField]
-        protected SyncFieldByte summonType = new SyncFieldByte();
-
         public override string EntityTitle
         {
             get
@@ -53,43 +46,6 @@ namespace MultiplayerARPG
                 string title = base.EntityTitle;
                 return !string.IsNullOrEmpty(title) ? title : characterDatabase.Title;
             }
-        }
-
-        private BaseCharacterEntity summoner;
-        public BaseCharacterEntity Summoner
-        {
-            get
-            {
-                if (summoner == null)
-                {
-                    LiteNetLibIdentity identity;
-                    if (Manager.Assets.TryGetSpawnedObject(summonerObjectId.Value, out identity))
-                        summoner = identity.GetComponent<BaseCharacterEntity>();
-                }
-                return summoner;
-            }
-            protected set
-            {
-                summoner = value;
-                if (IsServer)
-                    summonerObjectId.Value = summoner != null ? summoner.ObjectId : 0;
-            }
-        }
-
-        public SummonType SummonType
-        {
-            get { return (SummonType)summonType.Value; }
-            protected set { summonType.Value = (byte)value; }
-        }
-
-        public bool IsSummoned
-        {
-            get { return SummonType != SummonType.None; }
-        }
-
-        public bool IsSummonedAndSummonerExisted
-        {
-            get { return IsSummoned && Summoner != null; }
         }
 
         public GameSpawnArea<BaseMonsterCharacterEntity> SpawnArea { get; protected set; }
@@ -168,6 +124,9 @@ namespace MultiplayerARPG
             set { destroyRespawnDelay = value; }
         }
 
+        public readonly List<GameObject> InstantiatedObjects = new List<GameObject>();
+
+        protected bool _isObjectsInstantiated = false;
         protected bool _isDestroyed;
         protected readonly HashSet<string> _looters = new HashSet<string>();
         protected readonly List<CharacterItem> _droppingItems = new List<CharacterItem>();
@@ -205,7 +164,7 @@ namespace MultiplayerARPG
                 0 /* Guild ID */,
                 IsInSafeArea,
                 this,
-                Summoner);
+                SummonerEntity);
         }
 
         protected override void EntityAwake()
@@ -213,12 +172,6 @@ namespace MultiplayerARPG
             base.EntityAwake();
             gameObject.tag = CurrentGameInstance.monsterTag;
             gameObject.layer = CurrentGameInstance.monsterLayer;
-        }
-
-        public override void OnStartServer()
-        {
-            base.OnStartServer();
-            Id = GetId();
         }
 
         public override void InitialRequiredComponents()
@@ -236,7 +189,7 @@ namespace MultiplayerARPG
                 {
                     if (IsSummoned)
                     {
-                        if (!Summoner || Summoner.IsDead())
+                        if (!SummonerEntity || SummonerEntity.IsDead())
                         {
                             // Summoner disappear so destroy it
                             UnSummon();
@@ -244,29 +197,19 @@ namespace MultiplayerARPG
                         else
                         {
                             float currentTime = Time.unscaledTime;
-                            if (Vector3.Distance(EntityTransform.position, Summoner.EntityTransform.position) > CurrentGameInstance.maxFollowSummonerDistance &&
+                            if (Vector3.Distance(EntityTransform.position, SummonerEntity.EntityTransform.position) > CurrentGameInstance.maxFollowSummonerDistance &&
                                 currentTime - _lastTeleportToSummonerTime > TELEPORT_TO_SUMMONER_DELAY)
                             {
                                 // Teleport to summoner if too far from summoner
-                                Teleport(GameInstance.Singleton.GameplayRule.GetSummonPosition(Summoner), GameInstance.Singleton.GameplayRule.GetSummonRotation(Summoner), false);
+                                Teleport(GameInstance.Singleton.GameplayRule.GetSummonPosition(SummonerEntity), GameInstance.Singleton.GameplayRule.GetSummonRotation(SummonerEntity), false);
                                 _lastTeleportToSummonerTime = currentTime;
                             }
                             // Set its sub channel ID follow summoner
-                            Identity.SubChannelId = Summoner.SubChannelId;
+                            Identity.SubChannelId = SummonerEntity.SubChannelId;
                         }
                     }
                 }
             }
-        }
-
-        public override void SendServerState(long writeTimestamp)
-        {
-            if (!IsUpdateEntityComponents)
-            {
-                // Don't updates while there is no subscribers
-                return;
-            }
-            base.SendServerState(writeTimestamp);
         }
 
         public virtual void InitStats()
@@ -283,45 +226,46 @@ namespace MultiplayerARPG
             CurrentWater = (int)stats.water;
         }
 
-        protected override void SetupNetElements()
+        public override void OnIdentityInitialize()
         {
-            base.SetupNetElements();
-            summonerObjectId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
-            summonType.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
-        }
-
-        public override void OnSetup()
-        {
-            base.OnSetup();
+            base.OnIdentityInitialize();
             InstantiateMonsterCharacterObjects();
             if (SpawnArea == null)
                 SpawnPosition = EntityTransform.position;
             if (IsServer)
+            {
                 InitStats();
+                Id = GetId();
+            }
         }
 
         private async void InstantiateMonsterCharacterObjects()
         {
             if (!IsClient)
                 return;
+            if (_isObjectsInstantiated)
+                return;
+            _isObjectsInstantiated = true;
+            InstantiatedObjects.DestroyAndNullify();
+            InstantiatedObjects.Clear();
 #if !DISABLE_ADDRESSABLES
             // Instantiates monster objects
-            await CurrentGameInstance.AddressableMonsterCharacterObjects.InstantiateObjectsOrUsePrefabs(CurrentGameInstance.MonsterCharacterObjects, EntityTransform);
+            await CurrentGameInstance.AddressableMonsterCharacterObjects.InstantiateObjectsOrUsePrefabs(CurrentGameInstance.MonsterCharacterObjects, EntityTransform, InstantiatedObjects);
 #else
             foreach (var prefab in CurrentGameInstance.MonsterCharacterObjects)
             {
                 if (prefab == null) continue;
-                Instantiate(prefab, EntityTransform.position, EntityTransform.rotation, EntityTransform);
+                InstantiatedObjects.Add(Instantiate(prefab, EntityTransform.position, EntityTransform.rotation, EntityTransform));
             }
 #endif
 #if !DISABLE_ADDRESSABLES
             // Instantiates monster minimap objects
-            await CurrentGameInstance.AddressableMonsterCharacterMiniMapObjects.InstantiateObjectsOrUsePrefabs(CurrentGameInstance.MonsterCharacterMiniMapObjects, EntityTransform);
+            await CurrentGameInstance.AddressableMonsterCharacterMiniMapObjects.InstantiateObjectsOrUsePrefabs(CurrentGameInstance.MonsterCharacterMiniMapObjects, EntityTransform, InstantiatedObjects);
 #else
             foreach (var prefab in CurrentGameInstance.MonsterCharacterMiniMapObjects)
             {
                 if (prefab == null) continue;
-                Instantiate(prefab, EntityTransform.position, EntityTransform.rotation, EntityTransform);
+                InstantiatedObjects.Add(Instantiate(prefab, EntityTransform.position, EntityTransform.rotation, EntityTransform));
             }
 #endif
             // Instantiates monster character UI
@@ -380,54 +324,18 @@ namespace MultiplayerARPG
             return base.GetMoveSpeed_Implementation(movementState, extraMovementState);
         }
 
-        public override void ReceivedDamage(HitBoxPosition position, Vector3 fromPosition, EntityInfo instigator, Dictionary<DamageElement, MinMaxFloat> damageAmounts, CombatAmountType damageAmountType, int totalDamage, CharacterItem weapon, BaseSkill skill, int skillLevel, CharacterBuff buff, bool isDamageOverTime = false)
-        {
-            RecordRecivingDamage(instigator, totalDamage);
-            base.ReceivedDamage(position, fromPosition, instigator, damageAmounts, damageAmountType, totalDamage, weapon, skill, skillLevel, buff, isDamageOverTime);
-        }
-
-        public override void OnBuffHpDecrease(EntityInfo causer, int amount)
-        {
-            base.OnBuffHpDecrease(causer, amount);
-            RecordRecivingDamage(causer, amount);
-        }
-
-        public void RecordRecivingDamage(EntityInfo instigator, int damage)
-        {
-            if (instigator.TryGetEntity(out BaseCharacterEntity attackerCharacter))
-            {
-                // If summoned by someone, summoner is attacker
-                if (attackerCharacter is BaseMonsterCharacterEntity monsterCharacterEntity && monsterCharacterEntity.IsSummonedAndSummonerExisted)
-                    attackerCharacter = monsterCharacterEntity.Summoner;
-
-                // Add received damage entry
-                if (attackerCharacter != null)
-                {
-                    ReceivedDamageRecord receivedDamageRecord = new ReceivedDamageRecord();
-                    receivedDamageRecord.totalReceivedDamage = damage;
-                    if (receivedDamageRecords.ContainsKey(attackerCharacter))
-                    {
-                        receivedDamageRecord = receivedDamageRecords[attackerCharacter];
-                        receivedDamageRecord.totalReceivedDamage += damage;
-                    }
-                    receivedDamageRecord.lastReceivedDamageTime = Time.unscaledTime;
-                    receivedDamageRecords[attackerCharacter] = receivedDamageRecord;
-                }
-            }
-        }
-
         public override async void Killed(EntityInfo lastAttacker)
         {
-            base.Killed(lastAttacker);
-
             // If this summoned by someone, don't give reward to killer
             if (IsSummoned)
+            {
+                base.Killed(lastAttacker);
                 return;
+            }
 
             _killedReward = CurrentGameplayRule.MakeMonsterReward(CharacterDatabase, Level);
             // Giving gold and exp to players
             GivingRewardToKillers(FindLastAttackerPlayer(lastAttacker), _killedReward, out float itemDropRate);
-            receivedDamageRecords.Clear();
             // Clear dropping items, it will fills in `OnRandomDropItem` function
             _droppingItems.Clear();
             // Drop items
@@ -512,14 +420,13 @@ namespace MultiplayerARPG
             _killedReward.Dispose();
             _killedReward = null;
 
-            if (!IsSummoned)
-            {
-                // If not summoned by someone, destroy and respawn it
-                DestroyAndRespawn();
-            }
-
             // Clear looters because they are already set to dropped items
             _looters.Clear();
+
+            base.Killed(lastAttacker);
+
+            // If not summoned by someone, destroy and respawn it
+            DestroyAndRespawn();
         }
 
         /// <summary>
@@ -532,11 +439,11 @@ namespace MultiplayerARPG
             if (!lastAttacker.TryGetEntity(out BaseCharacterEntity attackerCharacter))
                 return null;
             if (attackerCharacter is BaseMonsterCharacterEntity monsterCharacterEntity &&
-                monsterCharacterEntity.Summoner != null &&
-                monsterCharacterEntity.Summoner is BasePlayerCharacterEntity)
+                monsterCharacterEntity.SummonerEntity != null &&
+                monsterCharacterEntity.SummonerEntity is BasePlayerCharacterEntity)
             {
                 // Set its summoner as main enemy
-                lastAttacker = monsterCharacterEntity.Summoner.GetInfo();
+                lastAttacker = monsterCharacterEntity.SummonerEntity.GetInfo();
                 lastAttacker.TryGetEntity(out attackerCharacter);
             }
             return attackerCharacter as BasePlayerCharacterEntity;
@@ -545,7 +452,7 @@ namespace MultiplayerARPG
         protected virtual void GivingRewardToKillers(BasePlayerCharacterEntity lastPlayer, Reward reward, out float itemDropRate)
         {
             itemDropRate = 1f;
-            if (receivedDamageRecords.Count <= 0)
+            if (_receivedDamageRecords.Count <= 0)
                 return;
 
             BaseCharacterEntity tempCharacterEntity;
@@ -553,83 +460,87 @@ namespace MultiplayerARPG
             bool givenRewardGold;
             bool givenRewardCurrencies;
             float tempHighRewardRate = 0f;
-            foreach (BaseCharacterEntity enemy in receivedDamageRecords.Keys)
+
+            using (CollectionPool<List<ReceivedDamageRecord>, ReceivedDamageRecord>.Get(out List<ReceivedDamageRecord> damageRecords))
             {
-                if (enemy == null)
-                    continue;
-
-                tempCharacterEntity = enemy;
-                givenRewardExp = false;
-                givenRewardGold = false;
-                givenRewardCurrencies = false;
-
-                ReceivedDamageRecord receivedDamageRecord = receivedDamageRecords[tempCharacterEntity];
-                float rewardRate = (float)receivedDamageRecord.totalReceivedDamage / (float)CachedData.MaxHp;
-                if (rewardRate > 1f)
-                    rewardRate = 1f;
-
-                if (tempCharacterEntity is BaseMonsterCharacterEntity tempMonsterCharacterEntity && tempMonsterCharacterEntity.Summoner != null && tempMonsterCharacterEntity.Summoner is BasePlayerCharacterEntity)
+                GetReceivedDamageRecords(damageRecords);
+                for (int i = 0; i < damageRecords.Count; ++i)
                 {
-                    // Set its summoner as main enemy
-                    tempCharacterEntity = tempMonsterCharacterEntity.Summoner;
-                }
+                    ReceivedDamageRecord receivedDamageRecord = damageRecords[i];
+                    if (!receivedDamageRecord.Instigator.TryGetEntity(out tempCharacterEntity))
+                        continue;
 
-                if (tempCharacterEntity is BasePlayerCharacterEntity tempPlayerCharacterEntity)
-                {
-                    bool makeMostDamage = false;
-                    bool isLastAttacker = lastPlayer != null && lastPlayer.ObjectId == tempPlayerCharacterEntity.ObjectId;
-                    if (isLastAttacker)
-                    {
-                        // Increase kill progress
-                        tempPlayerCharacterEntity.OnKillMonster(this);
-                    }
-                    // Clear looters list when it is found new player character who make most damages
-                    if (rewardRate > tempHighRewardRate)
-                    {
-                        tempHighRewardRate = rewardRate;
-                        _looters.Clear();
-                        makeMostDamage = true;
-                        // Make this player character to be able to pick up item because it made most damage
-                        _looters.Add(tempPlayerCharacterEntity.Id);
-                        // And also change item drop rate
-                        itemDropRate = 1f + tempPlayerCharacterEntity.CachedData.Stats.itemDropRate;
-                    }
-                    GivingRewardToGuild(tempPlayerCharacterEntity, reward, rewardRate, out float shareGuildExpRate);
-                    GivingRewardToParty(tempPlayerCharacterEntity, isLastAttacker, reward, rewardRate, shareGuildExpRate, makeMostDamage, out givenRewardExp, out givenRewardGold, out givenRewardCurrencies);
+                    givenRewardExp = false;
+                    givenRewardGold = false;
+                    givenRewardCurrencies = false;
 
-                    // Add reward to current character in damage record list
-                    if (CurrentGameInstance.monsterExpRewardingMode == RewardingMode.Immediately && !givenRewardExp)
+                    float rewardRate = (float)receivedDamageRecord.Damage / (float)CachedData.MaxHp;
+                    if (rewardRate > 1f)
+                        rewardRate = 1f;
+
+                    if (tempCharacterEntity is BaseMonsterCharacterEntity tempMonsterCharacterEntity && tempMonsterCharacterEntity.SummonerEntity != null && tempMonsterCharacterEntity.SummonerEntity is BasePlayerCharacterEntity)
                     {
-                        // Will give reward when it was not given
-                        int petIndex = tempPlayerCharacterEntity.IndexOfSummon(SummonType.PetItem);
-                        if (petIndex >= 0 && tempPlayerCharacterEntity.Summons[petIndex].CacheEntity != null)
+                        // Set its summoner as main enemy
+                        tempCharacterEntity = tempMonsterCharacterEntity.SummonerEntity;
+                    }
+
+                    if (tempCharacterEntity is BasePlayerCharacterEntity tempPlayerCharacterEntity)
+                    {
+                        bool makeMostDamage = false;
+                        bool isLastAttacker = lastPlayer != null && lastPlayer.ObjectId == tempPlayerCharacterEntity.ObjectId;
+                        if (isLastAttacker)
                         {
-                            tempMonsterCharacterEntity = tempPlayerCharacterEntity.Summons[petIndex].CacheEntity;
-                            // Share exp to pet, set multiplier to 0.5, because it will be shared to player
-                            tempMonsterCharacterEntity.RewardExp(reward.exp, (1f - shareGuildExpRate) * 0.5f * rewardRate, RewardGivenType.KillMonster, Level, Level);
-                            // Set multiplier to 0.5, because it was shared to monster
-                            tempPlayerCharacterEntity.RewardExp(reward.exp, (1f - shareGuildExpRate) * 0.5f * rewardRate, RewardGivenType.KillMonster, Level, Level);
+                            // Increase kill progress
+                            tempPlayerCharacterEntity.OnKillMonster(this);
                         }
-                        else
+                        // Clear looters list when it is found new player character who make most damages
+                        if (rewardRate > tempHighRewardRate)
                         {
-                            // No pet, no share, so rate is 1f
-                            tempPlayerCharacterEntity.RewardExp(reward.exp, (1f - shareGuildExpRate) * rewardRate, RewardGivenType.KillMonster, Level, Level);
+                            tempHighRewardRate = rewardRate;
+                            _looters.Clear();
+                            makeMostDamage = true;
+                            // Make this player character to be able to pick up item because it made most damage
+                            _looters.Add(tempPlayerCharacterEntity.Id);
+                            // And also change item drop rate
+                            itemDropRate = 1f + tempPlayerCharacterEntity.CachedData.Stats.itemDropRate;
                         }
-                    }
+                        GivingRewardToGuild(tempPlayerCharacterEntity, reward, rewardRate, out float shareGuildExpRate);
+                        GivingRewardToParty(tempPlayerCharacterEntity, isLastAttacker, reward, rewardRate, shareGuildExpRate, makeMostDamage, out givenRewardExp, out givenRewardGold, out givenRewardCurrencies);
 
-                    if (CurrentGameInstance.monsterGoldRewardingMode == RewardingMode.Immediately && !givenRewardGold)
-                    {
-                        // Will give reward when it was not given
-                        tempPlayerCharacterEntity.RewardGold(reward.gold, rewardRate, RewardGivenType.KillMonster, Level, Level);
-                    }
+                        // Add reward to current character in damage record list
+                        if (CurrentGameInstance.monsterExpRewardingMode == RewardingMode.Immediately && !givenRewardExp)
+                        {
+                            // Will give reward when it was not given
+                            int petIndex = tempPlayerCharacterEntity.IndexOfSummon(SummonType.PetItem);
+                            if (petIndex >= 0 && tempPlayerCharacterEntity.Summons[petIndex].CacheEntity != null)
+                            {
+                                tempMonsterCharacterEntity = tempPlayerCharacterEntity.Summons[petIndex].CacheEntity;
+                                // Share exp to pet, set multiplier to 0.5, because it will be shared to player
+                                tempMonsterCharacterEntity.RewardExp(reward.exp, (1f - shareGuildExpRate) * 0.5f * rewardRate, RewardGivenType.KillMonster, Level, Level);
+                                // Set multiplier to 0.5, because it was shared to monster
+                                tempPlayerCharacterEntity.RewardExp(reward.exp, (1f - shareGuildExpRate) * 0.5f * rewardRate, RewardGivenType.KillMonster, Level, Level);
+                            }
+                            else
+                            {
+                                // No pet, no share, so rate is 1f
+                                tempPlayerCharacterEntity.RewardExp(reward.exp, (1f - shareGuildExpRate) * rewardRate, RewardGivenType.KillMonster, Level, Level);
+                            }
+                        }
+
+                        if (CurrentGameInstance.monsterGoldRewardingMode == RewardingMode.Immediately && !givenRewardGold)
+                        {
+                            // Will give reward when it was not given
+                            tempPlayerCharacterEntity.RewardGold(reward.gold, rewardRate, RewardGivenType.KillMonster, Level, Level);
+                        }
 
 #if !DISABLE_CUSTOM_CHARACTER_CURRENCIES
-                    if (CurrentGameInstance.monsterCurrencyRewardingMode == RewardingMode.Immediately && !givenRewardCurrencies)
-                    {
-                        // Will give reward when it was not given
-                        tempPlayerCharacterEntity.RewardCurrencies(reward.currencies, rewardRate, RewardGivenType.KillMonster, Level, Level);
-                    }
+                        if (CurrentGameInstance.monsterCurrencyRewardingMode == RewardingMode.Immediately && !givenRewardCurrencies)
+                        {
+                            // Will give reward when it was not given
+                            tempPlayerCharacterEntity.RewardCurrencies(reward.currencies, rewardRate, RewardGivenType.KillMonster, Level, Level);
+                        }
 #endif
+                    }
                 }
             }
         }
@@ -845,7 +756,7 @@ namespace MultiplayerARPG
 
         public void Summon(BaseCharacterEntity summoner, SummonType summonType, int level)
         {
-            Summoner = summoner;
+            SummonerEntity = summoner;
             SummonType = summonType;
             Level = level;
             InitStats();
@@ -928,11 +839,5 @@ namespace MultiplayerARPG
 
             CurrentHp -= totalDamage;
         }
-    }
-
-    public struct ReceivedDamageRecord
-    {
-        public float lastReceivedDamageTime;
-        public int totalReceivedDamage;
     }
 }

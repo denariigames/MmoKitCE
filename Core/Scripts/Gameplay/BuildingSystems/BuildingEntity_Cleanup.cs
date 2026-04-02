@@ -19,6 +19,12 @@ namespace MultiplayerARPG
             _triggerObjects?.Clear();
             _children?.Clear();
             _buildingMaterials?.Clear();
+            _finalizedChildVisualObjects?.Clear();
+            _finalizedChildVisualData?.Clear();
+            _finalizedPartCurrentHp?.Clear();
+            _finalizedPartMaxHp?.Clear();
+            _finalizedPartVisualObjects?.Clear();
+            _pendingFinalizedPartHpDeltas?.Clear();
         }
     }
 }

@@ -33,7 +33,7 @@ namespace MultiplayerARPG
         {
             // TODO: It is easy to request for a EXP drop on ground feature, but it is actually not easy to implements because it has to share EXP to party/guild
             BaseCharacterEntity rewardingCharacter = characterEntity;
-            if (characterEntity is BaseMonsterCharacterEntity monsterCharacterEntity && monsterCharacterEntity.Summoner is BasePlayerCharacterEntity summonerCharacterEntity)
+            if (characterEntity is BaseMonsterCharacterEntity monsterCharacterEntity && monsterCharacterEntity.SummonerEntity is BasePlayerCharacterEntity summonerCharacterEntity)
                 rewardingCharacter = summonerCharacterEntity;
             if (!CurrentGameplayRule.RewardExp(rewardingCharacter, Amount, Multiplier, GivenType, GiverLevel, SourceLevel, out int rewardedExp))
             {

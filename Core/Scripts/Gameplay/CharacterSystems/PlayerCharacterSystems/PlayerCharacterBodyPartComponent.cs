@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using Insthync.ManagedUpdating;
 using Insthync.UnityEditorUtils;
 using LiteNetLibManager;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using UnityEngine.Serialization;
 
 namespace MultiplayerARPG
 {
-    public class PlayerCharacterBodyPartComponent : BaseGameEntityComponent<BasePlayerCharacterEntity>
+    public class PlayerCharacterBodyPartComponent : BaseGameEntityComponent<BasePlayerCharacterEntity>, IManagedUpdate
     {
         [System.Serializable]
         public class MaterialPropertiesSetting
@@ -114,8 +115,24 @@ namespace MultiplayerARPG
         private BaseCharacterModel[] _models;
         private bool _isInitialized = false;
 
+        private bool Applying
+        {
+            set
+            {
+                if (value)
+                {
+                    UpdateManager.Register(this);
+                }
+                else
+                {
+                    UpdateManager.Unregister(this);
+                }
+            }
+        }
+
         private void Awake()
         {
+            _models = GetComponentsInChildren<BaseCharacterModel>(true);
             if (optionObjects.Count > 0)
             {
                 foreach (PlayerCharacterBodyPartComponentOption optionObject in optionObjects)
@@ -130,15 +147,14 @@ namespace MultiplayerARPG
             if (!_isInitialized)
             {
                 _isInitialized = true;
-                _models = GetComponentsInChildren<BaseCharacterModel>(true);
                 SetupEvents();
-                ApplyModelAndColorBySavedData();
             }
         }
 
         protected override void OnDestroy()
         {
             ClearEvents();
+            Applying = false;
             if (_models != null && _models.Length > 0)
             {
                 for (int i = 0; i < _models.Length; ++i)
@@ -149,6 +165,12 @@ namespace MultiplayerARPG
             base.OnDestroy();
         }
 
+        public void ManagedUpdate()
+        {
+            ApplyModelAndColorBySavedData();
+            Applying = false;
+        }
+
         public void SetupEvents()
         {
             ClearEvents();
@@ -157,7 +179,7 @@ namespace MultiplayerARPG
                 SetupCharacterModelEvents(_models[i]);
             }
 #if !DISABLE_CUSTOM_CHARACTER_DATA
-            Entity.onPublicIntsOperation -= OnPublicIntsOperation;
+            Entity.onSetup += OnSetup;
             Entity.onPublicIntsOperation += OnPublicIntsOperation;
 #endif
         }
@@ -172,6 +194,7 @@ namespace MultiplayerARPG
                 }
             }
 #if !DISABLE_CUSTOM_CHARACTER_DATA
+            Entity.onSetup -= OnSetup;
             Entity.onPublicIntsOperation -= OnPublicIntsOperation;
 #endif
         }
@@ -284,6 +307,11 @@ namespace MultiplayerARPG
             characterModel.SetupEquippingModels(cancellationTokenSource, showingModels, storingModels, unequippingSockets, options[_currentModelIndex].models, CreateFakeEquipPosition(), CreateFakeCharacterItem(), false, 0, OnShowEquipmentModel).Forget();
         }
 
+        private void OnSetup()
+        {
+            Applying = true;
+        }
+
         private void OnPublicIntsOperation(LiteNetLibSyncListOp operation, int index, CharacterDataInt32 oldItem, CharacterDataInt32 newItem)
         {
             switch(operation)
@@ -291,10 +319,10 @@ namespace MultiplayerARPG
                 case LiteNetLibSyncListOp.Set:
                 case LiteNetLibSyncListOp.Dirty:
                     if (oldItem.hashedKey != newItem.hashedKey || oldItem.value != newItem.value)
-                        ApplyModelAndColorBySavedData();
+                        Applying = true;
                     break;
                 default:
-                    ApplyModelAndColorBySavedData();
+                    Applying = true;
                     break;
             }
         }

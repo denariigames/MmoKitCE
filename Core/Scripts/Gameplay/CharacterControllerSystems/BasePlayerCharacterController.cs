@@ -1,4 +1,4 @@
-﻿using Insthync.AddressableAssetTools;
+using Insthync.AddressableAssetTools;
 using Insthync.DevExtension;
 using Insthync.ManagedUpdating;
 using UnityEngine;
@@ -103,6 +103,8 @@ namespace MultiplayerARPG
         {
             get { return TargetGameEntity != null ? TargetGameEntity.ObjectId : 0; }
         }
+        public DamageableHitBox SelectedDamageableHitBox { get; protected set; }
+        public string SelectedSegmentedPartId { get; protected set; } = string.Empty;
         public BuildingEntity ConstructingBuildingEntity { get; protected set; }
         public BuildingEntity TargetBuildingEntity
         {
@@ -217,11 +219,21 @@ namespace MultiplayerARPG
             TargetEntity = null;
         }
 
+        /// <summary>
+        /// Set the selected damageable hit box and segmented part id for repairing or destroying a building
+        /// </summary>
+        /// <param name="hitBox">The damageable hit box to set</param>
+        protected void SetSelectedDamageableHitBox(DamageableHitBox hitBox)
+        {
+            SelectedDamageableHitBox = hitBox;
+            SelectedSegmentedPartId = hitBox == null ? string.Empty : hitBox.SegmentedPartId;
+        }
         public virtual void RepairBuilding(BuildingEntity targetBuildingEntity)
         {
             if (targetBuildingEntity == null)
                 return;
-            PlayingCharacterEntity.BuildingComponent.CallCmdRepairBuilding(targetBuildingEntity.ObjectId);
+            string partId = SelectedGameEntityObjectId == targetBuildingEntity.ObjectId ? SelectedSegmentedPartId : string.Empty;
+            PlayingCharacterEntity.BuildingComponent.CallCmdRepairBuilding(targetBuildingEntity.ObjectId, partId);
             DeselectBuilding();
         }
 
@@ -229,7 +241,8 @@ namespace MultiplayerARPG
         {
             if (targetBuildingEntity == null)
                 return;
-            PlayingCharacterEntity.BuildingComponent.CallCmdDestroyBuilding(targetBuildingEntity.ObjectId);
+            string partId = SelectedGameEntityObjectId == targetBuildingEntity.ObjectId ? SelectedSegmentedPartId : string.Empty;
+            PlayingCharacterEntity.BuildingComponent.CallCmdDestroyBuilding(targetBuildingEntity.ObjectId, partId);
             DeselectBuilding();
         }
 

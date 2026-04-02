@@ -1306,9 +1306,14 @@ namespace MultiplayerARPG
             RaycastHit tempHitInfo;
             // Default aim position (aim to sky/space)
             _aimTargetPosition = _centerRay.origin + _centerRay.direction * (_centerOriginToCharacterDistance + attackDistance);
+            // Clear selected damageable hit box and segmented part id
+            SetSelectedDamageableHitBox(null);
             // Aim to damageable hit boxes (higher priority than other entities)
             // Raycast from camera position to center of screen
             int tempCount = PhysicUtils.SortedRaycastNonAlloc3D(_centerRay.origin, _centerRay.direction, _raycasts, _centerOriginToCharacterDistance + attackDistance, GameInstance.Singleton.GetDamageEntityHitLayerMask());
+            DamageableHitBox fallbackDamageHitBox = null;
+            RaycastHit fallbackDamageHitInfo = default;
+            bool hasFallbackDamageHit = false;
             for (int tempCounter = 0; tempCounter < tempCount; ++tempCounter)
             {
                 tempHitInfo = _raycasts[tempCounter];
@@ -1349,11 +1354,38 @@ namespace MultiplayerARPG
                 if (attacking && tempHitBox.IsDead())
                     continue;
 
+                 bool canReceiveDamage = tempHitBox.CanReceiveDamageFrom(PlayingCharacterEntity.GetInfo());
+                if (attacking && !canReceiveDamage)
+                {
+                    // Keep searching; first collider might be a non-damageable root hitbox in finalized buildings.
+                    continue;
+                }
+
+                // While attacking, prefer segmented child parts over root hitboxes.
+                if (attacking && string.IsNullOrEmpty(tempHitBox.SegmentedPartId))
+                {
+                    if (!hasFallbackDamageHit)
+                    {
+                        fallbackDamageHitBox = tempHitBox;
+                        fallbackDamageHitInfo = tempHitInfo;
+                        hasFallbackDamageHit = true;
+                    }
+                    continue;
+                }
+
                 // Entity is in front of character, so this is target
-                if (tempHitBox.CanReceiveDamageFrom(PlayingCharacterEntity.GetInfo()))
+                if (canReceiveDamage)
                     _aimTargetPosition = tempHitInfo.point;
+                SetSelectedDamageableHitBox(tempHitBox);
                 SelectedEntity = tempHitBox.Entity;
                 break;
+            }
+
+            if (attacking && SelectedEntity == null && hasFallbackDamageHit && fallbackDamageHitBox != null)
+            {
+                _aimTargetPosition = fallbackDamageHitInfo.point;
+                SetSelectedDamageableHitBox(fallbackDamageHitBox);
+                SelectedEntity = fallbackDamageHitBox.Entity;
             }
 
             // Aim to activateable entities if it can't find attacking target
@@ -1392,6 +1424,22 @@ namespace MultiplayerARPG
                             break;
                         }
                         continue;
+                    }
+
+                    // Finalized child visuals may raycast against colliders where only hitbox is present.
+                    tempHitBox = tempHitInfo.collider.GetComponent<DamageableHitBox>();
+                    if (tempHitBox != null && tempHitBox.Entity != null)
+                    {
+                        if (tempHitBox.IsHideFrom(PlayingCharacterEntity) || tempHitBox.GetObjectId() == PlayingCharacterEntity.ObjectId)
+                            continue;
+
+                        tempActivatableEntity = tempHitBox as IBaseActivatableEntity;
+                        if (tempActivatableEntity != null && Vector3.Distance(EntityTransform.position, tempActivatableEntity.EntityTransform.position) <= tempActivatableEntity.GetActivatableDistance())
+                        {
+                            SetSelectedDamageableHitBox(tempHitBox);
+                            SelectedEntity = tempActivatableEntity;
+                            break;
+                        }
                     }
 
                     tempActivatableEntity = tempHitInfo.collider.GetComponent<IBaseActivatableEntity>();
@@ -1546,7 +1594,12 @@ namespace MultiplayerARPG
                     if (_activateInput.IsHold)
                     {
                         _holdActivatableEntity = null;
-                        if (SelectedEntity is IHoldActivatableEntity)
+                        // Prioritize hitbox selection so child-piece hold activate uses child position/distance.
+                        if (SelectedDamageableHitBox != null)
+                        {
+                            _holdActivatableEntity = SelectedDamageableHitBox;
+                        }
+                        else if (SelectedEntity is IHoldActivatableEntity)
                         {
                             _holdActivatableEntity = SelectedEntity as IHoldActivatableEntity;
                         }
@@ -2051,6 +2104,18 @@ namespace MultiplayerARPG
         {
             if (CanHoldActivate(_holdActivatableEntity))
                 _holdActivatableEntity.OnHoldActivate();
+        }
+
+        private bool CanHoldActivate(IHoldActivatableEntity entity)
+        {
+            if (entity.IsNull())
+                return false;
+            if (entity is DamageableHitBox hitBox && hitBox.CacheTransform != null)
+            {
+                return Vector3.Distance(EntityTransform.position, hitBox.CacheTransform.position) <= entity.GetActivatableDistance() &&
+                    entity.CanHoldActivate();
+            }
+            return CanHoldActivate(entity);
         }
 
         public virtual void Activate()

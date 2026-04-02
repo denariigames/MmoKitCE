@@ -6,26 +6,25 @@ namespace MultiplayerARPG
     public partial class PlayerCharacterController
     {
         public const float MIN_START_MOVE_DISTANCE = 0.01f;
+        public const float DETECT_MOUSE_DRAG_DISTANCE_SQUARED = 100f;
+        public const float DETECT_MOUSE_HOLD_DURATION = 1f;
 
         // Input & control states variables
         protected int _findingEnemyIndex = -1;
-        protected bool _getMouseUp;
-        protected bool _getMouseDown;
-        protected bool _getMouse;
-        protected bool _isPointerOverUI;
-        protected bool _isMouseDragDetected;
-        protected bool _isMouseHoldDetected;
-        protected bool _isMouseHoldAndNotDrag;
         protected bool _isSprinting;
         protected bool _isWalking;
+        protected bool _getMouseDown;
+        protected bool _getMouseUp;
+        protected bool _getMouse;
         protected Vector3 _mouseDownPosition;
         protected float _mouseDownTime;
-        protected bool _isMouseDragOrHoldOrOverUI;
         protected Vector3? _targetPosition;
         protected Vector3 _previousPointClickPosition = Vector3.positiveInfinity;
         protected bool _didActionOnTarget;
         protected bool _isBlockControllerLastFrame = false;
         protected bool _isWASDAttackInputLastFrame = false;
+        protected bool _isTouchingOnUILastFrame = false;
+        protected int _mobileAxesControllingFrameCount = 0;
         protected Vector3 _moveDirection;
 
         public int FindClickObjects(out Vector3 worldPosition2D)
@@ -35,7 +34,12 @@ namespace MultiplayerARPG
 
         public bool IsUpdatingMobileMovement()
         {
-            return InputManager.IsUpdatingMobileAxis("Horizontal") || InputManager.IsUpdatingMobileAxis("Vertical");
+            for (int i = 0; i < mobileInputAxisNames.Length; ++i)
+            {
+                if (InputManager.IsUpdatingMobileAxis(mobileInputAxisNames[i]))
+                    return true;
+            }
+            return false;
         }
 
         public virtual void UpdateInput()
@@ -222,39 +226,55 @@ namespace MultiplayerARPG
         public virtual void UpdatePointClickInput()
         {
             if (controllerMode == PlayerCharacterControllerMode.WASD)
+            {
+                _mobileAxesControllingFrameCount = 0;
                 return;
+            }
 
             // If it's building something, not allow point click movement
             if (ConstructingBuildingEntity != null)
+            {
+                _mobileAxesControllingFrameCount = 0;
                 return;
+            }
 
             // If it's aiming skills, not allow point click movement
             if (UICharacterHotkeys.UsingHotkey != null)
+            {
+                _mobileAxesControllingFrameCount = 0;
                 return;
+            }
 
             _getMouseDown = InputManager.GetMouseButtonDown(0);
             _getMouseUp = InputManager.GetMouseButtonUp(0);
             _getMouse = InputManager.GetMouseButton(0);
 
+            bool isMouseDragOrHoldOrOverUI = false;
             if (_getMouseDown)
             {
-                _isMouseDragOrHoldOrOverUI = false;
+                isMouseDragOrHoldOrOverUI = false;
                 _mouseDownTime = Time.unscaledTime;
                 _mouseDownPosition = InputManager.MousePosition();
             }
             // Read inputs
-            _isPointerOverUI = UISceneGameplay.IsPointerOverUIObject();
-            _isMouseDragDetected = (InputManager.MousePosition() - _mouseDownPosition).sqrMagnitude > DETECT_MOUSE_DRAG_DISTANCE_SQUARED;
-            _isMouseHoldDetected = Time.unscaledTime - _mouseDownTime > DETECT_MOUSE_HOLD_DURATION;
-            _isMouseHoldAndNotDrag = !_isMouseDragDetected && _isMouseHoldDetected;
-            if (!_isMouseDragOrHoldOrOverUI && (_isMouseDragDetected || _isMouseHoldDetected || _isPointerOverUI))
+            bool isPointerOverUI = UISceneGameplay.IsPointerOverUIObject();
+            bool isMouseDragDetected = (InputManager.MousePosition() - _mouseDownPosition).sqrMagnitude > DETECT_MOUSE_DRAG_DISTANCE_SQUARED;
+            bool isMouseHoldDetected = Time.unscaledTime - _mouseDownTime > DETECT_MOUSE_HOLD_DURATION;
+            bool isMouseHoldAndNotDrag = !isMouseDragDetected && isMouseHoldDetected;
+            if (!isMouseDragOrHoldOrOverUI && (isMouseDragDetected || isMouseHoldDetected || isPointerOverUI))
             {
                 // Detected mouse dragging or hold on an UIs
-                _isMouseDragOrHoldOrOverUI = true;
+                isMouseDragOrHoldOrOverUI = true;
             }
             bool updatingMobileMovement = IsUpdatingMobileMovement();
-            // Will set move target when pointer isn't point on an UIs 
-            if (!updatingMobileMovement && !_isPointerOverUI && !_isWASDAttackInputLastFrame && (_getMouse || _getMouseUp))
+            if (updatingMobileMovement)
+                _mobileAxesControllingFrameCount++;
+            else
+                _mobileAxesControllingFrameCount = 0;
+
+            bool isTouchingOnUI = _mobileAxesControllingFrameCount > 1 || isPointerOverUI || _isWASDAttackInputLastFrame;
+            // Will set move target when pointer isn't point on an UIs
+            if (!_isTouchingOnUILastFrame && !isTouchingOnUI && _getMouseUp)
             {
                 // Clear target
                 ClearTarget(true);
@@ -264,15 +284,21 @@ namespace MultiplayerARPG
                 bool tempHasMapPosition = false;
                 Vector3 tempMapPosition = Vector3.zero;
                 // If mouse up while cursor point to target (character, item, npc and so on)
-                bool mouseUpOnTarget = _getMouseUp && !_isMouseDragOrHoldOrOverUI;
+                bool mouseUpOnTarget = _getMouseUp && !isMouseDragOrHoldOrOverUI;
                 int tempCount = FindClickObjects(out Vector3 tempVector3);
                 for (int tempCounter = 0; tempCounter < tempCount; ++tempCounter)
                 {
                     tempTransform = _physicFunctions.GetRaycastTransform(tempCounter);
                     // When holding on target, or already enter edit building mode
-                    if (_isMouseHoldAndNotDrag)
+                    if (isMouseHoldAndNotDrag)
                     {
                         IHoldActivatableEntity activatable = tempTransform.GetComponent<IHoldActivatableEntity>();
+                        if (activatable.IsNull())
+                        {
+                            DamageableHitBox hitBox = _physicFunctions.GetRaycastObject(tempCounter).GetComponent<DamageableHitBox>();
+                            if (hitBox != null)
+                                activatable = hitBox;
+                        }
                         if (!activatable.IsNull() && activatable.CanHoldActivate())
                         {
                             SetTarget(activatable, TargetActionType.HoldClickActivate);
@@ -283,7 +309,13 @@ namespace MultiplayerARPG
                     }
                     else if (mouseUpOnTarget)
                     {
-                        ITargetableEntity targetable = tempTransform.GetComponent<ITargetableEntity>();
+                         ITargetableEntity targetable = tempTransform.GetComponent<ITargetableEntity>();
+                        if (targetable.IsNull())
+                        {
+                            DamageableHitBox hitBox = _physicFunctions.GetRaycastObject(tempCounter).GetComponent<DamageableHitBox>();
+                            if (hitBox != null)
+                                targetable = hitBox;
+                        }
                         IActivatableEntity activatable = targetable as IActivatableEntity;
                         IPickupActivatableEntity pickupActivatable = targetable as IPickupActivatableEntity;
                         IDamageableEntity damageable = targetable as IDamageableEntity;
@@ -361,6 +393,7 @@ namespace MultiplayerARPG
                     }
                 }
             }
+            _isTouchingOnUILastFrame = isTouchingOnUI;
         }
 
         /// <summary>
@@ -406,7 +439,10 @@ namespace MultiplayerARPG
         protected virtual void ClearTarget(bool exceptSelectedTarget = false)
         {
             if (!exceptSelectedTarget)
+            {
                 SelectedEntity = null;
+                SetSelectedDamageableHitBox(null);
+            }
             TargetEntity = null;
             PlayingCharacterEntity.SetTargetEntity(null);
             _targetPosition = null;
@@ -794,12 +830,23 @@ namespace MultiplayerARPG
             }
             if (_turnToTargetActionType != TargetActionType.None)
             {
+                bool turnedToTarget = false;
                 Vector3 targetPosition = _turnToTargetPosition.HasValue ? _turnToTargetPosition.Value : TargetGameEntity.EntityTransform.position;
                 Vector3 lookAtDir = (targetPosition - EntityTransform.position).normalized;
                 Quaternion lookAtRot = Quaternion.LookRotation(lookAtDir);
-                PlayingCharacterEntity.SetLookRotation(lookAtRot, false);
-                float currentAngle = Quaternion.Angle(Quaternion.LookRotation(PlayingCharacterEntity.EntityTransform.forward), lookAtRot);
-                if (currentAngle <= 15f)
+                switch (GameInstance.Singleton.DimensionType)
+                {
+                    case DimensionType.Dimension2D:
+                        PlayingCharacterEntity.SetLookRotation(lookAtRot, true);
+                        turnedToTarget = true;
+                        break;
+                    default:
+                        PlayingCharacterEntity.SetLookRotation(lookAtRot, false);
+                        float currentAngle = Quaternion.Angle(Quaternion.LookRotation(PlayingCharacterEntity.EntityTransform.forward), lookAtRot);
+                        turnedToTarget = currentAngle <= 15f;
+                        break;
+                }
+                if (turnedToTarget)
                 {
                     switch (_turnToTargetActionType)
                     {
@@ -947,12 +994,8 @@ namespace MultiplayerARPG
             if (activateDistance <= 0f)
                 activateDistance = StoppingDistance * 0.5f;
             Vector3 position = targetPosition - (direction * activateDistance);
-            if (Vector3.Distance(MovementTransform.position, position) > MIN_START_MOVE_DISTANCE &&
-                Vector3.Distance(_previousPointClickPosition, position) > MIN_START_MOVE_DISTANCE)
-            {
-                PlayingCharacterEntity.PointClickMovement(position);
-                _previousPointClickPosition = position;
-            }
+            PlayingCharacterEntity.PointClickMovement(position);
+            _previousPointClickPosition = position;
             _turnToTargetActionType = TargetActionType.None;
             _turnToTargetPosition = null;
         }
