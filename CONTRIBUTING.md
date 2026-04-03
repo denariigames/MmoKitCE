@@ -9,10 +9,11 @@ The master branch will always reflect the latest release, while development for 
 
 3. Select MmoKitCE under Projects. This will place the issue on the [Kanban board](https://github.com/orgs/denariigames/projects/2) and allow fellow developers know what you are currently working on and whether it is ready for review.
 <img width="372" height="229" alt="image" src="https://github.com/user-attachments/assets/323a1154-443f-43ce-a50b-a68bca7ff1b2" />
-
+ 
 4. Under Development, click **Create a branch** and base it off of **develop**.
 <img width="400" height="194" alt="image" src="https://github.com/user-attachments/assets/16bf6ede-48be-4ee5-91a5-5adf439f24d0" />
 
+5. When you are done working on the issue, open a Pull Request on your branch.
 
 ### CE Structure
 CE pulls from many source repos. Each of these forked repos has an upstream branch where modifications from the source repo can occur. The directory structure is flattened for use with subtree, instead of submodules, and placed into a sensible structure:
