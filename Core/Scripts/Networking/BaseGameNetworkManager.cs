@@ -29,6 +29,9 @@ namespace MultiplayerARPG
         // Others
         public ILagCompensationManager LagCompensationManager { get; protected set; }
         public IHitRegistrationManager HitRegistrationManager { get; protected set; }
+
+        //Grid Manager for AOI system and Quantizing positions, it will be used if interest manager is not set
+        public IBaseGridManagerComponenent GridManager { get; protected set; }
         public BaseGameNetworkManagerComponent[] ManagerComponents { get; private set; }
 
         public bool IsTemporarilyClose { get; set; } = false;
@@ -110,6 +113,7 @@ namespace MultiplayerARPG
             doNotDestroyOnSceneChanges = true;
             LagCompensationManager = gameObject.GetOrAddComponent<ILagCompensationManager, DefaultLagCompensationManager>();
             HitRegistrationManager = gameObject.GetOrAddComponent<IHitRegistrationManager, DefaultHitRegistrationManager>();
+            GridManager = gameObject.GetOrAddComponent<IBaseGridManagerComponenent, DefaultGridManagerComponent>();
             _defaultInterestManager = GetComponent<BaseInterestManager>();
             if (_defaultInterestManager == null)
                 _defaultInterestManager = gameObject.AddComponent<JobifiedGridSpatialPartitioningAOI>();
@@ -255,6 +259,9 @@ namespace MultiplayerARPG
             }
             CurrentGameInstance.DayNightTimeUpdater.InitTimeOfDay(this);
             base.OnStartServer();
+
+            //Populate Grid for AOI system
+            GridManager.SetupDynamicGrid();
         }
 
         public override void OnStopServer()
@@ -285,6 +292,9 @@ namespace MultiplayerARPG
                 component.OnStartClient(this, client);
             }
             base.OnStartClient(client);
+
+            //Populate Grid for AOI system
+            GridManager.SetupDynamicGrid();
         }
 
         public override void OnStopClient()
@@ -677,7 +687,7 @@ namespace MultiplayerARPG
                         tempLastPosition = unreliableWriter.Length;
                         // If packet will too big, send created one then re-create a new packet
                         const byte intSize = 4;
-                        if (tempLastPosition + EntityMovementDataBuffers.StateDataWriter.Length + intSize > MAX_UNRELIABLE_PACKET_SIZE)
+                        if (tempLastPosition + EntityMovementDataBuffers.StateDataWriter.Length + intSize >= MAX_UNRELIABLE_PACKET_SIZE)
                         {
                             unreliableWriter.SetPosition(posBeforeWriteUnreliableStateCount);
                             unreliableWriter.Put(unreliableStateCount);

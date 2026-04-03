@@ -1,3 +1,5 @@
+//DG: 20260403 add sitting state
+
 using Cysharp.Threading.Tasks;
 using Insthync.AddressableAssetTools;
 using Insthync.UnityEditorUtils;
@@ -432,6 +434,11 @@ namespace MultiplayerARPG.GameData.Model.Playables
         public AnimState dashStartState = new AnimState();
         public AnimState dashLoopState = new AnimState();
         public AnimState dashEndState = new AnimState();
+
+        [Header("Sitting")]
+        public AnimState sittingStartState = new AnimState();
+        public AnimState sittingLoopState = new AnimState();
+        public AnimState sittingEndState = new AnimState();
 
         [Header("Pickup")]
         public ActionState pickupState = new ActionState();

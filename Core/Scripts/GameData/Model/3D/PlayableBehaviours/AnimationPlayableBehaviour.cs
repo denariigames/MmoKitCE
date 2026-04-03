@@ -1,3 +1,5 @@
+//DG: 20260403 add sitting state
+
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -202,6 +204,8 @@ namespace MultiplayerARPG.GameData.Model.Playables
             LandedPlaying,
             DashStartPlaying,
             DashEndPlaying,
+            SitStartPlaying,
+            SitEndPlaying,
         }
 
         private enum PlayingActionState
@@ -324,7 +328,9 @@ namespace MultiplayerARPG.GameData.Model.Playables
                     return PlayingSpecialMoveState == PlayingSpecialMoveState.JumpPlaying ||
                         PlayingSpecialMoveState == PlayingSpecialMoveState.LandedPlaying ||
                         PlayingSpecialMoveState == PlayingSpecialMoveState.DashStartPlaying ||
-                        PlayingSpecialMoveState == PlayingSpecialMoveState.DashEndPlaying;
+                        PlayingSpecialMoveState == PlayingSpecialMoveState.DashEndPlaying ||
+                        PlayingSpecialMoveState == PlayingSpecialMoveState.SitStartPlaying ||
+                        PlayingSpecialMoveState == PlayingSpecialMoveState.SitEndPlaying;
                 }
             }
 
@@ -595,6 +601,9 @@ namespace MultiplayerARPG.GameData.Model.Playables
                 SetBaseState(StateHash.Generate(CLIP_DASH_START), defaultAnimations.dashStartState);
                 SetBaseState(StateHash.Generate(CLIP_DASH_LOOP), defaultAnimations.dashLoopState);
                 SetBaseState(StateHash.Generate(CLIP_DASH_END), defaultAnimations.dashEndState);
+                SetBaseState(StateHash.Generate(CLIP_SITTING_LOOP), defaultAnimations.sittingLoopState);
+                SetBaseState(StateHash.Generate(CLIP_SITTING_START), defaultAnimations.sittingStartState);
+                SetBaseState(StateHash.Generate(CLIP_SITTING_END), defaultAnimations.sittingEndState);
             }
 
             private void SetupWeaponAnimations(WeaponAnimations weaponAnimations, string overrideWeaponTypeId = "")
@@ -753,6 +762,10 @@ namespace MultiplayerARPG.GameData.Model.Playables
         // Other
         public const string CLIP_HURT = "__Hurt";
         public const string CLIP_DEAD = "__Dead";
+        // SITTING
+        public const string CLIP_SITTING_START = "__SittingStart";
+        public const string CLIP_SITTING_LOOP = "__SittingLoop";
+        public const string CLIP_SITTING_END = "__SittingEnd";
 
         public Playable Self { get; private set; }
         public PlayableGraph Graph { get; private set; }
@@ -893,6 +906,24 @@ namespace MultiplayerARPG.GameData.Model.Playables
                 }
             }
 
+            else if (stateUpdateData.ExtraMovementState == ExtraMovementState.IsSitting && stateUpdateData.PreviousExtraMovementState != ExtraMovementState.IsSitting)
+            {
+                if (TryGetStateInfoId(stateInfos, weaponTypeId, CLIP_SITTING_START, out int foundStateInfoId))
+                {
+                    stateUpdateData.PlayingSpecialMoveState = PlayingSpecialMoveState.SitStartPlaying;
+                    return foundStateInfoId;
+                }
+            }
+            else if (stateUpdateData.ExtraMovementState != ExtraMovementState.IsSitting && stateUpdateData.PreviousExtraMovementState == ExtraMovementState.IsSitting)
+            {
+                if (TryGetStateInfoId(stateInfos, weaponTypeId, CLIP_SITTING_END, out int foundStateInfoId))
+                {
+                    stateUpdateData.PlayingSpecialMoveState = PlayingSpecialMoveState.SitEndPlaying;
+                    return foundStateInfoId;
+                }
+            }
+
+
             // Special move state still playing, continue it
             if (stateUpdateData.IsPlayingAnySpecialMoveState)
             {
@@ -993,6 +1024,10 @@ namespace MultiplayerARPG.GameData.Model.Playables
                             buildingHash = StateHash.Add(buildingHash, CLIP_CRAWL_IDLE);
                         else
                             buildingHash = StateHash.Add(buildingHash, MOVE_TYPE_CRAWL);
+                        break;
+                    case ExtraMovementState.IsSitting:
+                        if (!stateUpdateData.isMoving)
+                            buildingHash = StateHash.Add(buildingHash, CLIP_SITTING_LOOP);
                         break;
                     default:
                         if (!stateUpdateData.isMoving)

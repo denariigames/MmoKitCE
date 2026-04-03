@@ -1,4 +1,6 @@
-﻿using Cysharp.Text;
+﻿//DG: 20260403 add sitting state
+
+using Cysharp.Text;
 using Insthync.UnityEditorUtils;
 using System.Collections.Generic;
 using UnityEngine;
@@ -470,6 +472,10 @@ namespace MultiplayerARPG
                 if (Entity.ExtraMovementState == ExtraMovementState.IsCrawling && weaponItem.AttackRestriction.restrictedWhileCrawlMoving)
                     return false;
             }
+
+            //DG: no attack while sitting
+            if (Entity.ExtraMovementState == ExtraMovementState.IsSitting)
+                return false;
 
             return true;
         }
