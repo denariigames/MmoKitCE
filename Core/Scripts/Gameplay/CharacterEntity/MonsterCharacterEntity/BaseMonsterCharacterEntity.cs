@@ -229,7 +229,6 @@ namespace MultiplayerARPG
         public override void OnIdentityInitialize()
         {
             base.OnIdentityInitialize();
-            InstantiateMonsterCharacterObjects();
             if (SpawnArea == null)
                 SpawnPosition = EntityTransform.position;
             if (IsServer)
@@ -239,15 +238,21 @@ namespace MultiplayerARPG
             }
         }
 
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            InstantiateMonsterCharacterObjects();
+        }
+
         private async void InstantiateMonsterCharacterObjects()
         {
+            InstantiatedObjects.DestroyAndNullify();
+            InstantiatedObjects.Clear();
             if (!IsClient)
                 return;
             if (_isObjectsInstantiated)
                 return;
             _isObjectsInstantiated = true;
-            InstantiatedObjects.DestroyAndNullify();
-            InstantiatedObjects.Clear();
 #if !DISABLE_ADDRESSABLES
             // Instantiates monster objects
             await CurrentGameInstance.AddressableMonsterCharacterObjects.InstantiateObjectsOrUsePrefabs(CurrentGameInstance.MonsterCharacterObjects, EntityTransform, InstantiatedObjects);
@@ -270,7 +275,6 @@ namespace MultiplayerARPG
 #endif
             // Instantiates monster character UI
             InstantiateUI(await CurrentGameInstance.GetLoadedMonsterCharacterUIPrefab());
-            await UniTask.Yield();
         }
 
         public void SetSpawnArea(GameSpawnArea<BaseMonsterCharacterEntity> spawnArea, BaseMonsterCharacterEntity spawnPrefab, int spawnLevel, Vector3 spawnPosition)

@@ -1192,7 +1192,6 @@ namespace MultiplayerARPG
             _lastTeleportFrame = Time.frameCount;
             EntityTransform.position = position;
             EntityMovement.SetPosition(position);
-            CurrentGameManager.ShouldPhysicSyncTransforms = true;
             TurnImmediately(rotation.eulerAngles.y);
             _previousPosition = EntityTransform.position;
             // Prepare teleporation states

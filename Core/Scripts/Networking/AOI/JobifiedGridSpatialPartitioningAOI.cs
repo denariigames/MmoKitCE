@@ -117,6 +117,12 @@ namespace MultiplayerARPG
             }
         }
 
+        public override void UpdateInterestManagementImmediate()
+        {
+            _updateCountDown = 0f;
+            UpdateInterestManagement(0f);
+        }
+
         public override void UpdateInterestManagement(float deltaTime)
         {
             if (_system == null)

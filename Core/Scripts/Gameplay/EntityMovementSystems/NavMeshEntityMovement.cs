@@ -763,7 +763,6 @@ namespace MultiplayerARPG
                 // If it is not a client, don't have to simulate movement, just set the position (but still simulate gravity)
                 _acceptedPosition = newPos;
                 EntityTransform.position = newPos;
-                CurrentGameManager.ShouldPhysicSyncTransforms = true;
                 // Update character rotation
                 RemoteTurnSimulation(yAngle, unityDeltaTime);
             }
