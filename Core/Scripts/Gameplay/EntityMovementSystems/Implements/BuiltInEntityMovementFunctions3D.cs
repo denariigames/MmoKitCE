@@ -1,5 +1,4 @@
 using Cysharp.Threading.Tasks;
-using LiteNetLib;
 using LiteNetLib.Utils;
 using LiteNetLibManager;
 using System.Collections.Generic;
@@ -240,6 +239,7 @@ namespace MultiplayerARPG
         public void OnSetOwnerClient(bool isOwnerClient)
         {
             NavPaths = null;
+            _simulatingKeyMovement = false;
         }
 
         public void OnAnimatorMove()
@@ -1331,7 +1331,6 @@ namespace MultiplayerARPG
                     if (movementSecure == MovementSecure.ServerAuthoritative || !IsOwnerClient)
                     {
                         EntityMovement.SetPosition(position);
-                        CurrentGameManager.ShouldPhysicSyncTransforms = true;
                         RemoteTurnSimulation(true, yAngle, unityDeltaTime);
                     }
                     MovementState = _tempMovementState = movementState;
@@ -1500,35 +1499,47 @@ namespace MultiplayerARPG
             _accumulateDeltaTime += unityDeltaTime;
             _accumulateDiffHorMoveDist += horMoveDistDiff;
             _accumulateDiffVerMoveDist += verMoveDistDiff;
-            // TODO: Speed hack detection
-            if (!IsClient)
+            if (!Entity.CanMove())
             {
-                // Allow to move to the position
+                // Do not move
+                if (clientHorMoveDist > 0.001f)
+                {
+                    newPos.x = oldPos.x;
+                    newPos.z = oldPos.z;
+                }
                 _acceptedPosition = newPos;
-                EntityMovement.SetPosition(newPos);
-                CurrentGameManager.ShouldPhysicSyncTransforms = true;
-                // Update character rotation
-                RemoteTurnSimulation(true, yAngle, unityDeltaTime);
             }
             else
             {
-                // It's both server and client, simulate movement
-                if (Vector3.Distance(position, oldPos) > MIN_DISTANCE_TO_SIMULATE_MOVEMENT)
+                // TODO: Speed hack detection
+                if (!IsClient)
                 {
+                    // Allow to move to the position
                     _acceptedPosition = newPos;
-                    _simulatingKeyMovement = true;
-                    SetMovePaths(position, false);
+                    EntityMovement.SetPosition(newPos);
+                    // Update character rotation
+                    RemoteTurnSimulation(true, yAngle, unityDeltaTime);
                 }
-                RemoteTurnSimulation(true, yAngle, unityDeltaTime);
-            }
-            if (movementState.Has(MovementState.IsJump))
-            {
-                _acceptedJump = true;
-            }
-            if (movementState.Has(MovementState.IsDash))
-            {
-                _acceptedDash = true;
-                TurnImmediately(yAngle);
+                else
+                {
+                    // It's both server and client, simulate movement
+                    if (Vector3.Distance(position, oldPos) > MIN_DISTANCE_TO_SIMULATE_MOVEMENT)
+                    {
+                        _acceptedPosition = newPos;
+                        _simulatingKeyMovement = true;
+                        SetMovePaths(position, false);
+                    }
+                    RemoteTurnSimulation(true, yAngle, unityDeltaTime);
+                }
+                if (movementState.Has(MovementState.IsJump))
+                {
+                    _acceptedJump = true;
+                }
+                if (movementState.Has(MovementState.IsDash))
+                {
+                    _acceptedDash = true;
+                    TurnImmediately(yAngle);
+                }
             }
             _acceptedPositionTimestamp = peerTimestamp;
         }
@@ -1546,7 +1557,6 @@ namespace MultiplayerARPG
                 NavPaths = null;
             _verticalVelocity = 0;
             EntityMovement.SetPosition(position);
-            CurrentGameManager.ShouldPhysicSyncTransforms = true;
             TurnImmediately(yAngle);
             if (!IsServer && IsOwnerClient)
                 _isClientConfirmingTeleport = true;
