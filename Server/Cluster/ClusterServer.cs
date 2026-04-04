@@ -1,8 +1,8 @@
-﻿using LiteNetLib;
+﻿using Cysharp.Threading.Tasks;
+using LiteNetLib;
+using LiteNetLib.Utils;
 using LiteNetLibManager;
 using System.Collections.Generic;
-using LiteNetLib.Utils;
-using Cysharp.Threading.Tasks;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,6 +15,9 @@ namespace MultiplayerARPG.MMO
 
         private readonly CentralNetworkManager _centralNetworkManager;
 #if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
+        // Login server peers
+        private Dictionary<long, CentralServerPeerInfo> _loginServerPeers = new Dictionary<long, CentralServerPeerInfo>();
+        public Dictionary<long, CentralServerPeerInfo> LoginServerPeers => _loginServerPeers;
         // Map spawn server peers
         private Dictionary<long, CentralServerPeerInfo> _mapSpawnServerPeers = new Dictionary<long, CentralServerPeerInfo>();
         public Dictionary<long, CentralServerPeerInfo> MapSpawnServerPeers => _mapSpawnServerPeers;
@@ -56,6 +59,13 @@ namespace MultiplayerARPG.MMO
             // Generic
             RegisterRequestHandler<RequestAppServerRegisterMessage, ResponseAppServerRegisterMessage>(MMORequestTypes.AppServerRegister, HandleRequestAppServerRegister);
             RegisterRequestHandler<RequestAppServerAddressMessage, ResponseAppServerAddressMessage>(MMORequestTypes.AppServerAddress, HandleRequestAppServerAddress);
+            //Login
+            RegisterMessageHandler(MMOMessageTypes.KickUser, HandleKickMapUser);
+            RegisterMessageHandler(MMOMessageTypes.PlayerCharacterRemoved, HandlePlayerCharacterRemoved);
+            RegisterRequestHandler<EmptyMessage, ResponseChannelsMessage>(MMORequestTypes.Channels, HandleRequestChannels);
+            RegisterRequestHandler<RequestForceDespawnCharacterMessage, EmptyMessage>(MMORequestTypes.ForceDespawnCharacter, HandleRequestForceDespawnCharacter);
+            RegisterRequestHandler<RequestCheckChannelsLimit, EmptyMessage>(MMORequestTypes.CheckChannelsLimit, HandleRequestCheckChannelsLimit);
+            RegisterRequestHandler<RequestFindOnlineUserMessage, ResponseFindOnlineUserMessage>(MMORequestTypes.FindOnlineUser, HandleRequestFindOnlineUser);
             // Map
             RegisterResponseHandler<RequestForceDespawnCharacterMessage, EmptyMessage>(MMORequestTypes.ForceDespawnCharacter);
             RegisterResponseHandler<RequestSpawnMapMessage, ResponseSpawnMapMessage>(MMORequestTypes.RunMap);
@@ -122,7 +132,7 @@ namespace MultiplayerARPG.MMO
                     RemoveAllocateMapServer(eventData.connectionId);
                     break;
                 case ENetworkEvent.ErrorEvent:
-                    Logging.LogError(LogTag, $"OnPeerNetworkError endPoint: {eventData.endPoint } socketErrorCode {eventData.socketError } errorMessage {eventData.errorMessage}");
+                    Logging.LogError(LogTag, $"OnPeerNetworkError endPoint: {eventData.endPoint} socketErrorCode {eventData.socketError} errorMessage {eventData.errorMessage}");
                     break;
             }
         }
@@ -162,6 +172,11 @@ namespace MultiplayerARPG.MMO
                 peerInfo.connectionId = connectionId;
                 switch (request.peerInfo.peerType)
                 {
+                    case CentralServerPeerType.LoginServer:
+                        _loginServerPeers[connectionId] = peerInfo;
+                        Logging.Log(LogTag, $"Register Login Server: [{connectionId}]");
+                        BroadcastAppServersToLoginServer(connectionId);
+                        break;
                     case CentralServerPeerType.MapSpawnServer:
                         _mapSpawnServerPeers[connectionId] = peerInfo;
                         Logging.Log(LogTag, $"Register Map Spawn Server: [{connectionId}]");
@@ -263,6 +278,29 @@ namespace MultiplayerARPG.MMO
                     peerInfo = broadcastPeerInfo,
                 }));
             }
+
+            // Send map peer info to other map server
+            foreach (CentralServerPeerInfo loginPeerInfo in _loginServerPeers.Values)
+            {
+                // Send current info to other peer
+                SendPacket(loginPeerInfo.connectionId, 0, DeliveryMethod.ReliableOrdered, MMOMessageTypes.AppServerAddress, (writer) => writer.PutValue(new ResponseAppServerAddressMessage()
+                {
+                    message = UITextKeys.NONE,
+                    peerInfo = broadcastPeerInfo,
+                }));
+            }
+        }
+        private void BroadcastAppServersToLoginServer(long connectionId)
+        {
+            // Send map peer info to login server
+            foreach (CentralServerPeerInfo mapPeerInfo in _mapServerPeers.Values)
+            {
+                SendPacket(connectionId, 0, DeliveryMethod.ReliableOrdered, MMOMessageTypes.AppServerAddress, (writer) => writer.PutValue(new ResponseAppServerAddressMessage()
+                {
+                    message = UITextKeys.NONE,
+                    peerInfo = mapPeerInfo,
+                }));
+            }
         }
 #endif
 
@@ -337,6 +375,24 @@ namespace MultiplayerARPG.MMO
             long connectionId = messageHandler.ConnectionId;
             UpdateUserCharacterMessage message = messageHandler.ReadMessage<UpdateUserCharacterMessage>();
             UpdateMapUser(message.type, message.character, connectionId);
+        }
+#endif
+
+#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
+        private void HandleKickMapUser(MessageHandlerData messageHandler)
+        {
+            string kickUserId = messageHandler.Reader.GetString();
+            UITextKeys message = (UITextKeys)messageHandler.Reader.GetPackedUShort();
+            KickUser(kickUserId, message);
+        }
+#endif
+
+#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
+        private void HandlePlayerCharacterRemoved(MessageHandlerData messageHandler)
+        {
+            string kickUserId = messageHandler.Reader.GetString();
+            string characterId = messageHandler.Reader.GetString();
+            PlayerCharacterRemoved(kickUserId, characterId);
         }
 #endif
 
@@ -464,6 +520,74 @@ namespace MultiplayerARPG.MMO
             }
         }
 #endif
+
+        internal async UniTaskVoid HandleRequestFindOnlineUser(
+    RequestHandlerData requestHandler,
+    RequestFindOnlineUserMessage request,
+    RequestProceedResultDelegate<ResponseFindOnlineUserMessage> result)
+        {
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+            bool despawned = true;
+            if (!string.IsNullOrEmpty(request.userId))
+                despawned = await MapContainsUser(request.userId);
+
+            result.InvokeSuccess(new ResponseFindOnlineUserMessage()
+            {
+                isFound = despawned
+            });
+#endif
+        }
+
+        internal async UniTaskVoid HandleRequestChannels(
+RequestHandlerData requestHandler,
+EmptyMessage request,
+RequestProceedResultDelegate<ResponseChannelsMessage> result)
+        {
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+            result.InvokeSuccess(new ResponseChannelsMessage()
+            {
+                channels = GetChannels()
+            });
+#endif
+        }
+
+        internal async UniTaskVoid HandleRequestForceDespawnCharacter(
+            RequestHandlerData requestHandler,
+            RequestForceDespawnCharacterMessage request,
+            RequestProceedResultDelegate<EmptyMessage> result)
+        {
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+            bool despawned = true;
+            if (!string.IsNullOrEmpty(request.userId))
+                despawned = await ConfirmDespawnCharacter(request.userId);
+
+            if (despawned)
+                result.InvokeSuccess(EmptyMessage.Value);
+            else
+                result.InvokeError(EmptyMessage.Value);
+#endif
+        }
+
+        internal async UniTaskVoid HandleRequestCheckChannelsLimit(
+    RequestHandlerData requestHandler,
+    RequestCheckChannelsLimit request,
+    RequestProceedResultDelegate<EmptyMessage> result)
+        {
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+            string channelId = request.channelId;
+            if (_centralNetworkManager.Channels.TryGetValue(channelId, out ChannelData channelData))
+            {
+
+                if (CountUsers(channelId) >= channelData.maxConnections)
+                {
+                    result.InvokeError(EmptyMessage.Value);
+                    return;
+                }
+            }
+            result.InvokeSuccess(EmptyMessage.Value);
+            return;
+#endif
+        }
 
         public async UniTask RequestSpawnMap(long mapSpawnConnectionId, RequestSpawnMapMessage request, string key, RequestProceedResultDelegate<ResponseSpawnMapMessage> resultForMapServer)
         {
@@ -661,11 +785,18 @@ namespace MultiplayerARPG.MMO
 
         public int CountUsers(string channelId)
         {
+
 #if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
-            if (MapServerPeersByKey.TryGetValue(channelId, out CentralServerPeerInfo peerInfo))
-                return peerInfo.currentUsers;
-#endif
+            int count = 0;
+            foreach (CentralServerPeerInfo peerInfo in MapServerPeers.Values)
+            {
+                if (peerInfo.channelId == channelId)
+                    count += peerInfo.currentUsers;
+            }
+            return count;
+#else
             return 0;
+#endif
         }
 
         public static string GetAppServerRegisterHash(CentralServerPeerType peerType, long time)

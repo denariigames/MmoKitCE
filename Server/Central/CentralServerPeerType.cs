@@ -6,5 +6,6 @@
         MapServer,
         InstanceMapServer,
         AllocateMapServer,
+        LoginServer,
     }
 }

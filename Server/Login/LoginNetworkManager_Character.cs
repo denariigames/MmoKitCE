@@ -1,13 +1,14 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Insthync.DevExtension;
-using LiteNetLibManager;
 using LiteNetLib.Utils;
+using LiteNetLibManager;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace MultiplayerARPG.MMO
 {
-    public partial class CentralNetworkManager
+    public partial class LoginNetworkManager
     {
         public bool RequestCharacters(ResponseDelegate<ResponseCharactersMessage> callback)
         {
@@ -111,7 +112,7 @@ namespace MultiplayerARPG.MMO
                 });
                 return;
             }
-            
+
             if (characterName.Length < minCharacterNameLength)
             {
                 result.InvokeError(new ResponseCreateCharacterMessage()
@@ -243,7 +244,7 @@ namespace MultiplayerARPG.MMO
                 return;
             }
             // Kick from servers
-            ClusterServer.PlayerCharacterRemoved(userPeerInfo.userId, request.characterId);
+            PlayerCharacterRemoved(userPeerInfo.userId, request.characterId);
             // Response
             result.InvokeSuccess(new ResponseDeleteCharacterMessage());
 #endif
@@ -265,7 +266,7 @@ namespace MultiplayerARPG.MMO
                 return;
             }
             // Kick player's character from map-servers
-            if (!await ClusterServer.ConfirmDespawnCharacter(userPeerInfo.userId))
+            if (!await ConfirmDespawnCharacter(userPeerInfo.userId))
             {
                 result.InvokeError(new ResponseSelectCharacterMessage()
                 {
@@ -276,8 +277,8 @@ namespace MultiplayerARPG.MMO
             // Get channel, or use default one
             string channelId = request.channelId;
             if (string.IsNullOrEmpty(channelId))
-                channelId = Channels.Keys.First();
-            if (!Channels.TryGetValue(channelId, out ChannelData channel))
+                channelId = CentralNetworkManager.Channels.Keys.First();
+            if (!CentralNetworkManager.Channels.TryGetValue(channelId, out ChannelData channel))
             {
                 result.InvokeError(new ResponseSelectCharacterMessage()
                 {
@@ -287,8 +288,9 @@ namespace MultiplayerARPG.MMO
             }
             int maxConnections = channel.maxConnections;
             if (maxConnections <= 0)
-                maxConnections = defaultChannelMaxConnections;
-            if (ClusterServer.CountUsers(channelId) >= maxConnections)
+                maxConnections = CentralNetworkManager.defaultChannelMaxConnections;
+            //Check if channel is not already full.
+            if (!await ConfirmCanConnectToChannel(channelId))
             {
                 result.InvokeError(new ResponseSelectCharacterMessage()
                 {
@@ -319,7 +321,7 @@ namespace MultiplayerARPG.MMO
                 });
                 return;
             }
-            if (!ClusterServer.MapServerPeersByKey.TryGetValue(PeerInfoExtensions.GetPeerInfoKey(channelId, character.CurrentMapName), out CentralServerPeerInfo mapServerPeerInfo))
+            if (!_mapServerConnectionIdsBySceneName.TryGetValue(PeerInfoExtensions.GetPeerInfoKey(channelId, character.CurrentMapName), out CentralServerPeerInfo mapServerPeerInfo))
             {
                 result.InvokeError(new ResponseSelectCharacterMessage()
                 {

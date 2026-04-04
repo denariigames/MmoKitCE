@@ -19,7 +19,7 @@ namespace MultiplayerARPG.MMO
 
         [Header("Client Components")]
         [SerializeField]
-        private CentralNetworkManager centralNetworkManager = null;
+        private LoginNetworkManager loginNetworkManager = null;
         [SerializeField]
         private MapNetworkManager mapNetworkManager = null;
 
@@ -31,15 +31,15 @@ namespace MultiplayerARPG.MMO
         [SerializeField]
         private MmoNetworkSetting[] networkSettings = new MmoNetworkSetting[0];
 
-        public CentralNetworkManager CentralNetworkManager
+        public LoginNetworkManager LoginNetworkManager
         {
             get
             {
-                if (centralNetworkManager == null)
-                    centralNetworkManager = GetComponentInChildren<CentralNetworkManager>();
-                if (centralNetworkManager == null)
-                    centralNetworkManager = FindFirstObjectByType<CentralNetworkManager>();
-                return centralNetworkManager;
+                if (loginNetworkManager == null)
+                    loginNetworkManager = GetComponentInChildren<LoginNetworkManager>();
+                if (loginNetworkManager == null)
+                    loginNetworkManager = FindFirstObjectByType<LoginNetworkManager>();
+                return loginNetworkManager;
             }
         }
         public MapNetworkManager MapNetworkManager
@@ -90,9 +90,9 @@ namespace MultiplayerARPG.MMO
 
         private void OnEnable()
         {
-            CentralNetworkManager.onClientConnected += OnCentralConnected;
-            CentralNetworkManager.onClientDisconnected += OnCentralDisconnected;
-            CentralNetworkManager.onClientStopped += OnCentralStopped;
+            LoginNetworkManager.onClientConnected += OnCentralConnected;
+            LoginNetworkManager.onClientDisconnected += OnCentralDisconnected;
+            LoginNetworkManager.onClientStopped += OnCentralStopped;
             ClientGenericActions.onClientConnected += OnMapConnected;
             ClientGenericActions.onClientDisconnected += OnMapDisconnected;
             ClientGenericActions.onClientStopped += OnMapStopped;
@@ -100,9 +100,9 @@ namespace MultiplayerARPG.MMO
 
         private void OnDisable()
         {
-            CentralNetworkManager.onClientConnected -= OnCentralConnected;
-            CentralNetworkManager.onClientDisconnected -= OnCentralDisconnected;
-            CentralNetworkManager.onClientStopped -= OnCentralStopped;
+            LoginNetworkManager.onClientConnected -= OnCentralConnected;
+            LoginNetworkManager.onClientDisconnected -= OnCentralDisconnected;
+            LoginNetworkManager.onClientStopped -= OnCentralStopped;
             ClientGenericActions.onClientConnected -= OnMapConnected;
             ClientGenericActions.onClientDisconnected -= OnMapDisconnected;
             ClientGenericActions.onClientStopped -= OnMapStopped;
@@ -151,21 +151,21 @@ namespace MultiplayerARPG.MMO
         #region Client functions
         public void StartCentralClient()
         {
-            CentralNetworkManager.useWebSocket = UseWebSocket;
-            CentralNetworkManager.webSocketSecure = WebSocketSecure;
-            CentralNetworkManager.StartClient();
+            LoginNetworkManager.useWebSocket = UseWebSocket;
+            LoginNetworkManager.webSocketSecure = WebSocketSecure;
+            LoginNetworkManager.StartClient();
         }
 
         public void StartCentralClient(string address, int port)
         {
-            CentralNetworkManager.useWebSocket = UseWebSocket;
-            CentralNetworkManager.webSocketSecure = WebSocketSecure;
-            CentralNetworkManager.StartClient(address, port);
+            LoginNetworkManager.useWebSocket = UseWebSocket;
+            LoginNetworkManager.webSocketSecure = WebSocketSecure;
+            LoginNetworkManager.StartClient(address, port);
         }
 
         public void StopCentralClient()
         {
-            CentralNetworkManager.StopClient();
+            LoginNetworkManager.StopClient();
         }
 
         public void StartMapClient(BaseMapInfo mapInfo, string address, int port)
@@ -188,7 +188,7 @@ namespace MultiplayerARPG.MMO
 
         public bool IsConnectedToCentralServer()
         {
-            return CentralNetworkManager != null && CentralNetworkManager.IsClientConnected;
+            return LoginNetworkManager != null && LoginNetworkManager.IsClientConnected;
         }
 
         public void ClearClientData()
@@ -202,42 +202,42 @@ namespace MultiplayerARPG.MMO
 
         public void RequestUserLogin(string username, string password, ResponseDelegate<ResponseUserLoginMessage> callback)
         {
-            CentralNetworkManager.RequestUserLogin(username, password, (responseHandler, responseCode, response) => OnRequestUserLogin(responseHandler, responseCode, response, callback).Forget());
+            LoginNetworkManager.RequestUserLogin(username, password, (responseHandler, responseCode, response) => OnRequestUserLogin(responseHandler, responseCode, response, callback).Forget());
         }
 
         public void RequestUserRegister(string username, string password, string email, ResponseDelegate<ResponseUserRegisterMessage> callback)
         {
-            CentralNetworkManager.RequestUserRegister(username, password, email, callback);
+            LoginNetworkManager.RequestUserRegister(username, password, email, callback);
         }
 
         public void RequestUserLogout(ResponseDelegate<INetSerializable> callback)
         {
-            CentralNetworkManager.RequestUserLogout((responseHandler, responseCode, response) => OnRequestUserLogout(responseHandler, responseCode, response, callback).Forget());
+            LoginNetworkManager.RequestUserLogout((responseHandler, responseCode, response) => OnRequestUserLogout(responseHandler, responseCode, response, callback).Forget());
         }
 
         public void RequestValidateAccessToken(string userId, string accessToken, ResponseDelegate<ResponseValidateAccessTokenMessage> callback)
         {
-            CentralNetworkManager.RequestValidateAccessToken(userId, accessToken, (responseHandler, responseCode, response) => OnRequestValidateAccessToken(responseHandler, responseCode, response, callback).Forget());
+            LoginNetworkManager.RequestValidateAccessToken(userId, accessToken, (responseHandler, responseCode, response) => OnRequestValidateAccessToken(responseHandler, responseCode, response, callback).Forget());
         }
 
         public void RequestChannels(ResponseDelegate<ResponseChannelsMessage> callback)
         {
-            CentralNetworkManager.RequestChannels(callback);
+            LoginNetworkManager.RequestChannels(callback);
         }
 
         public void RequestCharacters(ResponseDelegate<ResponseCharactersMessage> callback)
         {
-            CentralNetworkManager.RequestCharacters(callback);
+            LoginNetworkManager.RequestCharacters(callback);
         }
 
         public void RequestCreateCharacter(PlayerCharacterData characterData, ResponseDelegate<ResponseCreateCharacterMessage> callback)
         {
-            CentralNetworkManager.RequestCreateCharacter(characterData, callback);
+            LoginNetworkManager.RequestCreateCharacter(characterData, callback);
         }
 
         public void RequestDeleteCharacter(string characterId, ResponseDelegate<ResponseDeleteCharacterMessage> callback)
         {
-            CentralNetworkManager.RequestDeleteCharacter(characterId, callback);
+            LoginNetworkManager.RequestDeleteCharacter(characterId, callback);
         }
 
         public void RequestSelectCharacter(string characterId, ResponseDelegate<ResponseSelectCharacterMessage> callback)
@@ -247,7 +247,7 @@ namespace MultiplayerARPG.MMO
 
         public void RequestSelectCharacter(string channelId, string characterId, ResponseDelegate<ResponseSelectCharacterMessage> callback)
         {
-            CentralNetworkManager.RequestSelectCharacter(channelId, characterId, (responseHandler, responseCode, response) => OnRequestSelectCharacter(responseHandler, responseCode, response, characterId, callback).Forget());
+            LoginNetworkManager.RequestSelectCharacter(channelId, characterId, (responseHandler, responseCode, response) => OnRequestSelectCharacter(responseHandler, responseCode, response, characterId, callback).Forget());
         }
 
         private UniTaskVoid OnRequestUserLogin(ResponseHandlerData responseHandler, AckResponseCode responseCode, ResponseUserLoginMessage response, ResponseDelegate<ResponseUserLoginMessage> callback)
