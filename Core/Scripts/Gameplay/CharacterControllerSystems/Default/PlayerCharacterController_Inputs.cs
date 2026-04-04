@@ -1,4 +1,6 @@
-﻿using Insthync.CameraAndInput;
+﻿//DG: 20260403 add sitting state
+
+using Insthync.CameraAndInput;
 using UnityEngine;
 
 namespace MultiplayerARPG
@@ -26,6 +28,8 @@ namespace MultiplayerARPG
         protected bool _isTouchingOnUILastFrame = false;
         protected int _mobileAxesControllingFrameCount = 0;
         protected Vector3 _moveDirection;
+
+        protected float _waitTime;
 
         public int FindClickObjects(out Vector3 worldPosition2D)
         {
@@ -73,6 +77,10 @@ namespace MultiplayerARPG
                 PlayingCharacterEntity.KeyMovement(Vector3.zero, MovementState.None);
                 return;
             }
+
+            //Wait to complete action (getup from sit)
+            if (Time.unscaledTime - _waitTime < 0.6f)
+                return;
 
             _isBlockControllerLastFrame = isBlockController;
 
@@ -172,20 +180,33 @@ namespace MultiplayerARPG
                 {
                     _isSprinting = false;
                     _isWalking = false;
+                    _isSitting = false;
                 }
                 else if (PlayingCharacterEntity.MovementState.Has(MovementState.IsGrounded))
                 {
+                    //Hold for sprint state
                     if (InputManager.GetButtonDown("Sprint"))
                     {
-                        // Toggles sprint state
-                        _isSprinting = !_isSprinting;
-                        _isWalking = false;
+                        _isSprinting = true;
+                        _isWalking = _isSitting = false;
                     }
-                    else if (InputManager.GetButtonDown("Walk"))
+                    else if (InputManager.GetButtonUp("Sprint"))
                     {
-                        // Toggles sprint state
-                        _isWalking = !_isWalking;
                         _isSprinting = false;
+                    }
+                    //Sit on hold
+                    else if (_walkInput.IsHold)
+                    {
+                        _isSitting = !_isSitting;
+                        if (_isSitting)
+                            _isSprinting = _isWalking = false;
+                    }
+                    //Walk on release
+                    else if (_walkInput.IsRelease)
+                    {
+                        _isWalking = !_isWalking;
+                        if (_isWalking)
+                            _isSprinting = _isSitting = false;
                     }
                 }
                 // Auto reload
@@ -210,6 +231,8 @@ namespace MultiplayerARPG
                 PlayingCharacterEntity.SetExtraMovementState(ExtraMovementState.IsSprinting);
             else if (_isWalking)
                 PlayingCharacterEntity.SetExtraMovementState(ExtraMovementState.IsWalking);
+            else if (_isSitting)
+                PlayingCharacterEntity.SetExtraMovementState(ExtraMovementState.IsSitting);
             else
                 PlayingCharacterEntity.SetExtraMovementState(ExtraMovementState.None);
         }
@@ -390,6 +413,9 @@ namespace MultiplayerARPG
         /// <param name="targetPosition"></param>
         protected virtual void OnPointClickOnGround(Vector3 targetPosition)
         {
+            if (WaitToExitSitting())
+                return;
+
             if (Vector3.Distance(MovementTransform.position, targetPosition) > MIN_START_MOVE_DISTANCE)
             {
                 _destination = targetPosition;
@@ -451,9 +477,13 @@ namespace MultiplayerARPG
 
             // Set movement state to be forward only when it is having moving direction
             MovementState movementState = MovementState.None;
+
             // Move
             if (_moveDirection.sqrMagnitude > 0f)
             {
+                if (WaitToExitSitting())
+                    return;
+
                 HideNpcDialog();
                 _destination = null;
                 _isFollowingTarget = false;
@@ -480,6 +510,9 @@ namespace MultiplayerARPG
             }
             else if (PlayingCharacterEntity.MovementState.Has(MovementState.IsGrounded))
             {
+                if (WaitToExitSitting())
+                    return;
+
                 if (InputManager.GetButtonDown("Jump"))
                 {
                     movementState |= MovementState.IsJump;
@@ -507,6 +540,9 @@ namespace MultiplayerARPG
                 return;
 
             if (!InputManager.GetButton("Attack"))
+                return;
+
+            if (WaitToExitSitting())
                 return;
 
             _isWASDAttackInputLastFrame = true;
@@ -572,6 +608,9 @@ namespace MultiplayerARPG
         protected void UpdateQueuedSkill()
         {
             if (_queueUsingSkill.skill == null || _queueUsingSkill.level <= 0)
+                return;
+
+            if (WaitToExitSitting())
                 return;
 
             _destination = null;
@@ -813,6 +852,10 @@ namespace MultiplayerARPG
                 _turnToTargetActionType = TargetActionType.None;
                 return;
             }
+
+            if (WaitToExitSitting())
+                return;
+
             if (_turnToTargetActionType != TargetActionType.None)
             {
                 bool turnedToTarget = false;
@@ -1135,6 +1178,20 @@ namespace MultiplayerARPG
                 return false;
             int dataId = BaseGameData.MakeDataId(id);
             return PlayingCharacterEntity.CallCmdUseGuildSkill(dataId);
+        }
+
+        /// <summary>
+        /// Cancel sitting state on actions and wait for exit
+        /// </summary>
+        private bool WaitToExitSitting()
+        {
+            if (_isSitting)
+            {
+                _isSitting = false;
+                _waitTime = Time.unscaledTime;
+                return true;
+            }
+            return false;
         }
     }
 }

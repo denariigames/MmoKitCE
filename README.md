@@ -6,7 +6,7 @@
 
 ### The Three S's Guiding Principle
 
-Every change, fix, or removal in MmoKitCE is evaluated strictly against these core goals:
+Every change, fix, or removal in MmoKitCE is evaluated against these core goals:
 
 - **Scalability**: Can the system handle hundreds or thousands of concurrent players?
 - **Stability**: Does it reduce bugs, crashes, edge cases, and unexpected behavior?
@@ -17,12 +17,24 @@ Every change, fix, or removal in MmoKitCE is evaluated strictly against these co
 ## What's New in CE
 
 ### Addon Manager
-One of the biggest changes in the Community Edition is the introduction of the **Addon Manager**, an in-editor interface that allows the community and team to modularize functionality.
+Addon Manager is an in-editor interface that allows the community and team to modularize functionality.
 
 - Former "core" features that were too niche, experimental, or optional can be extracted into addons.
-- Addons are discovered, installed, updated, and managed directly inside Unity, similar to a private Unity Package Manager.
+- Addons are discovered, installed, and updated directly inside Unity, similar to a private Unity Package Manager.
 - This keeps the **core distribution lean**, focused, and easier to maintain long-term.
 - The Addon Manager pulls from a central, curated manifest (similar in spirit to how many modern Unity ecosystems work).
+
+
+### Cell-Based Position Quantization
+Cell-based position quantization dramatically improves network efficiency for entity movement.
+
+- Significant bandwidth reduction: Position updates shrink from 12 bytes (full Vector3) to 7 bytes (1 byte cell ID + 6 bytes quantized local offset).
+- Improved scalability: Lower network traffic supports more concurrent players, higher update rates, and denser entity populations.
+- Strong foundation for spatial partitioning: Integer cell IDs enable fast, efficient grid-based systems such as Area of Interest (AOI) management, neighbor culling, and future sharding/zoning.
+- Better determinism: Reduces floating-point drift over long distances and play sessions.
+
+**World Size Assumptions:** The system uses a fixed square grid centered at the world origin. The maximum supported world size is determined by configurable CellSize. Positions outside the grid are clamped to edge cells.
+
 
 ## Quick Start / Installation Wizard
 
@@ -39,7 +51,7 @@ https://github.com/denariigames/MmoKitCE_Installer.git
 
 <img width="609" height="512" alt="setup-wizard" src="https://github.com/user-attachments/assets/cab53039-f83f-4034-82d3-d3a101b6afb2" />
 
-A setup wizard will appear automatically after the package is installed. If the Wizard does not appear or is inadventently closed, you can reopen at Window → MMORPG KIT → MMOKitCE → **Show Setup Wizard**
+A setup wizard will appear after the package is installed. If the Wizard does not appear or is inadventently closed, you can reopen at Window → MMORPG KIT → MMOKitCE → **Show Setup Wizard**
 
 Click **Import Settings** to install base project settings. The following settings will be overwritten by this process:
 
@@ -75,4 +87,4 @@ $ git pull
 
 ## Thanks
 
-Huge thanks to Ittipon Teerapruettikulchai for open sourcing the original kit. Without this act of generosity, none of this would exist. Special thanks to the entire community of former customers and new developers who continue to keep this ecosystem alive.
+Huge thanks to Ittipon Teerapruettikulchai for open sourcing the original kit. Without his act of generosity, none of this would exist. Special thanks to the entire community of former customers and new developers who continue to keep this ecosystem alive.

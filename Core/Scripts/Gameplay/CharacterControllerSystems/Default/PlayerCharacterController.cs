@@ -1,4 +1,6 @@
-﻿using Insthync.CameraAndInput;
+﻿//DG: 20260403 add sitting state
+
+using Insthync.CameraAndInput;
 using Insthync.ManagedUpdating;
 using LiteNetLibManager;
 using UnityEngine;
@@ -141,6 +143,9 @@ namespace MultiplayerARPG
         protected InputStateManager _findEnemyInput;
         protected InputStateManager _exitVehicleInput;
         protected InputStateManager _switchEquipWeaponSetInput;
+        protected InputStateManager _walkInput;
+
+        protected bool _isSitting;
 
         protected override void Awake()
         {
@@ -182,6 +187,7 @@ namespace MultiplayerARPG
             _findEnemyInput = new InputStateManager("FindEnemy");
             _exitVehicleInput = new InputStateManager("ExitVehicle");
             _switchEquipWeaponSetInput = new InputStateManager("SwitchEquipWeaponSet");
+            _walkInput = new InputStateManager("Walk");
 
             if (targetObjectPrefab != null)
             {
@@ -289,6 +295,7 @@ namespace MultiplayerARPG
             _findEnemyInput.OnUpdate(deltaTime);
             _exitVehicleInput.OnUpdate(deltaTime);
             _switchEquipWeaponSetInput.OnUpdate(deltaTime);
+            _walkInput.OnUpdate(deltaTime);
 
             UpdateInput();
             UpdateFollowTarget();
@@ -304,6 +311,7 @@ namespace MultiplayerARPG
             _findEnemyInput.OnLateUpdate();
             _exitVehicleInput.OnLateUpdate();
             _switchEquipWeaponSetInput.OnLateUpdate();
+            _walkInput.OnLateUpdate();
         }
 
         public bool TryGetSelectedTargetAsAttackingEntity(out BaseCharacterEntity character)
