@@ -462,7 +462,8 @@ namespace MultiplayerARPG
 
         public bool WriteServerState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
         {
-            return Functions.WriteServerState(writeTimestamp, writer, out shouldSendReliably);
+            Vector3 currentPlayerPosition = Vector3.zero;
+            return Functions.WriteServerState(writeTimestamp, writer, currentPlayerPosition, out shouldSendReliably);
         }
 
         public void ReadClientStateAtServer(long peerTimestamp, NetDataReader reader)

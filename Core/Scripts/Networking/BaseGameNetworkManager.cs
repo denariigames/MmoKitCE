@@ -672,7 +672,12 @@ namespace MultiplayerARPG
                     if (!_entityMovementDataHandlers.TryGetValue(objectId, out IEntityMovementDataHandler dataHandler))
                         continue;
                     EntityMovementDataBuffers.StateDataWriter.Reset();
-                    if (!dataHandler.WriteServerState(writeTimestamp, EntityMovementDataBuffers.StateDataWriter, out bool shouldSendReliably))
+
+                    //Try get position for interest management, it will be used for determining data compression mode, but it's not required, so it won't cause problem if failed to get position
+                    if (!DefaultServerUserHandlers.PlayerCharacters.TryGetValue(player.ConnectionId, out IPlayerCharacterData playerCharacter))
+                        continue;
+
+                    if (!dataHandler.WriteServerState(writeTimestamp, EntityMovementDataBuffers.StateDataWriter, playerCharacter.CurrentPosition, out bool shouldSendReliably))
                         continue;
                     // Increase data writing counter
                     if (shouldSendReliably)

@@ -80,6 +80,14 @@ namespace MultiplayerARPG
         // Client confirm codes
         protected bool _isClientConfirmingTeleport;
 
+        //Last Compression Mode, used to determine which compression mode to use
+        private int _lastDataCompressionMode;
+        public int LastDataCompressionMode
+        {
+            get { return _lastDataCompressionMode; }
+            set { _lastDataCompressionMode = value; }
+        }
+
         protected virtual void Awake()
         {
             // Prepare rigidbody component
@@ -519,7 +527,7 @@ namespace MultiplayerARPG
             return false;
         }
 
-        public bool WriteServerState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
+        public bool WriteServerState(long writeTimestamp, NetDataWriter writer, Vector3 currentPlayerPosition, out bool shouldSendReliably)
         {
             shouldSendReliably = false;
             if (_sendingDash)

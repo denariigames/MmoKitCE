@@ -159,6 +159,14 @@ namespace MultiplayerARPG
         protected float _targetYAngle;
         protected float _yTurnSpeed;
 
+        //Last Compression Mode, used to determine which compression mode to use
+        private int _lastDataCompressionMode;
+        public int LastDataCompressionMode
+        {
+            get { return _lastDataCompressionMode; }
+            set { _lastDataCompressionMode = value; }
+        }
+
         // Interpolation Data
         protected SortedList<uint, System.ValueTuple<MovementState, ExtraMovementState>> _interpExtra = new SortedList<uint, System.ValueTuple<MovementState, ExtraMovementState>>();
 
@@ -1118,7 +1126,7 @@ namespace MultiplayerARPG
             return false;
         }
 
-        public bool WriteServerState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
+        public bool WriteServerState(long writeTimestamp, NetDataWriter writer, Vector3 currentPlayerPosition, out bool shouldSendReliably)
         {
             if (_serverTeleportState.Has(MovementTeleportState.Requesting))
             {

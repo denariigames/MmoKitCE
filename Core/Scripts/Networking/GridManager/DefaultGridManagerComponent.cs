@@ -24,6 +24,9 @@ namespace MultiplayerARPG
         private int gridSize = 15;
         public int GridSize => gridSize;
 
+        [SerializeField]
+        private CompressionRange compressionRange;
+
         private Dictionary<byte, GridCell> _cellsById;
 
         public void SetupDynamicGrid()
@@ -100,5 +103,38 @@ namespace MultiplayerARPG
                 position.y,
                 (gridCell.GridZ * cellSize) - offset + position.z);
         }
+
+        public int GetCompressionMode(float distSq, int previousMode)
+        {
+            switch (previousMode)
+            {
+                case 6:
+                    if (distSq > compressionRange.HighPrecisionRange * compressionRange.HighPrecisionRange) return 5;
+                    return 6;
+
+                case 5:
+                    if (distSq < compressionRange.HighestPrecisionRange * compressionRange.HighestPrecisionRange) return 6;
+                    if (distSq > compressionRange.MediumPrecisionRange * compressionRange.MediumPrecisionRange) return 4;
+                    return 5;
+
+                case 4:
+                    if (distSq < compressionRange.HighPrecisionRange * compressionRange.HighPrecisionRange) return 5;
+                    if (distSq > compressionRange.LowPrecisionRange * compressionRange.LowPrecisionRange) return 3;
+                    return 4;
+
+                default:
+                    if (distSq < compressionRange.MediumPrecisionRange * compressionRange.MediumPrecisionRange) return 4;
+                    return 3;
+            }
+        }
+    }
+
+    [Serializable]
+    public struct CompressionRange
+    {
+        public float HighestPrecisionRange;
+        public float HighPrecisionRange;
+        public float MediumPrecisionRange;
+        public float LowPrecisionRange;
     }
 }

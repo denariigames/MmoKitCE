@@ -119,6 +119,14 @@ namespace MultiplayerARPG
         public bool IsUnderWater { get; private set; } = false;
         public bool IsClimbing { get; private set; } = false;
 
+        //Last Compression Mode, used to determine which compression mode to use
+        private int _lastDataCompressionMode;
+        public int LastDataCompressionMode
+        {
+            get { return _lastDataCompressionMode; }
+            set { _lastDataCompressionMode = value; }
+        }
+
         private LogicUpdater _logicUpdater;
 
         // Input codes
@@ -1224,7 +1232,7 @@ namespace MultiplayerARPG
             return false;
         }
 
-        public bool WriteServerState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
+        public bool WriteServerState(long writeTimestamp, NetDataWriter writer, Vector3 currentPlayerPosition, out bool shouldSendReliably)
         {
             shouldSendReliably = false;
             if (!_isStarted)
@@ -1260,7 +1268,16 @@ namespace MultiplayerARPG
             {
                 MovementState &= ~MovementState.IsTeleport;
             }
-            Entity.ServerWriteSyncTransform3D(_movementForceAppliers, writer);
+
+            //Calculate distance to player, only sync transform when player is in sync range to save bandwidth.
+            float dx = currentPlayerPosition.x - EntityTransform.position.x;
+            float dz = currentPlayerPosition.z - EntityTransform.position.z;
+            float distSq = dx * dx + dz * dz;
+
+            // Get compression mode by distance, use lower compression for longer distance to save bandwidth, and use higher compression for shorter distance to make it more accurate.
+            LastDataCompressionMode = DefaultGridManagerComponent.Instance.GetCompressionMode(distSq, LastDataCompressionMode);
+
+            Entity.ServerWriteSyncTransform3D(_movementForceAppliers, LastDataCompressionMode, writer);
             _sendingJump = false;
             _sendingDash = false;
             _isTeleporting = false;

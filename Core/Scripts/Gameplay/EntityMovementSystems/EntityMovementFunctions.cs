@@ -133,7 +133,7 @@ namespace MultiplayerARPG
         #endregion
 
         #region Sync Transform Serialization (3D)
-        public static void ServerWriteSyncTransform3D(this IEntityMovement movement, List<EntityMovementForceApplier> movementForceAppliers, NetDataWriter writer)
+        public static void ServerWriteSyncTransform3D(this IEntityMovement movement, List<EntityMovementForceApplier> movementForceAppliers, int _lastDataCompressionMode, NetDataWriter writer)
         {
             if (!movement.Entity.IsServer)
                 return;
@@ -144,12 +144,11 @@ namespace MultiplayerARPG
             {
                 GetCellIdAndLocalPosition(movement.Entity.EntityTransform.position, out byte cellId, out Vector3 localposition);
                 writer.Put(cellId);
-                writer.PutQuantizedVector3(localposition);
+                writer.PutQuantizedVector3(localposition, DefaultGridManagerComponent.Instance.CellSize, _lastDataCompressionMode);
             }
             else
                 writer.PutVector3(movement.Entity.EntityTransform.position);
-
-            writer.PutPackedInt(GetCompressedAngle(movement.Entity.EntityTransform.eulerAngles.y));
+            writer.Put(CompressAngle(movement.Entity.EntityTransform.eulerAngles.y));
             writer.PutList(movementForceAppliers);
         }
 
@@ -178,12 +177,13 @@ namespace MultiplayerARPG
             if (!DefaultGridManagerComponent.Instance.IsDisabled)
             {
                 byte cellId = reader.GetByte();
-                position = DefaultGridManagerComponent.Instance.GetWorldPosition(cellId, reader.GetQuantizedVector3(DefaultGridManagerComponent.Instance.CellSize));
+                Vector3 localPosition = reader.GetQuantizedVector3(DefaultGridManagerComponent.Instance.CellSize, out int compressionMode);
+                position = DefaultGridManagerComponent.Instance.GetWorldPosition(cellId, localPosition);
             }
             else
                 position = reader.GetVector3();
 
-            yAngle = GetDecompressedAngle(reader.GetPackedInt());
+            yAngle = DecompressAngle(reader.GetByte());
             movementForceAppliers = reader.GetList<EntityMovementForceApplier>();
         }
         #endregion
@@ -229,6 +229,20 @@ namespace MultiplayerARPG
         #endregion
 
         #region Helpers
+
+        public static byte CompressAngle(float angle)
+        {
+            // normalize to 0–360
+            angle %= 360f;
+            if (angle < 0) angle += 360f;
+
+            return (byte)(angle * (255f / 360f));
+        }
+
+        public static float DecompressAngle(byte value)
+        {
+            return value * (360f / 255f);
+        }
         public static int GetCompressedAngle(float angle)
         {
             return Mathf.RoundToInt(angle * 6);

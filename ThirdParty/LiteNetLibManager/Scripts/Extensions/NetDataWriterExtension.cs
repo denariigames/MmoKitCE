@@ -73,30 +73,89 @@ namespace LiteNetLib.Utils
             writer.Put(value.y);
             writer.Put(value.z);
         }
+
+        public static void PutBits(this NetDataWriter writer, ulong value, int bitCount, ref int bitPos)
+        {
+            var data = writer.Data;
+
+            for (int i = 0; i < bitCount; i++)
+            {
+                int bytePos = bitPos >> 3;
+                int bitOffset = bitPos & 7;
+
+                // Ensure byte exists
+                if (bytePos >= writer.Length)
+                    writer.SetPosition(bytePos + 1);
+
+                if (((value >> i) & 1UL) != 0)
+                    data[bytePos] |= (byte)(1 << bitOffset);
+
+                bitPos++;
+            }
+
+            // Final length update
+            writer.SetPosition((bitPos + 7) >> 3);
+        }
+
         /// <summary>
         /// Puts a quantized Vector3 into the writer. The values are quantized based on the specified cell size and maximum value.
-        public static void PutQuantizedVector3(this NetDataWriter writer, Vector3 value, int cellSize = 128)
+        public static void PutQuantizedVector3(this NetDataWriter writer, Vector3 value, ushort cellSize, int compressionMode)
         {
-            ushort x = Quantize(value.x, cellSize);
-            ushort y = Quantize(value.y, cellSize);
-            ushort z = Quantize(value.z, cellSize);
+            int bx, by, bz;
 
-            byte[] bytes = new byte[6];
-            bytes[0] = (byte)(x & 0xFF);
-            bytes[1] = (byte)(x >> 8);
-            bytes[2] = (byte)(y & 0xFF);
-            bytes[3] = (byte)(y >> 8);
-            bytes[4] = (byte)(z & 0xFF);
-            bytes[5] = (byte)(z >> 8);
+            switch (compressionMode)
+            {
+                case 3: bx = 10; by = 4; bz = 10; break;
+                case 4: bx = 11; by = 10; bz = 11; break;
+                case 5: bx = 14; by = 12; bz = 14; break;
+                case 6: bx = 16; by = 16; bz = 16; break;
+                default: throw new Exception("Invalid mode");
+            }
 
-            writer.Put(bytes);
+            ushort qx = Quantize(value.x, cellSize, bx);
+            ushort qy = Quantize(value.y, cellSize, by);
+            ushort qz = Quantize(value.z, cellSize, bz);
+
+            ulong data = 0;
+            int shift = 0;
+
+            data |= ((ulong)qx << shift); shift += bx;
+            data |= ((ulong)qz << shift); shift += bz;
+            data |= ((ulong)qy << shift); shift += by;
+
+            int totalBits = bx + by + bz;
+
+            int byteCount = (totalBits + 7) / 8;
+
+            // convert mode (3–6 → 0–3)
+            int modeBits = compressionMode - 3;
+
+            // first byte: store mode in top 2 bits
+            byte first = (byte)(
+                ((ulong)modeBits << 6) | (data & 0x3F)
+            );
+
+            writer.Put(first);
+
+            data >>= 6;
+
+            for (int i = 1; i < byteCount; i++)
+            {
+                writer.Put((byte)(data & 0xFF));
+                data >>= 8;
+            }
         }
 
         /// <summary>
         /// Quantizes a float value based on the specified cell size and maximum value. The result is a ushort that represents the quantized value.
-        static ushort Quantize(float value, float cellSize, ushort maxValue = 65535)
+        static ushort Quantize(float value, ushort cellSize, int bits)
         {
-            return (ushort)Mathf.Clamp(Mathf.RoundToInt((value / cellSize) * maxValue), 0, maxValue);
+            value = Math.Clamp(value, 0f, cellSize - 0.0001f);
+
+            float normalized = value / cellSize;
+
+            int maxInt = (1 << bits) - 1;
+            return (ushort)(normalized * maxInt);
         }
 
         public static void PutVector3Int(this NetDataWriter writer, Vector3Int value)
