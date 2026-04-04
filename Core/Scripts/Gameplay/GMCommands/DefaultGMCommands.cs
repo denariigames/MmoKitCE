@@ -118,7 +118,7 @@ namespace MultiplayerARPG
             "/statpoint {amount} = Set character's stat point to {amount} value.\n" +
             "/skillpoint {amount} = Set character's skill point to {amount} value.\n" +
             "/gold {amount} = Set character's gold to {amount} value.\n" +
-            "/add_item {item_id} {amount} = Add item which its ID is {item_id} (if item ID have spaces, use _ for spaces) x {amount}.\n" +
+            "/add_item {item_id} {amount} {level} = Add item which its ID is {item_id} (if item ID have spaces, use _ for spaces) x {amount}.\n" +
             "/give_gold {name} {amount} = Increase {amount} of gold to character which its name is {name}.\n" +
             "/give_item {name} {item_id} {amount} = Add item which its ID is {item_id} (if item ID have spaces, use _ for spaces) x {amount} to character which its name is {name}.\n" +
             "/gold_rate {rate} = Set server's gold drop rate to {rate}.\n" +
@@ -156,7 +156,7 @@ namespace MultiplayerARPG
                 return true;
             if (string.Equals(command, Gold, StringComparison.OrdinalIgnoreCase) && dataLength == 2)
                 return true;
-            if (string.Equals(command, AddItem, StringComparison.OrdinalIgnoreCase) && dataLength == 3)
+            if (string.Equals(command, AddItem, StringComparison.OrdinalIgnoreCase) && dataLength >= 2)
                 return true;
             if (string.Equals(command, GiveGold, StringComparison.OrdinalIgnoreCase) && dataLength == 3)
                 return true;
@@ -332,12 +332,33 @@ namespace MultiplayerARPG
                             break;
                         }
                     }
-                    int amount;
-                    if (!int.TryParse(data[2], out amount) || amount <= 0)
+                    int amount = 1;
+                    if (data.Length >= 3)
                     {
-                        response = "Wrong input data";
+                        if (!int.TryParse(data[2], out amount) || amount <= 0)
+                        {
+                            if (targetItem != null)
+                                amount = targetItem.MaxStack;
+                            else
+                                amount = 1;
+                        }
                     }
-                    else if (targetItem == null)
+                    else
+                    {
+                        if (targetItem != null)
+                            amount = targetItem.MaxStack;
+                        else
+                            amount = 1;
+                    }
+                    int level = 1;
+                    if (data.Length >= 4)
+                    {
+                        if (!int.TryParse(data[3], out level) || level <= 0)
+                        {
+                            level = 1;
+                        }
+                    }
+                    if (targetItem == null)
                     {
                         response = "Cannot find the item";
                     }
@@ -349,7 +370,7 @@ namespace MultiplayerARPG
                         }
                         else
                         {
-                            senderCharacter.IncreaseItems(CharacterItem.Create(targetItem, 1, amount));
+                            senderCharacter.IncreaseItems(CharacterItem.Create(targetItem, level, amount));
                             GameInstance.ServerGameMessageHandlers.NotifyRewardItem(senderCharacter.ConnectionId, RewardGivenType.GM, targetItem.DataId, amount);
                             response = $"Add item {targetItem.Title}x{amount} to character's inventory";
                         }

@@ -595,7 +595,6 @@ namespace MultiplayerARPG
                     {
                         Direction2D = direction2D;
                         EntityTransform.position = position;
-                        CurrentGameManager.ShouldPhysicSyncTransforms2D = true;
                     }
                     MovementState = movementState;
                     ExtraMovementState = extraMovementState;
@@ -733,7 +732,6 @@ namespace MultiplayerARPG
                     // Allow to move to the position
                     _acceptedPosition = newPos;
                     EntityTransform.position = newPos;
-                    CurrentGameManager.ShouldPhysicSyncTransforms2D = true;
                 }
                 else
                 {
@@ -782,7 +780,6 @@ namespace MultiplayerARPG
             if (!stillMoveAfterTeleport)
                 NavPaths = null;
             EntityTransform.position = position;
-            CurrentGameManager.ShouldPhysicSyncTransforms2D = true;
             if (!IsServer && IsOwnerClient)
                 _isClientConfirmingTeleport = true;
         }

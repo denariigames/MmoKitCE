@@ -42,10 +42,6 @@ namespace MultiplayerARPG
         public string ChannelPassword { get; set; } = string.Empty;
         public BaseMapInfo MapInfo { get; protected set; } = null;
         public static BaseMapInfo CurrentMapInfo => Singleton == null ? null : Singleton.MapInfo;
-        public bool ShouldPhysicSyncTransforms { get; set; }
-        public bool ShouldPhysicSyncTransforms2D { get; set; }
-
-        public bool useUnityAutoPhysicSyncTransform = true;
         // Spawn entities events
         public LiteNetLibLoadSceneEvent onSpawnEntitiesStart = new LiteNetLibLoadSceneEvent();
         public LiteNetLibLoadSceneEvent onSpawnEntitiesProgress = new LiteNetLibLoadSceneEvent();
@@ -118,9 +114,6 @@ namespace MultiplayerARPG
             if (_defaultInterestManager == null)
                 _defaultInterestManager = gameObject.AddComponent<JobifiedGridSpatialPartitioningAOI>();
             ManagerComponents = GetComponents<BaseGameNetworkManagerComponent>();
-            // Force change physic auto sync transforms mode to manual
-            Physics.autoSyncTransforms = useUnityAutoPhysicSyncTransform;
-            Physics2D.autoSyncTransforms = useUnityAutoPhysicSyncTransform;
             // Setup character hidding condition
             LiteNetLibIdentity.ForceHideFunctions.Add(IsHideEntity);
             base.Awake();
@@ -173,13 +166,6 @@ namespace MultiplayerARPG
                     SendTimeOfDay();
                 }
             }
-            // Network messages were handled (in base.Update()), enity movement proceeded, it may have transform changing manually, and need to sync tranforms before update physic movement
-            if (ShouldPhysicSyncTransforms && !Physics.autoSyncTransforms)
-                Physics.SyncTransforms();
-            ShouldPhysicSyncTransforms = false;
-            if (ShouldPhysicSyncTransforms2D && !Physics2D.autoSyncTransforms)
-                Physics2D.SyncTransforms();
-            ShouldPhysicSyncTransforms2D = false;
 
             // Update game entity, it may update entities movement
             if (IsNetworkActive)
@@ -602,7 +588,7 @@ namespace MultiplayerARPG
                 int positionBeforeRead = reader.Position;
                 if (!_entityMovementDataHandlers.TryGetValue(objectId, out IEntityMovementDataHandler dataHandler))
                 {
-                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, entity movement not found.");
+                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, entity movement not found: {objectId}.");
                     reader.SetPosition(positionBeforeRead);
                     reader.SkipBytes(dataLength);
                     continue;
@@ -614,7 +600,7 @@ namespace MultiplayerARPG
                 }
                 catch
                 {
-                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, error occurs while reading.");
+                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, error occurs while reading: {objectId}.");
                     reader.SetPosition(positionBeforeRead);
                     reader.SkipBytes(dataLength);
                 }
@@ -625,7 +611,7 @@ namespace MultiplayerARPG
         {
             if (IsServer)
                 return;
-            BasePlayerCharacterEntity entity = GameInstance.PlayingCharacterEntity;
+            BaseGameEntity entity = GetSyncTransformEntity(GameInstance.PlayingCharacterEntity);
             if (entity == null)
                 return;
             if (!_entityMovementDataHandlers.TryGetValue(entity.ObjectId, out IEntityMovementDataHandler dataHandler))
@@ -638,6 +624,29 @@ namespace MultiplayerARPG
             EntityMovementDataBuffers.StateMessageWriter.PutPackedUInt(entity.ObjectId);
             EntityMovementDataBuffers.StateMessageWriter.Put(EntityMovementDataBuffers.StateDataWriter.Data, 0, EntityMovementDataBuffers.StateDataWriter.Length);
             ClientSendMessage(BaseGameEntity.MOVEMENT_DATA_CHANNEL, shouldSendReliably ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Unreliable, EntityMovementDataBuffers.StateMessageWriter);
+        }
+
+        private BaseGameEntity GetSyncTransformEntity(BaseGameEntity entity)
+        {
+            if (entity == null)
+                return null;
+            IVehicleEntity passengingVehicleEntity;
+            do
+            {
+                passengingVehicleEntity = entity.PassengingVehicleEntity;
+                if (passengingVehicleEntity.IsNull())
+                {
+                    // No passenging vehicle, no changes to syncing entity
+                    break;
+                }
+                if (!passengingVehicleEntity.IsDriver(entity.PassengingVehicleSeatIndex))
+                {
+                    // Passenging on vehicle, but not a driver, do not sync
+                    return null;
+                }
+                entity = passengingVehicleEntity.Entity;
+            } while (true);
+            return entity;
         }
 
         internal void SendServerEntityMovementState(long writeTimestamp)
@@ -692,7 +701,19 @@ namespace MultiplayerARPG
                             unreliableWriter.SetPosition(posBeforeWriteUnreliableStateCount);
                             unreliableWriter.Put(unreliableStateCount);
                             unreliableWriter.SetPosition(tempLastPosition);
-                            ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                            try
+                            {
+#endif
+                                ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                            }
+                            catch (TooBigPacketException ex)
+                            {
+                                Logging.LogError(LogTag, $"Too Big Packet {unreliableWriter.Length}");
+                                throw ex;
+                            }
+#endif
                             unreliableStateCount = 0;
                             unreliableWriter.SetPosition(posAfterWriteUnreliableStateCount);
                         }
@@ -718,7 +739,20 @@ namespace MultiplayerARPG
                     unreliableWriter.SetPosition(posBeforeWriteUnreliableStateCount);
                     unreliableWriter.Put(unreliableStateCount);
                     unreliableWriter.SetPosition(tempLastPosition);
-                    ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    try
+                    {
+#endif
+                        ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    }
+                    catch (TooBigPacketException ex)
+                    {
+                        Logging.LogError(LogTag, $"Too Big Packet {unreliableWriter.Length}");
+                        throw ex;
+                    }
+#endif
                 }
             }
         }
@@ -1109,12 +1143,22 @@ namespace MultiplayerARPG
             progress = 1f;
             onSpawnEntitiesProgress.Invoke(sceneName, false, true, progress);
             // If it's server (not host) spawn simple camera controller
-            if (!IsClient && GameInstance.Singleton.serverCharacterPrefab != null &&
-                SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null)
+            if (!IsClient && SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null)
             {
                 if (LogInfo)
                     Logging.Log(LogTag, "Spawning server character");
-                Instantiate(GameInstance.Singleton.serverCharacterPrefab, MapInfo.StartPosition, Quaternion.identity);
+                Vector3 startPosition = MapInfo != null ? MapInfo.StartPosition : Vector3.zero;
+                if (GameInstance.Singleton.serverCharacterPrefab != null)
+                {
+                    Instantiate(GameInstance.Singleton.serverCharacterPrefab, startPosition, Quaternion.identity);
+                }
+                else
+                {
+                    GameObject serverCharacter = new GameObject("_SERVER_CHARACTER");
+                    serverCharacter.AddComponent<ServerCharacter>();
+                    serverCharacter.AddComponent<Camera>();
+                    serverCharacter.tag = "MainCamera";
+                }
             }
             await UniTask.NextFrame();
             // Entities were spawned
