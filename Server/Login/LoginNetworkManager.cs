@@ -75,7 +75,12 @@ namespace MultiplayerARPG.MMO
 
         //Login Queue
         private readonly Queue<LoginQueueEntry> loginQueue = new();
-        private const int MAX_CONCURRENT_LOGINS = 100;
+        private int maxConcurrentRequest = 150;
+        public int MaxConcurrentRequest
+        {
+            get { return maxConcurrentRequest; }
+            set { maxConcurrentRequest = value; }
+        }
         private int activeLogins = 0;
 
 

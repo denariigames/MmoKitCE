@@ -60,7 +60,7 @@ namespace MultiplayerARPG.MMO
                 return;
             }
 
-            if (activeLogins >= MAX_CONCURRENT_LOGINS)
+            if (activeLogins >= MaxConcurrentRequest)
             {
                 loginQueue.Enqueue(new LoginQueueEntry
                 {
@@ -215,7 +215,7 @@ namespace MultiplayerARPG.MMO
             if (loginQueue.Count == 0)
                 return;
 
-            if (activeLogins >= MAX_CONCURRENT_LOGINS)
+            if (activeLogins >= MaxConcurrentRequest)
                 return;
 
             var entry = loginQueue.Dequeue();

@@ -326,6 +326,7 @@ namespace MultiplayerARPG.MMO
                     LoginNetworkManager.clusterServerAddress = centralAddress = currentServerConfig.centralAddress;
                 }
                 currentServerConfig.centralAddress = centralAddress;
+
                 //Login network address
                 string loginAddress;
                 if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_LOGIN_ADDRESS, out loginAddress, LoginNetworkManager.loginServerAddress))
@@ -350,17 +351,17 @@ namespace MultiplayerARPG.MMO
                 }
                 currentServerConfig.centralPort = centralPort;
 
-                // Central max connections
-                int centralMaxConnections;
-                if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_LOGIN_MAX_CONNECTIONS, out centralMaxConnections, CentralNetworkManager.maxConnections))
+                // Login max connections
+                int loginMaxConnections;
+                if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_LOGIN_MAX_CONNECTIONS, out loginMaxConnections, loginNetworkManager.maxConnections))
                 {
-                    CentralNetworkManager.maxConnections = centralMaxConnections;
+                    loginNetworkManager.maxConnections = loginMaxConnections;
                 }
-                else if (currentServerConfig.centralMaxConnections.HasValue)
+                else if (currentServerConfig.loginMaxConnections.HasValue)
                 {
-                    CentralNetworkManager.maxConnections = centralMaxConnections = currentServerConfig.centralMaxConnections.Value;
+                    loginNetworkManager.maxConnections = loginMaxConnections = currentServerConfig.loginMaxConnections.Value;
                 }
-                currentServerConfig.centralMaxConnections = centralMaxConnections;
+                currentServerConfig.loginMaxConnections = loginMaxConnections;
 
                 // Central map spawn timeout (milliseconds)
                 int mapSpawnMillisecondsTimeout;
@@ -426,6 +427,7 @@ namespace MultiplayerARPG.MMO
                     LoginNetworkManager.clusterServerPort = clusterPort = currentServerConfig.clusterPort.Value;
                 }
                 currentServerConfig.clusterPort = clusterPort;
+
                 // Login network port
                 int loginPort;
                 if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_LOGIN_PORT, out loginPort, LoginNetworkManager.networkPort))
@@ -437,6 +439,19 @@ namespace MultiplayerARPG.MMO
                     LoginNetworkManager.networkPort = loginPort = currentServerConfig.LoginPort.Value;
                 }
                 currentServerConfig.LoginPort = loginPort;
+
+                //login max concurrent requests
+                int concurrentRequest;
+                if (ConfigReader.ReadArgs(args, ProcessArguments.ARGG_MAX_CONCURRENT_REQUEST, out concurrentRequest, LoginNetworkManager.MaxConcurrentRequest))
+                {
+                    LoginNetworkManager.MaxConcurrentRequest = concurrentRequest;
+                }
+                else if (currentServerConfig.MaxConcurrentRequest.HasValue)
+                {
+                    LoginNetworkManager.MaxConcurrentRequest = concurrentRequest = currentServerConfig.MaxConcurrentRequest.Value;
+                }
+                currentServerConfig.MaxConcurrentRequest = concurrentRequest;
+
                 // Machine network address, will be set to map spawn / map / chat
                 string publicAddress;
                 // Old config key

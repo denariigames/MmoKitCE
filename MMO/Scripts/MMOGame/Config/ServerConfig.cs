@@ -7,6 +7,8 @@ namespace MultiplayerARPG.MMO
         // Login server
         public string LoginAddress;
         public int? LoginPort;
+        public int? loginMaxConnections;
+        public int? MaxConcurrentRequest;
 
         // Central server
         public string centralAddress;

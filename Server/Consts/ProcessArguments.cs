@@ -9,6 +9,10 @@ namespace MultiplayerARPG.MMO
         public const string ARG_LOGIN_PORT = "-" + CONFIG_LOGIN_PORT;
         public const string CONFIG_LOGIN_MAX_CONNECTIONS = "loginMaxConnections";
         public const string ARG_LOGIN_MAX_CONNECTIONS = "-" + CONFIG_LOGIN_MAX_CONNECTIONS;
+        public const string CONFIG_MAX_CONCURRENT_REQUEST = "maxConcurrentRequest";
+        public const string ARGG_MAX_CONCURRENT_REQUEST = "-" + CONFIG_MAX_CONCURRENT_REQUEST;
+
+        //Channels
         public const string CONFIG_DEFAULT_CHANNEL_MAX_CONNECTIONS = "defaultChannelMaxConnections";
         public const string ARG_DEFAULT_CHANNEL_MAX_CONNECTIONS = "-" + CONFIG_DEFAULT_CHANNEL_MAX_CONNECTIONS;
         public const string CONFIG_CHANNELS = "channels";
