@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// CE security: #31
+
+using System.Collections.Generic;
 using Insthync.DevExtension;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -173,16 +175,6 @@ namespace MultiplayerARPG.MMO
         protected override void RegisterMessages()
         {
             EnableRequestResponse(MMOMessageTypes.Request, MMOMessageTypes.Response);
-            // Requests
-            RegisterRequestToServer<RequestUserLoginMessage, ResponseUserLoginMessage>(MMORequestTypes.UserLogin, HandleRequestUserLogin);
-            RegisterRequestToServer<RequestUserRegisterMessage, ResponseUserRegisterMessage>(MMORequestTypes.UserRegister, HandleRequestUserRegister);
-            RegisterRequestToServer<EmptyMessage, EmptyMessage>(MMORequestTypes.UserLogout, HandleRequestUserLogout);
-            RegisterRequestToServer<EmptyMessage, ResponseCharactersMessage>(MMORequestTypes.Characters, HandleRequestCharacters);
-            RegisterRequestToServer<RequestCreateCharacterMessage, ResponseCreateCharacterMessage>(MMORequestTypes.CreateCharacter, HandleRequestCreateCharacter);
-            RegisterRequestToServer<RequestDeleteCharacterMessage, ResponseDeleteCharacterMessage>(MMORequestTypes.DeleteCharacter, HandleRequestDeleteCharacter);
-            RegisterRequestToServer<RequestSelectCharacterMessage, ResponseSelectCharacterMessage>(MMORequestTypes.SelectCharacter, HandleRequestSelectCharacter);
-            RegisterRequestToServer<RequestValidateAccessTokenMessage, ResponseValidateAccessTokenMessage>(MMORequestTypes.ValidateAccessToken, HandleRequestValidateAccessToken);
-            RegisterRequestToServer<EmptyMessage, ResponseChannelsMessage>(MMORequestTypes.Channels, HandleRequestChannels);
             // Client messages
             RegisterClientMessage(MMOMessageTypes.Disconnect, HandleServerDisconnect);
             // Keeping `RegisterClientMessages` and `RegisterServerMessages` for backward compatibility, can use any of below dev extension methods

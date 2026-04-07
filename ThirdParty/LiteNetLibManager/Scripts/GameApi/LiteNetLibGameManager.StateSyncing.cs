@@ -1,3 +1,5 @@
+// CE security: #31
+
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System.Collections.Generic;
@@ -7,7 +9,7 @@ namespace LiteNetLibManager
 {
     public partial class LiteNetLibGameManager
     {
-        public const ushort MAX_UNRELIABLE_PACKET_SIZE = 1023; // 1024 - 1 (unreliable header)
+        public const ushort MAX_UNRELIABLE_PACKET_SIZE = 1020; // 1024 - 1 (unreliable header)
         protected readonly List<LiteNetLibSyncElement> _updatingClientSyncElements = new List<LiteNetLibSyncElement>();
         protected readonly List<LiteNetLibSyncElement> _updatingServerSyncElements = new List<LiteNetLibSyncElement>();
         protected readonly NetDataWriter _gameStatesWriter = new NetDataWriter(true, 1024);

@@ -1,21 +1,31 @@
+// CE security: #31
+
 namespace MultiplayerARPG.MMO
 {
     public static partial class ProcessArguments
     {
+        // Login server
+        public const string CONFIG_LOGIN_ADDRESS = "loginAddress";
+        public const string ARG_LOGIN_ADDRESS = "-" + CONFIG_LOGIN_ADDRESS;
+        public const string CONFIG_LOGIN_PORT = "loginPort";
+        public const string ARG_LOGIN_PORT = "-" + CONFIG_LOGIN_PORT;
+        public const string CONFIG_LOGIN_MAX_CONNECTIONS = "loginMaxConnections";
+        public const string ARG_LOGIN_MAX_CONNECTIONS = "-" + CONFIG_LOGIN_MAX_CONNECTIONS;
+        public const string CONFIG_MAX_CONCURRENT_REQUEST = "maxConcurrentRequest";
+        public const string ARGG_MAX_CONCURRENT_REQUEST = "-" + CONFIG_MAX_CONCURRENT_REQUEST;
+
+        //Channels
+        public const string CONFIG_DEFAULT_CHANNEL_MAX_CONNECTIONS = "defaultChannelMaxConnections";
+        public const string ARG_DEFAULT_CHANNEL_MAX_CONNECTIONS = "-" + CONFIG_DEFAULT_CHANNEL_MAX_CONNECTIONS;
+        public const string CONFIG_CHANNELS = "channels";
+        public const string ARG_CHANNELS = "-" + CONFIG_CHANNELS;
+
         // Central server
         public const string CONFIG_CENTRAL_ADDRESS = "centralAddress";
         public const string ARG_CENTRAL_ADDRESS = "-" + CONFIG_CENTRAL_ADDRESS;
         public const string CONFIG_CENTRAL_PORT = "centralPort";
         public const string ARG_CENTRAL_PORT = "-" + CONFIG_CENTRAL_PORT;
-        public const string CONFIG_CENTRAL_MAX_CONNECTIONS = "centralMaxConnections";
-        public const string ARG_CENTRAL_MAX_CONNECTIONS = "-" + CONFIG_CENTRAL_MAX_CONNECTIONS;
-        // Central channel
-        public const string CONFIG_MAP_SPAWN_MILLISECONDS_TIMEOUT = "mapSpawnMillisecondsTimeout";
-        public const string ARG_MAP_SPAWN_MILLISECONDS_TIMEOUT = "-" + CONFIG_MAP_SPAWN_MILLISECONDS_TIMEOUT;
-        public const string CONFIG_DEFAULT_CHANNEL_MAX_CONNECTIONS = "defaultChannelMaxConnections";
-        public const string ARG_DEFAULT_CHANNEL_MAX_CONNECTIONS = "-" + CONFIG_DEFAULT_CHANNEL_MAX_CONNECTIONS;
-        public const string CONFIG_CHANNELS = "channels";
-        public const string ARG_CHANNELS = "-" + CONFIG_CHANNELS;
+
         // Central web-socket connection (for login/character management)
         public const string CONFIG_USE_WEB_SOCKET = "useWebSocket";
         public const string ARG_USE_WEB_SOCKET = "-" + CONFIG_USE_WEB_SOCKET;
@@ -38,6 +48,8 @@ namespace MultiplayerARPG.MMO
         public const string ARG_PUBLIC_ADDRESS = "-" + CONFIG_PUBLIC_ADDRESS;
 
         // Map spawn server
+        public const string CONFIG_MAP_SPAWN_MILLISECONDS_TIMEOUT = "mapSpawnMillisecondsTimeout";
+        public const string ARG_MAP_SPAWN_MILLISECONDS_TIMEOUT = "-" + CONFIG_MAP_SPAWN_MILLISECONDS_TIMEOUT;
         public const string CONFIG_MAP_SPAWN_PORT = "mapSpawnPort";
         public const string ARG_MAP_SPAWN_PORT = "-" + CONFIG_MAP_SPAWN_PORT;
         public const string CONFIG_SPAWN_EXE_PATH = "spawnExePath";
@@ -100,6 +112,8 @@ namespace MultiplayerARPG.MMO
         public const string CONFIG_DATABASE_PORT = "databaseManagerPort";
         public const string ARG_DATABASE_PORT = "-" + CONFIG_DATABASE_PORT;
         // Start servers
+        public const string CONFIG_START_LOGIN_SERVER = "startLoginServer";
+        public const string ARG_START_LOGIN_SERVER = "-" + CONFIG_START_LOGIN_SERVER;
         public const string CONFIG_START_CENTRAL_SERVER = "startCentralServer";
         public const string ARG_START_CENTRAL_SERVER = "-" + CONFIG_START_CENTRAL_SERVER;
         public const string CONFIG_START_MAP_SPAWN_SERVER = "startMapSpawnServer";

@@ -1,10 +1,11 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using LiteNetLib.Utils;
 using LiteNetLibManager;
+using System;
 
 namespace MultiplayerARPG.MMO
 {
-    public partial class CentralNetworkManager
+    public partial class LoginNetworkManager
     {
         public bool RequestUserLogin(string username, string password, ResponseDelegate<ResponseUserLoginMessage> callback)
         {
@@ -59,53 +60,38 @@ namespace MultiplayerARPG.MMO
                 return;
             }
 
-            long connectionId = requestHandler.ConnectionId;
-            DatabaseApiResult<ValidateUserLoginResp> validateUserLoginResp = await DatabaseClient.ValidateUserLoginAsync(new ValidateUserLoginReq()
+            if (activeLogins >= MaxConcurrentRequest)
             {
-                Username = request.username,
-                Password = request.password
-            });
-            if (!validateUserLoginResp.IsSuccess)
-            {
-                result.InvokeError(new ResponseUserLoginMessage()
+                loginQueue.Enqueue(new LoginQueueEntry
                 {
-                    message = UITextKeys.UI_ERROR_INTERNAL_SERVER_ERROR,
+                    handler = requestHandler,
+                    request = request,
+                    result = result
                 });
                 return;
             }
-            string userId = validateUserLoginResp.Response.UserId;
-            string accessToken = string.Empty;
-            if (string.IsNullOrEmpty(userId))
+
+            await ProcessLogin(requestHandler, request, result);
+#endif
+        }
+
+#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
+        private async UniTask ProcessLogin(
+            RequestHandlerData handler,
+            RequestUserLoginMessage request,
+            RequestProceedResultDelegate<ResponseUserLoginMessage> result)
+        {
+            activeLogins++;
+
+            try
             {
-                result.InvokeError(new ResponseUserLoginMessage()
+                long connectionId = handler.ConnectionId;
+                DatabaseApiResult<ValidateUserLoginResp> validateUserLoginResp = await DatabaseClient.ValidateUserLoginAsync(new ValidateUserLoginReq()
                 {
-                    message = UITextKeys.UI_ERROR_INVALID_USERNAME_OR_PASSWORD,
+                    Username = request.username,
+                    Password = request.password
                 });
-                return;
-            }
-            // User already logged in
-            if (_userPeersByUserId.ContainsKey(userId) || await MapContainsUser(userId))
-            {
-                // Kick the user from game
-                if (_userPeersByUserId.ContainsKey(userId))
-                    KickClient(_userPeersByUserId[userId].connectionId, UITextKeys.UI_ERROR_ACCOUNT_LOGGED_IN_BY_OTHER);
-                ClusterServer.KickUser(userId, UITextKeys.UI_ERROR_ACCOUNT_LOGGED_IN_BY_OTHER);
-                RemoveUserPeerByUserId(userId, out _);
-                result.InvokeError(new ResponseUserLoginMessage()
-                {
-                    message = UITextKeys.UI_ERROR_ALREADY_LOGGED_IN,
-                });
-                return;
-            }
-            // Email verification
-            bool emailVerified = true;
-            if (requireEmailVerification)
-            {
-                DatabaseApiResult<ValidateEmailVerificationResp> validateEmailVerificationResp = await DatabaseClient.ValidateEmailVerificationAsync(new ValidateEmailVerificationReq()
-                {
-                    UserId = userId
-                });
-                if (!validateEmailVerificationResp.IsSuccess)
+                if (!validateUserLoginResp.IsSuccess)
                 {
                     result.InvokeError(new ResponseUserLoginMessage()
                     {
@@ -113,71 +99,131 @@ namespace MultiplayerARPG.MMO
                     });
                     return;
                 }
-                emailVerified = validateEmailVerificationResp.Response.IsPass;
-            }
-            // Banning verification
-            DatabaseApiResult<GetUserUnbanTimeResp> unbanTimeResp = await DatabaseClient.GetUserUnbanTimeAsync(new GetUserUnbanTimeReq()
-            {
-                UserId = userId
-            });
-            if (!unbanTimeResp.IsSuccess)
-            {
-                result.InvokeError(new ResponseUserLoginMessage()
+                string userId = validateUserLoginResp.Response.UserId;
+                string accessToken = string.Empty;
+                if (string.IsNullOrEmpty(userId))
                 {
-                    message = UITextKeys.UI_ERROR_INTERNAL_SERVER_ERROR,
-                });
-                return;
-            }
-            long unbanTime = unbanTimeResp.Response.UnbanTime;
-            if (unbanTime > System.DateTimeOffset.UtcNow.ToUnixTimeSeconds())
-            {
-                result.InvokeError(new ResponseUserLoginMessage()
+                    result.InvokeError(new ResponseUserLoginMessage()
+                    {
+                        message = UITextKeys.UI_ERROR_INVALID_USERNAME_OR_PASSWORD,
+                    });
+                    return;
+                }
+                // User already logged in
+                if (_userPeersByUserId.ContainsKey(userId) || await MapContainsUser(userId))
                 {
-                    message = UITextKeys.UI_ERROR_USER_BANNED,
-                });
-                return;
-            }
-            if (!emailVerified)
-            {
-                result.InvokeError(new ResponseUserLoginMessage()
+                    // Kick the user from game
+                    if (_userPeersByUserId.ContainsKey(userId))
+                        KickClient(_userPeersByUserId[userId].connectionId, UITextKeys.UI_ERROR_ACCOUNT_LOGGED_IN_BY_OTHER);
+                    KickUser(userId, UITextKeys.UI_ERROR_ACCOUNT_LOGGED_IN_BY_OTHER);
+                    RemoveUserPeerByUserId(userId, out _);
+                    result.InvokeError(new ResponseUserLoginMessage()
+                    {
+                        message = UITextKeys.UI_ERROR_ALREADY_LOGGED_IN,
+                    });
+                    return;
+                }
+                // Email verification
+                bool emailVerified = true;
+                if (requireEmailVerification)
                 {
-                    message = UITextKeys.UI_ERROR_EMAIL_NOT_VERIFIED,
-                });
-                return;
-            }
-            // Generate new access token
-            accessToken = DataManager.GenerateAccessToken(userId);
-            DatabaseApiResult updateAccessTokenResp = await DatabaseClient.UpdateAccessTokenAsync(new UpdateAccessTokenReq()
-            {
-                UserId = userId,
-                AccessToken = accessToken,
-            });
-            if (!updateAccessTokenResp.IsSuccess)
-            {
-                result.InvokeError(new ResponseUserLoginMessage()
+                    DatabaseApiResult<ValidateEmailVerificationResp> validateEmailVerificationResp = await DatabaseClient.ValidateEmailVerificationAsync(new ValidateEmailVerificationReq()
+                    {
+                        UserId = userId
+                    });
+                    if (!validateEmailVerificationResp.IsSuccess)
+                    {
+                        result.InvokeError(new ResponseUserLoginMessage()
+                        {
+                            message = UITextKeys.UI_ERROR_INTERNAL_SERVER_ERROR,
+                        });
+                        return;
+                    }
+                    emailVerified = validateEmailVerificationResp.Response.IsPass;
+                }
+                // Banning verification
+                DatabaseApiResult<GetUserUnbanTimeResp> unbanTimeResp = await DatabaseClient.GetUserUnbanTimeAsync(new GetUserUnbanTimeReq()
                 {
-                    message = UITextKeys.UI_ERROR_INTERNAL_SERVER_ERROR,
+                    UserId = userId
                 });
-                return;
+                if (!unbanTimeResp.IsSuccess)
+                {
+                    result.InvokeError(new ResponseUserLoginMessage()
+                    {
+                        message = UITextKeys.UI_ERROR_INTERNAL_SERVER_ERROR,
+                    });
+                    return;
+                }
+                long unbanTime = unbanTimeResp.Response.UnbanTime;
+                if (unbanTime > System.DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+                {
+                    result.InvokeError(new ResponseUserLoginMessage()
+                    {
+                        message = UITextKeys.UI_ERROR_USER_BANNED,
+                    });
+                    return;
+                }
+                if (!emailVerified)
+                {
+                    result.InvokeError(new ResponseUserLoginMessage()
+                    {
+                        message = UITextKeys.UI_ERROR_EMAIL_NOT_VERIFIED,
+                    });
+                    return;
+                }
+                // Generate new access token
+                accessToken = DataManager.GenerateAccessToken(userId);
+                DatabaseApiResult updateAccessTokenResp = await DatabaseClient.UpdateAccessTokenAsync(new UpdateAccessTokenReq()
+                {
+                    UserId = userId,
+                    AccessToken = accessToken,
+                });
+                if (!updateAccessTokenResp.IsSuccess)
+                {
+                    result.InvokeError(new ResponseUserLoginMessage()
+                    {
+                        message = UITextKeys.UI_ERROR_INTERNAL_SERVER_ERROR,
+                    });
+                    return;
+                }
+                // Update peer info
+                CentralUserPeerInfo userPeerInfo = new CentralUserPeerInfo()
+                {
+                    connectionId = connectionId,
+                    userId = userId,
+                    accessToken = accessToken,
+                };
+                _userPeersByUserId[userId] = userPeerInfo;
+                _userPeers[connectionId] = userPeerInfo;
+                // Response
+                result.InvokeSuccess(new ResponseUserLoginMessage()
+                {
+                    userId = userId,
+                    accessToken = accessToken,
+                    unbanTime = unbanTime,
+                });
             }
-            // Update peer info
-            CentralUserPeerInfo userPeerInfo = new CentralUserPeerInfo()
+            finally
             {
-                connectionId = connectionId,
-                userId = userId,
-                accessToken = accessToken,
-            };
-            _userPeersByUserId[userId] = userPeerInfo;
-            _userPeers[connectionId] = userPeerInfo;
-            // Response
-            result.InvokeSuccess(new ResponseUserLoginMessage()
-            {
-                userId = userId,
-                accessToken = accessToken,
-                unbanTime = unbanTime,
-            });
-#endif
+                activeLogins--;
+                TryDequeue();
+            }
         }
+
+        private void TryDequeue()
+        {
+            if (loginQueue.Count == 0)
+                return;
+
+            if (activeLogins >= MaxConcurrentRequest)
+                return;
+
+            var entry = loginQueue.Dequeue();
+            ProcessLogin(entry.handler, entry.request, entry.result).Forget();
+        }
+
+#endif
+
 
         protected async UniTaskVoid HandleRequestUserRegister(
             RequestHandlerData requestHandler,
@@ -395,7 +441,7 @@ namespace MultiplayerARPG.MMO
 #endif
         }
 
-        protected UniTaskVoid HandleRequestChannels(
+        protected async UniTaskVoid HandleRequestChannels(
             RequestHandlerData requestHandler,
             EmptyMessage request,
             RequestProceedResultDelegate<ResponseChannelsMessage> result)
@@ -404,10 +450,9 @@ namespace MultiplayerARPG.MMO
             // Response
             result.InvokeSuccess(new ResponseChannelsMessage()
             {
-                channels = ClusterServer.GetChannels(),
+                channels =  await GetChannels(),
             });
 #endif
-            return default;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿// CE security: #31
+
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Security;
@@ -16,6 +18,8 @@ namespace MultiplayerARPG.MMO
         public static MMOServerInstance Singleton { get; protected set; }
 
         [Header("Server Components")]
+        [SerializeField]
+        private LoginNetworkManager loginNetworkManager = null;
         [SerializeField]
         private CentralNetworkManager centralNetworkManager = null;
         [SerializeField]
@@ -41,6 +45,18 @@ namespace MultiplayerARPG.MMO
         [SerializeField]
         private string webSocketCertPassword = string.Empty;
 
+
+        public LoginNetworkManager LoginNetworkManager
+        {
+            get
+            {
+                if (loginNetworkManager == null)
+                    loginNetworkManager = GetComponentInChildren<LoginNetworkManager>();
+                if (loginNetworkManager == null)
+                    loginNetworkManager = FindFirstObjectByType<LoginNetworkManager>();
+                return loginNetworkManager;
+            }
+        }
         public CentralNetworkManager CentralNetworkManager
         {
             get
@@ -120,6 +136,7 @@ namespace MultiplayerARPG.MMO
         public string LogFileName { get; set; }
 
         [Header("Running In Editor")]
+        public bool startLoginOnAwake;
         public bool startCentralOnAwake;
         public bool startMapSpawnOnAwake;
         public bool startDatabaseOnAwake;
@@ -133,6 +150,7 @@ namespace MultiplayerARPG.MMO
         private List<string> _spawningMaps;
         private List<SpawnAllocateMapByNameData> _spawningAllocateMaps;
         private string _startingMapId;
+        private bool _startingLoginServer;
         private bool _startingCentralServer;
         private bool _startingMapSpawnServer;
         private bool _startingMapServer;
@@ -301,7 +319,27 @@ namespace MultiplayerARPG.MMO
                 {
                     MapSpawnNetworkManager.clusterServerAddress = centralAddress = currentServerConfig.centralAddress;
                 }
+                if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_CENTRAL_ADDRESS, out centralAddress, LoginNetworkManager.clusterServerAddress))
+                {
+                    LoginNetworkManager.clusterServerAddress = centralAddress;
+                }
+                else if (!string.IsNullOrEmpty(currentServerConfig.centralAddress))
+                {
+                    LoginNetworkManager.clusterServerAddress = centralAddress = currentServerConfig.centralAddress;
+                }
                 currentServerConfig.centralAddress = centralAddress;
+
+                //Login network address
+                string loginAddress;
+                if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_LOGIN_ADDRESS, out loginAddress, LoginNetworkManager.loginServerAddress))
+                {
+                    LoginNetworkManager.loginServerAddress = loginAddress;
+                }
+                else if (!string.IsNullOrEmpty(currentServerConfig.LoginAddress))
+                {
+                    LoginNetworkManager.loginServerAddress = loginAddress = currentServerConfig.LoginAddress;
+                }
+                currentServerConfig.LoginAddress = loginAddress;
 
                 // Central network port
                 int centralPort;
@@ -315,17 +353,17 @@ namespace MultiplayerARPG.MMO
                 }
                 currentServerConfig.centralPort = centralPort;
 
-                // Central max connections
-                int centralMaxConnections;
-                if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_CENTRAL_MAX_CONNECTIONS, out centralMaxConnections, CentralNetworkManager.maxConnections))
+                // Login max connections
+                int loginMaxConnections;
+                if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_LOGIN_MAX_CONNECTIONS, out loginMaxConnections, loginNetworkManager.maxConnections))
                 {
-                    CentralNetworkManager.maxConnections = centralMaxConnections;
+                    loginNetworkManager.maxConnections = loginMaxConnections;
                 }
-                else if (currentServerConfig.centralMaxConnections.HasValue)
+                else if (currentServerConfig.loginMaxConnections.HasValue)
                 {
-                    CentralNetworkManager.maxConnections = centralMaxConnections = currentServerConfig.centralMaxConnections.Value;
+                    loginNetworkManager.maxConnections = loginMaxConnections = currentServerConfig.loginMaxConnections.Value;
                 }
-                currentServerConfig.centralMaxConnections = centralMaxConnections;
+                currentServerConfig.loginMaxConnections = loginMaxConnections;
 
                 // Central map spawn timeout (milliseconds)
                 int mapSpawnMillisecondsTimeout;
@@ -382,7 +420,39 @@ namespace MultiplayerARPG.MMO
                 {
                     CentralNetworkManager.clusterServerPort = clusterPort = currentServerConfig.clusterPort.Value;
                 }
+                if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_CLUSTER_PORT, out clusterPort, MapNetworkManager.clusterServerPort))
+                {
+                    LoginNetworkManager.clusterServerPort = clusterPort;
+                }
+                else if (currentServerConfig.clusterPort.HasValue)
+                {
+                    LoginNetworkManager.clusterServerPort = clusterPort = currentServerConfig.clusterPort.Value;
+                }
                 currentServerConfig.clusterPort = clusterPort;
+
+                // Login network port
+                int loginPort;
+                if (ConfigReader.ReadArgs(args, ProcessArguments.ARG_LOGIN_PORT, out loginPort, LoginNetworkManager.networkPort))
+                {
+                    LoginNetworkManager.networkPort = loginPort;
+                }
+                else if (currentServerConfig.LoginPort.HasValue)
+                {
+                    LoginNetworkManager.networkPort = loginPort = currentServerConfig.LoginPort.Value;
+                }
+                currentServerConfig.LoginPort = loginPort;
+
+                //login max concurrent requests
+                int concurrentRequest;
+                if (ConfigReader.ReadArgs(args, ProcessArguments.ARGG_MAX_CONCURRENT_REQUEST, out concurrentRequest, LoginNetworkManager.MaxConcurrentRequest))
+                {
+                    LoginNetworkManager.MaxConcurrentRequest = concurrentRequest;
+                }
+                else if (currentServerConfig.MaxConcurrentRequest.HasValue)
+                {
+                    LoginNetworkManager.MaxConcurrentRequest = concurrentRequest = currentServerConfig.MaxConcurrentRequest.Value;
+                }
+                currentServerConfig.MaxConcurrentRequest = concurrentRequest;
 
                 // Machine network address, will be set to map spawn / map / chat
                 string publicAddress;
@@ -639,6 +709,15 @@ namespace MultiplayerARPG.MMO
                     _startingCentralServer = true;
                 }
 
+                if (ConfigReader.IsArgsProvided(args, ProcessArguments.ARG_START_LOGIN_SERVER))
+                {
+                    if (!string.IsNullOrEmpty(LogFileName))
+                        LogFileName += "_";
+                    LogFileName += "Login";
+                    startLog = true;
+                    _startingLoginServer = true;
+                }
+
                 if (ConfigReader.IsArgsProvided(args, ProcessArguments.ARG_START_MAP_SPAWN_SERVER))
                 {
                     if (!string.IsNullOrEmpty(LogFileName))
@@ -657,7 +736,7 @@ namespace MultiplayerARPG.MMO
                     _startingMapServer = true;
                 }
 
-                if ((_startingDatabaseServer || _startingCentralServer || _startingMapSpawnServer || _startingMapServer) && !configFileFound)
+                if ((_startingDatabaseServer || _startingLoginServer || _startingCentralServer || _startingMapSpawnServer || _startingMapServer) && !configFileFound)
                 {
                     ConfigManager.WriteServerConfigIfNotExisted(currentServerConfig);
                 }
@@ -674,6 +753,9 @@ namespace MultiplayerARPG.MMO
 
                 if (startDatabaseOnAwake)
                     _startingDatabaseServer = true;
+
+                if (startLoginOnAwake)
+                    _startingLoginServer = true;
 
                 if (startCentralOnAwake)
                     _startingCentralServer = true;
@@ -728,7 +810,8 @@ namespace MultiplayerARPG.MMO
         {
             GameInstance.LoadHomeScenePreventions[nameof(MMOServerInstance)] = false;
 
-            if (_startingCentralServer ||
+            if (_startingLoginServer || 
+                _startingCentralServer ||
                 _startingMapSpawnServer ||
                 _startingMapServer)
             {
@@ -766,6 +849,12 @@ namespace MultiplayerARPG.MMO
             {
                 // Start central server
                 StartCentralServer();
+            }
+
+            if (_startingLoginServer)
+            {
+                // Start login server
+                StartLoginServer();
             }
 
             if (_startingMapSpawnServer)
@@ -815,7 +904,8 @@ namespace MultiplayerARPG.MMO
                 StartMapServer();
             }
 
-            if (_startingCentralServer ||
+            if (_startingLoginServer || 
+                _startingCentralServer ||
                 _startingMapSpawnServer ||
                 _startingMapServer)
             {
@@ -828,6 +918,15 @@ namespace MultiplayerARPG.MMO
 
 #if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
         #region Server functions
+
+        public void StartLoginServer()
+        {
+            loginNetworkManager.useWebSocket = UseWebSocket;
+            loginNetworkManager.webSocketSecure = WebSocketSecure;
+            loginNetworkManager.webSocketCertificateFilePath = WebSocketCertificateFilePath;
+            loginNetworkManager.webSocketCertificatePassword = WebSocketCertificatePassword;
+            loginNetworkManager.StartServer();
+        }
         public void StartCentralServer()
         {
             CentralNetworkManager.useWebSocket = UseWebSocket;

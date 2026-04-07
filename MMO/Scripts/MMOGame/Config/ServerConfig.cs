@@ -1,9 +1,17 @@
+// CE security: #31
+
 using System.Collections.Generic;
 
 namespace MultiplayerARPG.MMO
 {
     public partial class ServerConfig
     {
+        // Login server
+        public string LoginAddress;
+        public int? LoginPort;
+        public int? loginMaxConnections;
+        public int? MaxConcurrentRequest;
+
         // Central server
         public string centralAddress;
         public int? centralPort;
