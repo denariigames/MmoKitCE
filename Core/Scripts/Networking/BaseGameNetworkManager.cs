@@ -1,4 +1,5 @@
-﻿using ConcurrentCollections;
+﻿// CE scalability: #41
+using ConcurrentCollections;
 using Cysharp.Threading.Tasks;
 using Insthync.AddressableAssetTools;
 using Insthync.DevExtension;

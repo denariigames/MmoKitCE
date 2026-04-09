@@ -1,3 +1,4 @@
+// CE scalability: #41
 using Insthync.SpatialPartitioningSystems;
 using LiteNetLibManager;
 using System.Collections.Generic;
