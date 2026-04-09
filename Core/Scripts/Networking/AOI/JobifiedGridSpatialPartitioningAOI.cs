@@ -335,24 +335,34 @@ namespace MultiplayerARPG
 
         private bool IsWithinSpatialShape(Vector3 objectPosition, ISpatialObjectComponent component)
         {
+            return IsWithinSpatialShape(
+                objectPosition,
+                component,
+                GameInstance.Singleton.DimensionType);
+        }
+
+        private static bool IsWithinSpatialShape(Vector3 objectPosition, ISpatialObjectComponent component, DimensionType dimensionType)
+        {
             switch (component.SpatialObjectShape)
             {
                 case SpatialObjectShape.Box:
                     return IsWithinBox(
                         objectPosition,
                         (Vector3)component.SpatialObjectPosition,
-                        (Vector3)component.SpatialObjectExtents);
+                        (Vector3)component.SpatialObjectExtents,
+                        dimensionType);
                 default:
                     return IsWithinSphere(
                         objectPosition,
                         (Vector3)component.SpatialObjectPosition,
-                        component.SpatialObjectRadius);
+                        component.SpatialObjectRadius,
+                        dimensionType);
             }
         }
 
-        private bool IsWithinBox(Vector3 objectPosition, Vector3 center, Vector3 extents)
+        private static bool IsWithinBox(Vector3 objectPosition, Vector3 center, Vector3 extents, DimensionType dimensionType)
         {
-            switch (GameInstance.Singleton.DimensionType)
+            switch (dimensionType)
             {
                 case DimensionType.Dimension2D:
                     return Mathf.Abs(objectPosition.x - center.x) <= extents.x &&
@@ -363,10 +373,10 @@ namespace MultiplayerARPG
             }
         }
 
-        private bool IsWithinSphere(Vector3 objectPosition, Vector3 center, float radius)
+        private static bool IsWithinSphere(Vector3 objectPosition, Vector3 center, float radius, DimensionType dimensionType)
         {
             float radiusSqr = radius * radius;
-            switch (GameInstance.Singleton.DimensionType)
+            switch (dimensionType)
             {
                 case DimensionType.Dimension2D:
                     float xDiff2D = objectPosition.x - center.x;
