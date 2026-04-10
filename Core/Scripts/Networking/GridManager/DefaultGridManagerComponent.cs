@@ -1,7 +1,9 @@
+using LiteNetLib.Utils;
 using LiteNetLibManager;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace MultiplayerARPG
@@ -21,11 +23,24 @@ namespace MultiplayerARPG
 
         [SerializeField]
         [Range(0, 15)]
-        private int gridSize = 15;
-        public int GridSize => gridSize;
+        private ushort gridSize = 15;
+        public ushort GridSize => gridSize;
 
         [SerializeField]
         private CompressionRange compressionRange;
+
+        public CompressionRange CompressionRange
+        {
+            get { return compressionRange; }
+        }
+
+        [SerializeField]
+        private GridData gridData;
+
+        public GridData GridData
+        {
+            get { return gridData; }
+        }
 
         private Dictionary<byte, GridCell> _cellsById;
 
@@ -52,24 +67,23 @@ namespace MultiplayerARPG
                     };
                 }
             }
+
+            gridData = new GridData(cellSize, gridSize, compressionRange);
+
             Logging.Log($"[DefaultGridManagerComponent] Dynamic grid setup completed with {_cellsById.Count} cells.");
         }
 
-        public byte GetCellId(Vector3 pos)
+        public Vector3 GetWorldPosition(byte cellId, Vector3 position)
         {
+            GetCell(cellId, out GridCell gridCell);
             float offset = (GridSize * CellSize) * 0.5f;
-
-            // World → Cell
-            int cellX = (int)Math.Floor((pos.x + offset) / CellSize);
-            int cellZ = (int)Math.Floor((pos.z + offset) / CellSize);
-
-            cellX = Math.Clamp(cellX, 0, gridSize - 1);
-            cellZ = Math.Clamp(cellZ, 0, gridSize - 1);
-
-            return (byte)(cellX + cellZ * GridSize);
+            return new Vector3(
+                (gridCell.GridX * cellSize) - offset + position.x,
+                position.y,
+                (gridCell.GridZ * cellSize) - offset + position.z);
         }
 
-        public void GetCell(byte id, out GridCell gridCell)
+        void GetCell(byte id, out GridCell gridCell)
         {
             if (_cellsById.TryGetValue(id, out GridCell cell))
             {
@@ -83,28 +97,81 @@ namespace MultiplayerARPG
             }
         }
 
-        public Vector3 GetCellLocalPosition(byte cellId, Vector3 position)
+        public bool WriteEntityServerState(NetDataWriter writer, MovementResult movementResult, List<EntityMovementForceApplier> forceAppliers)
         {
-            GetCell(cellId, out GridCell gridCell);
-            float offset = (GridSize * CellSize) * 0.5f;
+            if (IsDisabled || writer == null)
+                return false;
+
+            writer.PutPackedUInt(movementResult.movementState);
+            writer.Put(movementResult.extraMovementState);
+            writer.Put(movementResult.cellId);
+            writer.Put(movementResult.compressionMode);
+
+            ulong data = movementResult.data;
+            data >>= 6;
+
+            for (int i = 1; i < movementResult.byteCount; i++)
+            {
+                writer.Put((byte)(data & 0xFF));
+                data >>= 8;
+            }
+            writer.Put(movementResult.compressedYAndle);
+            writer.PutList(forceAppliers);
+
+            return true;
+        }
+    }
+
+    [Serializable]
+    public struct CompressionRange
+    {
+        public float HighestPrecisionRange;
+        public float HighPrecisionRange;
+        public float MediumPrecisionRange;
+        public float LowPrecisionRange;
+    }
+
+    public static class GridUtility
+    {
+
+        public static ushort Quantize(float value, ushort cellSize, int bits)
+        {
+            value = Math.Clamp(value, 0f, cellSize - 0.0001f);
+
+            float normalized = value / cellSize;
+
+            int maxInt = (1 << bits) - 1;
+            return (ushort)(normalized * maxInt);
+        }
+        public static float3 GetCellLocalPosition(float3 worldPosition, float cellSize, ushort gridSize, out byte cellId)
+        {
+            float offset = (gridSize * cellSize) * 0.5f;
+
+            // World → Cell
+            ushort cellX = (ushort)Math.Floor((worldPosition.x + offset) / cellSize);
+            ushort cellZ = (ushort)Math.Floor((worldPosition.z + offset) / cellSize);
+
+            cellX = (ushort)Math.Clamp(cellX, 0, gridSize - 1);
+            cellZ = (ushort)Math.Clamp(cellZ, 0, gridSize - 1);
+
+            cellId = (byte)(cellX + cellZ * gridSize);
 
             return new Vector3(
-               (position.x + offset) - (gridCell.GridX * CellSize),
-               position.y,
-               (position.z + offset) - (gridCell.GridZ * CellSize));
+               (worldPosition.x + offset) - (cellX * cellSize),
+               worldPosition.y,
+               (worldPosition.z + offset) - (cellZ * cellSize));
         }
 
-        public Vector3 GetWorldPosition(byte cellId, Vector3 position)
+        public static byte CompressAngle(float angle)
         {
-            GetCell(cellId, out GridCell gridCell);
-            float offset = (GridSize * CellSize) * 0.5f;
-            return new Vector3(
-                (gridCell.GridX * cellSize) - offset + position.x,
-                position.y,
-                (gridCell.GridZ * cellSize) - offset + position.z);
+            // normalize to 0–360
+            angle %= 360f;
+            if (angle < 0) angle += 360f;
+
+            return (byte)(angle * (255f / 360f));
         }
 
-        public int GetCompressionMode(float distSq, int previousMode)
+        public static int GetCompressionMode(float distSq, int previousMode, CompressionRange compressionRange)
         {
             switch (previousMode)
             {
@@ -127,14 +194,5 @@ namespace MultiplayerARPG
                     return 3;
             }
         }
-    }
-
-    [Serializable]
-    public struct CompressionRange
-    {
-        public float HighestPrecisionRange;
-        public float HighPrecisionRange;
-        public float MediumPrecisionRange;
-        public float LowPrecisionRange;
     }
 }

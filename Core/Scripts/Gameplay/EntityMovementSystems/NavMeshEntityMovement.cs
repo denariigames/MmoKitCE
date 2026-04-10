@@ -88,14 +88,6 @@ namespace MultiplayerARPG
         protected bool _isClientConfirmingTeleport;
         protected bool _isStarted;
 
-        //Last Compression Mode, used to determine which compression mode to use
-        private int _lastDataCompressionMode;
-        public int LastDataCompressionMode
-        {
-            get { return _lastDataCompressionMode; }
-            set { _lastDataCompressionMode = value; }
-        }
-
         protected virtual void Awake()
         {
             // Prepare nav mesh agent component
@@ -557,7 +549,42 @@ namespace MultiplayerARPG
             return false;
         }
 
-        public bool WriteServerState(long writeTimestamp, NetDataWriter writer, Vector3 currentPlayerPosition, out bool shouldSendReliably)
+        public MovementData CreateMovementData(out List<EntityMovementForceApplier> forceAppliers)
+        {
+            bool shouldSendReliably = false;
+            if (_sendingDash)
+            {
+                shouldSendReliably = true;
+                MovementState |= MovementState.IsDash;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsDash;
+            }
+            if (_isTeleporting)
+            {
+                shouldSendReliably = true;
+                if (_stillMoveAfterTeleport)
+                    MovementState |= MovementState.IsTeleport;
+                else
+                    MovementState = MovementState.IsTeleport;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsTeleport;
+            }
+
+            MovementData movementData = new MovementData();
+            movementData.movementState = (uint)MovementState;
+            movementData.extraMovementState = (byte)ExtraMovementState;
+            movementData.worldPosition = EntityTransform.position;
+            movementData.yAngle = EntityTransform.eulerAngles.y;
+            movementData.shouldSendReliably = shouldSendReliably;
+            forceAppliers = _movementForceAppliers;
+            return movementData;
+        }
+
+        public bool WriteServerState(long writeTimestamp, NetDataWriter writer,  out bool shouldSendReliably)
         {
             shouldSendReliably = false;
             if (!_isStarted)
@@ -583,16 +610,8 @@ namespace MultiplayerARPG
             {
                 MovementState &= ~MovementState.IsTeleport;
             }
-            
-            //Calculate distance to player, only sync transform when player is in sync range to save bandwidth.
-            float dx = currentPlayerPosition.x - EntityTransform.position.x;
-            float dz = currentPlayerPosition.z - EntityTransform.position.z;
-            float distSq = dx * dx + dz * dz;
-            // Get compression mode by distance, use lower compression for longer distance to save bandwidth, and use higher compression for shorter distance to make it more accurate.
-            LastDataCompressionMode = DefaultGridManagerComponent.Instance.GetCompressionMode(distSq, LastDataCompressionMode);
-
             // Sync transform from server to all clients (include owner client)
-            this.ServerWriteSyncTransform3D(_movementForceAppliers, LastDataCompressionMode, writer);
+            this.ServerWriteSyncTransform3D(_movementForceAppliers, writer);
             _isTeleporting = false;
             _stillMoveAfterTeleport = false;
             return true;

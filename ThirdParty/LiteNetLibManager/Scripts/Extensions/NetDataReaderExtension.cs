@@ -64,26 +64,6 @@ namespace LiteNetLib.Utils
             return new Vector3(reader.GetFloat(), reader.GetFloat(), reader.GetFloat());
         }
 
-        /// Get bits from the reader, bitCount must be less than or equal to 64, and bitPos is the current bit position in the reader, it will be updated after reading.
-        public static ulong GetBits(this NetDataReader reader, int bitCount, ref int bitPos)
-        {
-            ulong value = 0;
-            var data = reader.RawData;
-
-            for (int i = 0; i < bitCount; i++)
-            {
-                int bytePos = bitPos >> 3;
-                int bitOffset = bitPos & 7;
-
-                if ((data[bytePos] & (1 << bitOffset)) != 0)
-                    value |= (1UL << i);
-
-                bitPos++;
-            }
-
-            return value;
-        }
-
         /// <summary>
         ///Read a quantized Vector3 from the reader, the vector is quantized into integers based on the cell size and compression mode, which determines how many bits are used for each component.
         public static Vector3 GetQuantizedVector3(this NetDataReader reader, ushort cellSize, out int compressionMode)

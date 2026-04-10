@@ -1,3 +1,5 @@
+using LiteNetLib.Utils;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiplayerARPG
@@ -6,18 +8,15 @@ namespace MultiplayerARPG
     {
         bool IsDisabled { get; }
         ushort CellSize { get; }
-        int GridSize { get; }
+        ushort GridSize { get; }
+        CompressionRange CompressionRange { get; }
+
+        GridData GridData { get; }
         void SetupDynamicGrid();
-
-        byte GetCellId(Vector3 pos);
-
-        void GetCell(byte id, out GridCell gridCell);
-
-        Vector3 GetCellLocalPosition(byte cellId, Vector3 position);
 
         Vector3 GetWorldPosition(byte cellId, Vector3 position);
 
-        int GetCompressionMode(float distSq, int previousMode);
+        bool WriteEntityServerState(NetDataWriter writer, MovementResult movementResult, List<EntityMovementForceApplier> forceAppliers);
     }
 }
 
