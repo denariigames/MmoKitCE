@@ -133,22 +133,14 @@ namespace MultiplayerARPG
         #endregion
 
         #region Sync Transform Serialization (3D)
-        public static void ServerWriteSyncTransform3D(this IEntityMovement movement, List<EntityMovementForceApplier> movementForceAppliers, int _lastDataCompressionMode, NetDataWriter writer)
+        public static void ServerWriteSyncTransform3D(this IEntityMovement movement, List<EntityMovementForceApplier> movementForceAppliers, NetDataWriter writer)
         {
             if (!movement.Entity.IsServer)
                 return;
             writer.PutPackedUInt((uint)movement.MovementState);
             writer.Put((byte)movement.ExtraMovementState);
-            //get cell id and local position to reduce the amount of data to sync
-            if (!DefaultGridManagerComponent.Instance.IsDisabled)
-            {
-                GetCellIdAndLocalPosition(movement.Entity.EntityTransform.position, out byte cellId, out Vector3 localposition);
-                writer.Put(cellId);
-                writer.PutQuantizedVector3(localposition, DefaultGridManagerComponent.Instance.CellSize, _lastDataCompressionMode);
-            }
-            else
-                writer.PutVector3(movement.Entity.EntityTransform.position);
-            writer.Put(CompressAngle(movement.Entity.EntityTransform.eulerAngles.y));
+            writer.PutVector3(movement.Entity.EntityTransform.position);
+            writer.PutPackedInt(GetCompressedAngle(movement.Entity.EntityTransform.eulerAngles.y));
             writer.PutList(movementForceAppliers);
         }
 
@@ -229,28 +221,18 @@ namespace MultiplayerARPG
         #endregion
 
         #region Helpers
-
-        public static byte CompressAngle(float angle)
-        {
-            // normalize to 0–360
-            angle %= 360f;
-            if (angle < 0) angle += 360f;
-
-            return (byte)(angle * (255f / 360f));
-        }
-
         public static float DecompressAngle(byte value)
         {
             return value * (360f / 255f);
         }
         public static int GetCompressedAngle(float angle)
         {
-            return Mathf.RoundToInt(angle * 6);
+            return Mathf.RoundToInt(angle * 1000f);
         }
 
         public static float GetDecompressedAngle(int compressedAngle)
         {
-            return (float)compressedAngle / 6;
+            return (float)compressedAngle * 0.001f;
         }
 
         public static bool AllowToChangePose(this IEntityMovement movement, float height, float radius, int layerMask)
@@ -416,15 +398,6 @@ namespace MultiplayerARPG
             ArrayPool<float>.Shared.Return(crawlRaycastDegrees);
         }
 #endif
-        #endregion
-
-        #region Transform Player position into Cell and quantized
-        public static void GetCellIdAndLocalPosition(Vector3 position, out byte cellId, out Vector3 localposition)
-        {
-            cellId = DefaultGridManagerComponent.Instance.GetCellId(position);
-
-            localposition = DefaultGridManagerComponent.Instance.GetCellLocalPosition(cellId, position);
-        }
         #endregion
     }
 }

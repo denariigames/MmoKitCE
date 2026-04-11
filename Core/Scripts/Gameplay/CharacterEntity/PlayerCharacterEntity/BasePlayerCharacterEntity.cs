@@ -2,6 +2,7 @@
 using Insthync.UnityEditorUtils;
 using LiteNetLibManager;
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -128,6 +129,8 @@ namespace MultiplayerARPG
             base.EntityAwake();
             gameObject.tag = CurrentGameInstance.playerTag;
             gameObject.layer = CurrentGameInstance.playerLayer;
+            //Create compression modes dictionary
+            EntityCompressionModes = new NativeHashMap<uint, byte>(1024, Allocator.Persistent);
         }
 
         protected override void EntityOnSetOwnerClient(bool isOwnerClient)

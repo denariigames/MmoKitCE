@@ -73,8 +73,10 @@ namespace MultiplayerARPG.MMO
         public string RefId { get { return string.Empty; } }
         public CentralServerPeerType PeerType { get { return CentralServerPeerType.LoginServer; } }
 
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
         //Login Queue
         private readonly Queue<LoginQueueEntry> loginQueue = new();
+#endif
         private int maxConcurrentRequest = 150;
         public int MaxConcurrentRequest
         {
@@ -158,6 +160,7 @@ namespace MultiplayerARPG.MMO
             ClusterClient.RegisterResponseHandler<RequestCheckChannelsLimit, EmptyMessage>(MMORequestTypes.CheckChannelsLimit);
             ClusterClient.RegisterResponseHandler<RequestFindOnlineUserMessage, ResponseFindOnlineUserMessage>(MMORequestTypes.FindOnlineUser);
             ClusterClient.RegisterResponseHandler<EmptyMessage, ResponseChannelsMessage>(MMORequestTypes.Channels);
+#endif
             // Requests
             RegisterRequestToServer<RequestUserLoginMessage, ResponseUserLoginMessage>(MMORequestTypes.UserLogin, HandleRequestUserLogin);
             RegisterRequestToServer<RequestUserRegisterMessage, ResponseUserRegisterMessage>(MMORequestTypes.UserRegister, HandleRequestUserRegister);
@@ -168,7 +171,7 @@ namespace MultiplayerARPG.MMO
             RegisterRequestToServer<RequestSelectCharacterMessage, ResponseSelectCharacterMessage>(MMORequestTypes.SelectCharacter, HandleRequestSelectCharacter);
             RegisterRequestToServer<RequestValidateAccessTokenMessage, ResponseValidateAccessTokenMessage>(MMORequestTypes.ValidateAccessToken, HandleRequestValidateAccessToken);
             RegisterRequestToServer<EmptyMessage, ResponseChannelsMessage>(MMORequestTypes.Channels, HandleRequestChannels);
-#endif
+
             // Keeping `RegisterClientMessages` and `RegisterServerMessages` for backward compatibility, can use any of below dev extension methods
             this.InvokeInstanceDevExtMethods("RegisterClientMessages");
             this.InvokeInstanceDevExtMethods("RegisterServerMessages");
@@ -406,10 +409,12 @@ namespace MultiplayerARPG.MMO
             {
                 userId = userId,
             });
+            return result.Response.isFound;
 #else
             await UniTask.Yield();
+            return false;
 #endif
-            return result.Response.isFound;
+
         }
 
         public async UniTask<bool> ConfirmDespawnCharacter(string userId)
@@ -423,10 +428,12 @@ namespace MultiplayerARPG.MMO
             });
 
             allDone = ProcessResponseCode(result.ResponseCode);
+            return allDone;
 #else
             await UniTask.Yield();
+            return false;
 #endif
-            return allDone;
+
         }
 
         public async UniTask<bool> ConfirmCanConnectToChannel(string channelId)
@@ -439,10 +446,12 @@ namespace MultiplayerARPG.MMO
                 channelId = channelId,
             });
             canConnect = ProcessResponseCode(result.ResponseCode);
+            return canConnect;
 #else
             await UniTask.Yield();
+            return false;
 #endif
-            return canConnect;
+
         }
 
 #if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)

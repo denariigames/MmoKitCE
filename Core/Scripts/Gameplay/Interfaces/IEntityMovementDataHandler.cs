@@ -1,4 +1,6 @@
 using LiteNetLib.Utils;
+using Newtonsoft.Json.Bson;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiplayerARPG
@@ -7,11 +9,11 @@ namespace MultiplayerARPG
     {
         uint ObjectId { get; }
         long ConnectionId { get; }
-        //Last Data Compression Mode, used to determine which compression mode to use
-        int LastDataCompressionMode { get; set; }
+        //Create movement data from current entity state, this is used to create movement data and server
+        MovementData CreateMovementData(out List<EntityMovementForceApplier> forceAppliers);
         void ReadClientStateAtServer(long peerTimestamp, NetDataReader reader);
         void ReadServerStateAtClient(long peerTimestamp, NetDataReader reader);
         bool WriteClientState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably);
-        bool WriteServerState(long writeTimestamp, NetDataWriter writer, Vector3 currentPlayerPosition, out bool shouldSendReliably);
+        bool WriteServerState(long writeTimestamp, NetDataWriter writer,out bool shouldSendReliably);
     }
 }
