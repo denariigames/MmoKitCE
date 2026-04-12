@@ -581,6 +581,10 @@ namespace MultiplayerARPG
             movementData.yAngle = EntityTransform.eulerAngles.y;
             movementData.shouldSendReliably = shouldSendReliably;
             forceAppliers = _movementForceAppliers;
+
+            _isTeleporting = false;
+            _stillMoveAfterTeleport = false;
+
             return movementData;
         }
 
