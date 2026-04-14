@@ -1,3 +1,5 @@
+// ce stability: #46
+
 using Insthync.SpatialPartitioningSystems;
 using LiteNetLibManager;
 using System.Collections.Generic;

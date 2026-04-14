@@ -1,4 +1,6 @@
-﻿using ConcurrentCollections;
+﻿// ce stability: #46
+
+using ConcurrentCollections;
 using Cysharp.Threading.Tasks;
 using Insthync.DevExtension;
 using LiteNetLib;
