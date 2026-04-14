@@ -1,7 +1,11 @@
+using Unity.Collections;
+
 namespace MultiplayerARPG
 {
     public partial class BasePlayerCharacterEntity
     {
+        public NativeHashMap<uint, byte> EntityCompressionModes;
+
         protected override bool CanMove_Implementation()
         {
             if (VendingComponent != null && VendingComponent.Data.isStarted)

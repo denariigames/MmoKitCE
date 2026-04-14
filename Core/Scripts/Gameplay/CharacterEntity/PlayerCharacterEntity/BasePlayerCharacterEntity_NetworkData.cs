@@ -2,6 +2,7 @@
 using LiteNetLibManager;
 using NotifiableCollection;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 
 namespace MultiplayerARPG
@@ -570,6 +571,9 @@ namespace MultiplayerARPG
             publicFloats.onOperation -= OnPublicFloatsOperation;
 #endif
             guildSkills.onOperation -= OnGuildSkillsOperation;
+
+            // Dispose compression modes dictionary
+            EntityCompressionModes.Dispose();
 
             // Unsubscribe this entity
             if (GameInstance.ClientCharacterHandlers != null)
