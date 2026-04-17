@@ -1,4 +1,6 @@
-﻿using ConcurrentCollections;
+﻿// ce stability: #46
+
+using ConcurrentCollections;
 using Cysharp.Threading.Tasks;
 using Insthync.DevExtension;
 using LiteNetLib;
@@ -1155,6 +1157,22 @@ namespace MultiplayerARPG
             {
                 component.OnServerOnlineSceneLoaded(this);
             }
+
+            if (InterestManager is JobifiedGridSpatialPartitioningAOI gridAOI)
+            {
+                gridAOI.PrepareSystem();
+                if (gridAOI.IsSystemReady)
+                    Logging.Log(LogTag, "[AOI] Grid spatial partitioning system initialized successfully.");
+                else
+                    Logging.LogWarning(LogTag, "[AOI] Grid AOI system not initialized after PrepareSystem. " +
+                        "Running in degraded fallback mode. Add AOIMapBounds to your scene.");
+            }
+            else if (InterestManager is DefaultInterestManager)
+            {
+                Logging.LogWarning(LogTag, "[AOI] Using DefaultInterestManager (O(N*M) brute force). " +
+                    "This will not scale. Ensure JobifiedGridSpatialPartitioningAOI is configured.");
+            }
+
             _serverSceneLoadedTime = Time.unscaledTime;
             _serverReadyToInstantiateObjectsStates.Clear();
             _isServerReadyToInstantiateObjects = false;
