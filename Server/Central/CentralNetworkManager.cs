@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// CE security: #31
+
+using System.Collections.Generic;
 using Insthync.DevExtension;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -18,22 +20,10 @@ namespace MultiplayerARPG.MMO
     public partial class CentralNetworkManager : LiteNetLibManager.LiteNetLibManager
     {
         public const string DEFAULT_CHANNEL_ID = "default";
-        protected static readonly NetDataWriter s_Writer = new NetDataWriter();
-
-#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
-        // User peers (Login / Register / Manager characters)
-        protected readonly Dictionary<long, CentralUserPeerInfo> _userPeers = new Dictionary<long, CentralUserPeerInfo>();
-        protected readonly Dictionary<string, CentralUserPeerInfo> _userPeersByUserId = new Dictionary<string, CentralUserPeerInfo>();
-#endif
 #if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
         [Header("Cluster")]
 #endif
         public int clusterServerPort = 6010;
-
-#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
-        [Header("Map Spawn")]
-#endif
-        public int mapSpawnMillisecondsTimeout = 0;
 
 #if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
         [Header("Channels")]
@@ -42,16 +32,9 @@ namespace MultiplayerARPG.MMO
         public List<ChannelData> channels = new List<ChannelData>();
 
 #if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
-        [Header("User Account")]
+        [Header("Map Spawn")]
 #endif
-        public bool disableDefaultLogin = false;
-        public int minUsernameLength = 2;
-        public int maxUsernameLength = 24;
-        public int minPasswordLength = 2;
-        public int minCharacterNameLength = 2;
-        public int maxCharacterNameLength = 16;
-        public bool requireEmail = false;
-        public bool requireEmailVerification = false;
+        public int mapSpawnMillisecondsTimeout = 0;
 
 #if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
         [Header("Statistic")]
@@ -69,6 +52,7 @@ namespace MultiplayerARPG.MMO
         public IDatabaseClient DatabaseClient { get; set; }
         public ICentralServerDataManager DataManager { get; set; }
 #endif
+
         private Dictionary<string, ChannelData> _channels;
         public Dictionary<string, ChannelData> Channels
         {
@@ -122,24 +106,12 @@ namespace MultiplayerARPG.MMO
 
         protected virtual void Initialize()
         {
+#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
             if (defaultChannelMaxConnections <= 0)
                 defaultChannelMaxConnections = 500;
-#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
-            GameInstance.OnGameDataLoadedEvent += GameInstance_OnGameDataLoadedEvent;
-#endif
-#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
             ClusterServer = new ClusterServer(this);
 #endif
         }
-
-#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
-        private void GameInstance_OnGameDataLoadedEvent()
-        {
-            GameInstance.OnGameDataLoadedEvent -= GameInstance_OnGameDataLoadedEvent;
-            minCharacterNameLength = GameInstance.Singleton.minCharacterNameLength;
-            maxCharacterNameLength = GameInstance.Singleton.maxCharacterNameLength;
-        }
-#endif
 
         protected override void Update()
         {
@@ -173,44 +145,12 @@ namespace MultiplayerARPG.MMO
         protected override void RegisterMessages()
         {
             EnableRequestResponse(MMOMessageTypes.Request, MMOMessageTypes.Response);
-            // Requests
-            RegisterRequestToServer<RequestUserLoginMessage, ResponseUserLoginMessage>(MMORequestTypes.UserLogin, HandleRequestUserLogin);
-            RegisterRequestToServer<RequestUserRegisterMessage, ResponseUserRegisterMessage>(MMORequestTypes.UserRegister, HandleRequestUserRegister);
-            RegisterRequestToServer<EmptyMessage, EmptyMessage>(MMORequestTypes.UserLogout, HandleRequestUserLogout);
-            RegisterRequestToServer<EmptyMessage, ResponseCharactersMessage>(MMORequestTypes.Characters, HandleRequestCharacters);
-            RegisterRequestToServer<RequestCreateCharacterMessage, ResponseCreateCharacterMessage>(MMORequestTypes.CreateCharacter, HandleRequestCreateCharacter);
-            RegisterRequestToServer<RequestDeleteCharacterMessage, ResponseDeleteCharacterMessage>(MMORequestTypes.DeleteCharacter, HandleRequestDeleteCharacter);
-            RegisterRequestToServer<RequestSelectCharacterMessage, ResponseSelectCharacterMessage>(MMORequestTypes.SelectCharacter, HandleRequestSelectCharacter);
-            RegisterRequestToServer<RequestValidateAccessTokenMessage, ResponseValidateAccessTokenMessage>(MMORequestTypes.ValidateAccessToken, HandleRequestValidateAccessToken);
-            RegisterRequestToServer<EmptyMessage, ResponseChannelsMessage>(MMORequestTypes.Channels, HandleRequestChannels);
             // Client messages
             RegisterClientMessage(MMOMessageTypes.Disconnect, HandleServerDisconnect);
             // Keeping `RegisterClientMessages` and `RegisterServerMessages` for backward compatibility, can use any of below dev extension methods
             this.InvokeInstanceDevExtMethods("RegisterClientMessages");
             this.InvokeInstanceDevExtMethods("RegisterServerMessages");
             this.InvokeInstanceDevExtMethods("RegisterMessages");
-        }
-
-        public async void KickClient(long connectionId, byte[] data)
-        {
-            if (!IsServer)
-                return;
-            ServerSendPacket(connectionId, 0, DeliveryMethod.ReliableOrdered, MMOMessageTypes.Disconnect, (writer) => writer.PutBytesWithLength(data));
-#if NET || NETCOREAPP
-            await Task.Delay(500);
-#else
-            await UniTask.Delay(500);
-#endif
-            ServerTransport.ServerDisconnect(connectionId);
-        }
-
-        public void KickClient(long connectionId, UITextKeys message)
-        {
-            if (!IsServer)
-                return;
-            s_Writer.Reset();
-            s_Writer.PutPackedUShort((ushort)message);
-            KickClient(connectionId, s_Writer.CopyData());
         }
 
         protected void HandleServerDisconnect(MessageHandlerData messageHandler)
@@ -221,10 +161,6 @@ namespace MultiplayerARPG.MMO
         protected virtual void Clean()
         {
             this.InvokeInstanceDevExtMethods("Clean");
-#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
-            _userPeers.Clear();
-            _userPeersByUserId.Clear();
-#endif
         }
 
 #if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
@@ -284,49 +220,6 @@ namespace MultiplayerARPG.MMO
         public override void OnPeerDisconnected(long connectionId, DisconnectReason reason, SocketError socketError)
         {
             base.OnPeerDisconnected(connectionId, reason, socketError);
-            RemoveUserPeerByConnectionId(connectionId, out _);
-        }
-
-        public bool RemoveUserPeerByConnectionId(long connectionId, out CentralUserPeerInfo userPeerInfo)
-        {
-#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
-            if (_userPeers.TryGetValue(connectionId, out userPeerInfo))
-            {
-                _userPeersByUserId.Remove(userPeerInfo.userId);
-                _userPeers.Remove(connectionId);
-                return true;
-            }
-            return false;
-#else
-            userPeerInfo = default;
-            return false;
-#endif
-        }
-
-        public bool RemoveUserPeerByUserId(string userId, out CentralUserPeerInfo userPeerInfo)
-        {
-#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
-            if (_userPeersByUserId.TryGetValue(userId, out userPeerInfo))
-            {
-                _userPeersByUserId.Remove(userPeerInfo.userId);
-                _userPeers.Remove(userPeerInfo.connectionId);
-                return true;
-            }
-            return false;
-#else
-            userPeerInfo = default;
-            return false;
-#endif
-        }
-
-        public async UniTask<bool> MapContainsUser(string userId)
-        {
-#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
-            return await ClusterServer.MapContainsUser(userId);
-#else
-            await UniTask.Yield();
-            return false;
-#endif
         }
     }
 }

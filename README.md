@@ -22,18 +22,30 @@ Addon Manager is an in-editor interface that allows the community and team to mo
 - Former "core" features that were too niche, experimental, or optional can be extracted into addons.
 - Addons are discovered, installed, and updated directly inside Unity, similar to a private Unity Package Manager.
 - This keeps the **core distribution lean**, focused, and easier to maintain long-term.
-- The Addon Manager pulls from a central, curated manifest (similar in spirit to how many modern Unity ecosystems work).
+
+
+### Login Manager
+Login Manager is a clean separation of login/authentication logic from the central game servers.
+
+- Impoved scalability: Concurrent login limit prevents the login server from being overwhelmed during spikes. The dedicated login server + cluster client allows independent scaling of auth traffic away from game logic.
 
 
 ### Cell-Based Position Quantization
 Cell-based position quantization dramatically improves network efficiency for entity movement.
 
-- Significant bandwidth reduction: Position updates shrink from 12 bytes (full Vector3) to 7 bytes (1 byte cell ID + 6 bytes quantized local offset).
 - Improved scalability: Lower network traffic supports more concurrent players, higher update rates, and denser entity populations.
-- Strong foundation for spatial partitioning: Integer cell IDs enable fast, efficient grid-based systems such as Area of Interest (AOI) management, neighbor culling, and future sharding/zoning.
-- Better determinism: Reduces floating-point drift over long distances and play sessions.
+- LOD based compression: Close entities (the ones the player actually interacts with) keep high-precision modes, while distance entities (the majority in large MMO worlds) now send position data in as little as 4 bytes.
+
 
 **World Size Assumptions:** The system uses a fixed square grid centered at the world origin. The maximum supported world size is determined by configurable CellSize. Positions outside the grid are clamped to edge cells.
+
+
+### Jobs Movement Pipeline
+All entity movement data processing converted from monothreaded per-entity updates to Unity Jobs + Burst parallel processing.
+
+- Improved scalability: Combined with vector quantization and packed serialization, network payloads shrink dramatically, improving both server tick rate and bandwidth usage.
+addons without touching core networking code.
+
 
 
 ## Quick Start / Installation Wizard
@@ -75,6 +87,11 @@ $ git clone https://github.com/denariigames/MmoKitCE.git
 ```
 
 After installation, browse available addons via the Addon Manager window (Window → MMORPG Kit → MmoKitCE → **Addon Manager**). Have fun building!
+
+## Yo! Where's the demo?
+
+In keeping with the philosophy of a clean core distribution, a demo will not be included in CE. However, a demo is currently under development as an Addon.
+
 
 ## Updating MmoKitCE
 

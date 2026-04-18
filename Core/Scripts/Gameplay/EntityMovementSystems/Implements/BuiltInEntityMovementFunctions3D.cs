@@ -118,6 +118,8 @@ namespace MultiplayerARPG
         public bool IsUnderWater { get; private set; } = false;
         public bool IsClimbing { get; private set; } = false;
 
+        private LogicUpdater _logicUpdater;
+
         // Input codes
         private bool _isJumping;
         private bool _isDashing;
@@ -1222,6 +1224,58 @@ namespace MultiplayerARPG
             return false;
         }
 
+        // This is used to create movement data for server, and it will be sent to clients, so it can be used to sync movement state from server to clients, and it's called at server, so it can be used to create movement data from server state.
+        public MovementData CreateMovementData(out List<EntityMovementForceApplier> forceAppliers)
+        {
+            bool shouldSendReliably = false;
+            // Sync transform from server to all clients (include owner client)
+            if (_sendingJump)
+            {
+                shouldSendReliably = true;
+                MovementState |= MovementState.IsJump;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsJump;
+            }
+            if (_sendingDash)
+            {
+                shouldSendReliably = true;
+                MovementState |= MovementState.IsDash;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsDash;
+            }
+            if (_isTeleporting)
+            {
+                shouldSendReliably = true;
+                if (_stillMoveAfterTeleport)
+                    MovementState |= MovementState.IsTeleport;
+                else
+                    MovementState = MovementState.IsTeleport;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsTeleport;
+            }
+
+            MovementData movementData = new MovementData();
+            movementData.movementState = (uint)MovementState;
+            movementData.extraMovementState = (byte)ExtraMovementState;
+            movementData.worldPosition = EntityTransform.position;
+            movementData.yAngle = EntityTransform.eulerAngles.y;
+            movementData.shouldSendReliably = shouldSendReliably;
+            forceAppliers = _movementForceAppliers;
+
+            _sendingJump = false;
+            _sendingDash = false;
+            _isTeleporting = false;
+            _stillMoveAfterTeleport = false;
+
+            return movementData;
+        }
+
         public bool WriteServerState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
         {
             shouldSendReliably = false;
@@ -1258,6 +1312,7 @@ namespace MultiplayerARPG
             {
                 MovementState &= ~MovementState.IsTeleport;
             }
+
             Entity.ServerWriteSyncTransform3D(_movementForceAppliers, writer);
             _sendingJump = false;
             _sendingDash = false;

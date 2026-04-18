@@ -1,3 +1,5 @@
+// ce usability: #39
+
 using Cysharp.Threading.Tasks;
 using Insthync.ManagedUpdating;
 using Insthync.UnityEditorUtils;
@@ -11,6 +13,13 @@ namespace MultiplayerARPG
 {
     public class PlayerCharacterBodyPartComponent : BaseGameEntityComponent<BasePlayerCharacterEntity>, IManagedUpdate
     {
+		[System.Serializable]
+		public class MaterialModelIndex
+		{
+			public Renderer renderer;
+			public int materialIndex;
+		}
+
         [System.Serializable]
         public class MaterialPropertiesSetting
         {
@@ -32,7 +41,7 @@ namespace MultiplayerARPG
         public class MaterialGroup
         {
 #if UNITY_EDITOR
-            [Tooltip("Set any name for clarity; it doesn’t have to be unique and isn’t used anywhere.")]
+            [Tooltip("Set any name for clarity; it does not have to be unique and is not used anywhere.")]
             public string name;
 #endif
 
@@ -45,7 +54,7 @@ namespace MultiplayerARPG
         public class ModelColorSetting
         {
 #if UNITY_EDITOR
-            [Tooltip("Set any name for clarity; it doesn’t have to be unique and isn’t used anywhere.")]
+            [Tooltip("Set any name for clarity; it does not have to be unique and is not used anywhere.")]
             public string name;
 #endif
             public bool useUpperLevelMaterialColorSetting;
@@ -103,6 +112,7 @@ namespace MultiplayerARPG
 
         public string modelSettingId;
         public string colorSettingId;
+		public MaterialModelIndex[] indexOptions = new MaterialModelIndex[0];
         public List<ModelOption> options = new List<ModelOption>();
         public List<PlayerCharacterBodyPartComponentOption> optionObjects = new List<PlayerCharacterBodyPartComponentOption>();
         protected int _currentModelIndex;
@@ -388,20 +398,31 @@ namespace MultiplayerARPG
 
             ModelColorSetting modelColorSetting = colorOption.modelColorSettings[indexOfModelColorSetting];
 
-            if (modelObject != null && modelColorSetting.materials.Length > 0)
-            {
-                Color materialColor = modelColorSetting.useUpperLevelMaterialColorSetting ? colorOption.materialColor : modelColorSetting.materialColor;
-                SetMaterial(modelObject, materialColor, modelColorSetting.materials, modelColorSetting.properties);
+			if (indexOptions.Length > 0 && modelColorSetting.materials.Length > 0)
+			{
+				foreach (MaterialModelIndex materialModelIndex in indexOptions)
+				{
+					SetModelMaterialIndex(materialModelIndex, modelColorSetting.materials);
+				}
             }
-
-            if (instantiatedObjectGroup != null && modelColorSetting.materialGroups.Length > 0)
+			//default behavior
+			else
             {
-                for (int i = 0; i < instantiatedObjectGroup.instantiatedObjects.Length; ++i)
+                if (modelObject != null && modelColorSetting.materials.Length > 0)
                 {
-                    if (i >= modelColorSetting.materialGroups.Length)
-                        break;
                     Color materialColor = modelColorSetting.useUpperLevelMaterialColorSetting ? colorOption.materialColor : modelColorSetting.materialColor;
-                    SetMaterial(instantiatedObjectGroup.instantiatedObjects[i], materialColor, modelColorSetting.materialGroups[i].materials, modelColorSetting.materialGroups[i].properties);
+                    SetMaterial(modelObject, materialColor, modelColorSetting.materials, modelColorSetting.properties);
+                }
+
+                if (instantiatedObjectGroup != null && modelColorSetting.materialGroups.Length > 0)
+                {
+                    for (int i = 0; i < instantiatedObjectGroup.instantiatedObjects.Length; ++i)
+                    {
+                        if (i >= modelColorSetting.materialGroups.Length)
+                            break;
+                        Color materialColor = modelColorSetting.useUpperLevelMaterialColorSetting ? colorOption.materialColor : modelColorSetting.materialColor;
+                        SetMaterial(instantiatedObjectGroup.instantiatedObjects[i], materialColor, modelColorSetting.materialGroups[i].materials, modelColorSetting.materialGroups[i].properties);
+                    }
                 }
             }
         }
@@ -453,5 +474,23 @@ namespace MultiplayerARPG
         {
             return colorSettingId.GenerateHashId();
         }
+
+		/// <summary>
+		/// Custom implementation sets only selected index to materials array.
+		/// </summary>
+		/// <param name="materialModelIndex"></param>
+		/// <param name="materials"></param>
+		protected void SetModelMaterialIndex(MaterialModelIndex materialModelIndex, Material[] materials)
+		{
+			Renderer renderer = materialModelIndex.renderer;
+			if (renderer != null)
+			{
+				Material[] updatedMaterials = renderer.materials;
+				if (materialModelIndex.materialIndex < updatedMaterials.Length)
+					updatedMaterials[materialModelIndex.materialIndex] = materials[0];
+
+				renderer.materials = updatedMaterials;
+			}
+		}
     }
 }

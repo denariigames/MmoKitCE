@@ -1,3 +1,5 @@
+// ce stability: #46
+
 using Insthync.SpatialPartitioningSystems;
 using LiteNetLibManager;
 using System.Collections.Generic;
@@ -23,7 +25,12 @@ namespace MultiplayerARPG
         private Bounds _bounds;
         private List<SpatialObject> _spatialObjects = new List<SpatialObject>();
         private Dictionary<uint, HashSet<uint>> _playerSubscribings = new Dictionary<uint, HashSet<uint>>();
+        private readonly Queue<HashSet<uint>> _hashSetPool = new Queue<HashSet<uint>>();
+        private readonly HashSet<uint> _fallbackSubscribings = new HashSet<uint>();
         private HashSet<uint> _alwaysVisibleObjects = new HashSet<uint>();
+        private bool _didLogMissingSystemWarning;
+
+        public bool IsSystemReady => _system != null;
 
         private void OnDrawGizmosSelected()
         {
@@ -35,6 +42,14 @@ namespace MultiplayerARPG
 
         private void OnDestroy()
         {
+            ReleaseSystem();
+        }
+
+        private void ReleaseSystem()
+        {
+            if (_system == null)
+                return;
+            _system.Dispose();
             _system = null;
         }
 
@@ -50,9 +65,14 @@ namespace MultiplayerARPG
         {
             if (!IsServer || !isOnline)
             {
-                _system = null;
+                ReleaseSystem();
+                _didLogMissingSystemWarning = false;
                 return;
             }
+            // Full online scene load is already handled by OnServerOnlineSceneLoaded().
+            // Keep this callback for additive scene changes that can alter AOI bounds.
+            if (!isAdditive)
+                return;
             PrepareSystem();
         }
 
@@ -60,10 +80,11 @@ namespace MultiplayerARPG
         {
             if (!IsServer || !Manager.ServerSceneInfo.HasValue)
             {
-                _system = null;
+                ReleaseSystem();
+                _didLogMissingSystemWarning = false;
                 return;
             }
-            _system = null;
+            ReleaseSystem();
             var mapBounds = GenericUtils.GetComponentsFromAllLoadedScenes<AOIMapBounds>(true);
             if (mapBounds.Count > 0)
             {
@@ -115,6 +136,21 @@ namespace MultiplayerARPG
                         break;
                 }
             }
+
+            if (_system == null && IsServer && Manager.ServerSceneInfo.HasValue)
+            {
+                if (!_didLogMissingSystemWarning)
+                {
+                    Debug.LogWarning("[AOI] PrepareSystem: No AOIMapBounds or scene colliders found. " +
+                        "Grid AOI system could not initialize. Interest management will run in degraded " +
+                        "fallback mode (O(N*M) range checks). Add an AOIMapBounds component to your map scene.");
+                    _didLogMissingSystemWarning = true;
+                }
+            }
+            else
+            {
+                _didLogMissingSystemWarning = false;
+            }
         }
 
         public override void UpdateInterestManagementImmediate()
@@ -126,12 +162,22 @@ namespace MultiplayerARPG
         public override void UpdateInterestManagement(float deltaTime)
         {
             if (_system == null)
+            {
+                FallbackUpdateInterestManagement(deltaTime);
                 return;
+            }
 
             _updateCountDown -= deltaTime;
             if (_updateCountDown > 0)
                 return;
             _updateCountDown = updateInterval;
+
+            foreach (KeyValuePair<uint, HashSet<uint>> kv in _playerSubscribings)
+            {
+                kv.Value.Clear();
+                _hashSetPool.Enqueue(kv.Value);
+            }
+            _playerSubscribings.Clear();
 
             using (s_UpdateProfilerMarker.Auto())
             {
@@ -154,7 +200,7 @@ namespace MultiplayerARPG
                 }
                 _system.UpdateGrid(_spatialObjects);
                 _alwaysVisibleObjects.Clear();
-                NativeList<SpatialObject> queryResult;
+                NativeList<SpatialObject> queryResults;
                 HashSet<uint> subscribings;
                 LiteNetLibIdentity foundPlayerObject;
                 foreach (LiteNetLibIdentity spawnedObject in Manager.Assets.GetSpawnedObjects())
@@ -166,10 +212,11 @@ namespace MultiplayerARPG
                         _alwaysVisibleObjects.Add(spawnedObject.ObjectId);
                         continue;
                     }
-                    queryResult = _system.QuerySphere(spawnedObject.transform.position, GetVisibleRange(spawnedObject));
-                    for (int i = 0; i < queryResult.Length; ++i)
+                    _system.QuerySphere(spawnedObject.transform.position, GetVisibleRange(spawnedObject));
+                    queryResults = _system.QueryResults;
+                    for (int i = 0; i < queryResults.Length; ++i)
                     {
-                        uint contactedObjectId = queryResult[i].objectId;
+                        uint contactedObjectId = queryResults[i].objectId;
                         if (!Manager.Assets.TryGetSpawnedObject(contactedObjectId, out foundPlayerObject))
                         {
                             continue;
@@ -179,11 +226,10 @@ namespace MultiplayerARPG
                             continue;
                         }
                         if (!_playerSubscribings.TryGetValue(contactedObjectId, out subscribings))
-                            subscribings = new HashSet<uint>();
+                            subscribings = _hashSetPool.Count > 0 ? _hashSetPool.Dequeue() : new HashSet<uint>();
                         subscribings.Add(spawnedObject.ObjectId);
                         _playerSubscribings[contactedObjectId] = subscribings;
                     }
-                    queryResult.Dispose();
                 }
 
                 foreach (ISpatialObjectComponent component in SpatialObjectContainer.GetValues())
@@ -196,19 +242,19 @@ namespace MultiplayerARPG
                     switch (component.SpatialObjectShape)
                     {
                         case SpatialObjectShape.Box:
-                            queryResult = _system.QueryBox(component.SpatialObjectPosition, component.SpatialObjectExtents);
+                            _system.QueryBox(component.SpatialObjectPosition, component.SpatialObjectExtents);
                             break;
                         default:
-                            queryResult = _system.QuerySphere(component.SpatialObjectPosition, component.SpatialObjectRadius);
+                            _system.QuerySphere(component.SpatialObjectPosition, component.SpatialObjectRadius);
                             break;
                     }
-                    for (int i = 0; i < queryResult.Length; ++i)
+                    queryResults = _system.QueryResults;
+                    for (int i = 0; i < queryResults.Length; ++i)
                     {
-                        uint contactedObjectId = queryResult[i].objectId;
+                        uint contactedObjectId = queryResults[i].objectId;
                         if (Manager.Assets.TryGetSpawnedObject(contactedObjectId, out foundPlayerObject))
                             component.AddSubscriber(foundPlayerObject.ObjectId);
                     }
-                    queryResult.Dispose();
                 }
 
                 foreach (LiteNetLibPlayer player in Manager.GetPlayers())
@@ -230,7 +276,6 @@ namespace MultiplayerARPG
                                 }
                             }
                             playerObject.UpdateSubscribings(subscribings);
-                            subscribings.Clear();
                         }
                         else if (_alwaysVisibleObjects.Count > 0)
                         {
@@ -242,6 +287,97 @@ namespace MultiplayerARPG
                         }
                     }
                 }
+            }
+        }
+
+        private void FallbackUpdateInterestManagement(float deltaTime)
+        {
+            _updateCountDown -= deltaTime;
+            if (_updateCountDown > 0)
+                return;
+            _updateCountDown = updateInterval;
+
+            foreach (LiteNetLibPlayer player in Manager.GetPlayers())
+            {
+                if (!player.IsReady)
+                    continue;
+                foreach (LiteNetLibIdentity playerObject in player.GetSpawnedObjects())
+                {
+                    _fallbackSubscribings.Clear();
+                    foreach (LiteNetLibIdentity spawnedObject in Manager.Assets.GetSpawnedObjects())
+                    {
+                        if (ShouldSubscribe(playerObject, spawnedObject))
+                            _fallbackSubscribings.Add(spawnedObject.ObjectId);
+                    }
+                    playerObject.UpdateSubscribings(_fallbackSubscribings);
+                }
+            }
+
+            foreach (ISpatialObjectComponent component in SpatialObjectContainer.GetValues())
+            {
+                if (component == null)
+                    continue;
+                component.ClearSubscribers();
+                if (!component.SpatialObjectEnabled)
+                    continue;
+                foreach (LiteNetLibPlayer player in Manager.GetPlayers())
+                {
+                    if (!player.IsReady)
+                        continue;
+                    foreach (LiteNetLibIdentity playerObject in player.GetSpawnedObjects())
+                    {
+                        if (IsWithinSpatialShape(playerObject.transform.position, component))
+                        {
+                            component.AddSubscriber(playerObject.ObjectId);
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool IsWithinSpatialShape(Vector3 objectPosition, ISpatialObjectComponent component)
+        {
+            switch (component.SpatialObjectShape)
+            {
+                case SpatialObjectShape.Box:
+                    return IsWithinBox(
+                        objectPosition,
+                        (Vector3)component.SpatialObjectPosition,
+                        (Vector3)component.SpatialObjectExtents);
+                default:
+                    return IsWithinSphere(
+                        objectPosition,
+                        (Vector3)component.SpatialObjectPosition,
+                        component.SpatialObjectRadius);
+            }
+        }
+
+        private bool IsWithinBox(Vector3 objectPosition, Vector3 center, Vector3 extents)
+        {
+            switch (GameInstance.Singleton.DimensionType)
+            {
+                case DimensionType.Dimension2D:
+                    return Mathf.Abs(objectPosition.x - center.x) <= extents.x &&
+                        Mathf.Abs(objectPosition.y - center.y) <= extents.y;
+                default:
+                    return Mathf.Abs(objectPosition.x - center.x) <= extents.x &&
+                        Mathf.Abs(objectPosition.z - center.z) <= extents.z;
+            }
+        }
+
+        private bool IsWithinSphere(Vector3 objectPosition, Vector3 center, float radius)
+        {
+            float radiusSqr = radius * radius;
+            switch (GameInstance.Singleton.DimensionType)
+            {
+                case DimensionType.Dimension2D:
+                    float xDiff2D = objectPosition.x - center.x;
+                    float yDiff2D = objectPosition.y - center.y;
+                    return xDiff2D * xDiff2D + yDiff2D * yDiff2D <= radiusSqr;
+                default:
+                    float xDiff3D = objectPosition.x - center.x;
+                    float zDiff3D = objectPosition.z - center.z;
+                    return xDiff3D * xDiff3D + zDiff3D * zDiff3D <= radiusSqr;
             }
         }
     }

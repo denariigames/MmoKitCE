@@ -519,6 +519,40 @@ namespace MultiplayerARPG
             return false;
         }
 
+        public MovementData CreateMovementData(out List<EntityMovementForceApplier> forceAppliers)
+        {
+             bool shouldSendReliably = false;
+            if (_sendingDash)
+            {
+                shouldSendReliably = true;
+                MovementState |= MovementState.IsDash;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsDash;
+            }
+            if (_isTeleporting)
+            {
+                shouldSendReliably = true;
+                if (_stillMoveAfterTeleport)
+                    MovementState |= MovementState.IsTeleport;
+                else
+                    MovementState = MovementState.IsTeleport;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsTeleport;
+            }
+            MovementData movementData = new MovementData();
+            movementData.movementState = (uint)MovementState;
+            movementData.extraMovementState = (byte)ExtraMovementState;
+            movementData.worldPosition = EntityTransform.position;
+            movementData.yAngle = EntityTransform.eulerAngles.y;
+            movementData.shouldSendReliably = shouldSendReliably;
+            forceAppliers = _movementForceAppliers;
+            return movementData;
+        }
+
         public bool WriteServerState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
         {
             shouldSendReliably = false;

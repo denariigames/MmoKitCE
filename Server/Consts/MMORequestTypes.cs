@@ -1,4 +1,6 @@
-﻿namespace MultiplayerARPG.MMO
+﻿// CE security: #31
+
+namespace MultiplayerARPG.MMO
 {
     public static partial class MMORequestTypes
     {
@@ -18,5 +20,6 @@
         public const ushort ForceDespawnCharacter = 13;
         public const ushort RunMap = 14;
         public const ushort FindOnlineUser = 15;
+        public const ushort CheckChannelsLimit = 16;
     }
 }
