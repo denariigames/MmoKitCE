@@ -2,9 +2,19 @@ using MultiplayerARPG.Server.Scheduling;
 
 namespace MultiplayerARPG.Server.Runtime
 {
-    public sealed class MovementTickSystem : ITickSystem
+    /// <summary>
+    /// Scheduler-driven movement update. This intentionally does not shed under load because
+    /// skipping authoritative movement creates visible rubberbanding and desync risk.
+    /// </summary>
+    public sealed class MovementTickSystem : ITickSystem, IOrderedTickSystem, ILoadSheddingTickSystem
     {
         public string Name => nameof(MovementTickSystem);
+        public int Order => 100;
+
+        public bool ShouldRun(in TickContext ctx, SchedulerPressureLevel pressureLevel)
+        {
+            return true;
+        }
 
         public void Prepare(in TickContext ctx) { }
 
@@ -13,7 +23,7 @@ namespace MultiplayerARPG.Server.Runtime
             float dt = ctx.FixedDelta;
 
             var nav = MultiplayerARPG.MovementTickDriver.NavMesh;
-            for (int i = 0; i < nav.Count; ++i)
+            for (int i = nav.Count - 1; i >= 0; --i)
             {
                 var comp = nav[i];
                 if (comp == null || !comp.IsServer)
