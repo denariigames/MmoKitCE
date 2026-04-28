@@ -1,280 +1,246 @@
-// File: ServerTickScheduler/Server/ServerRuntimeSimulation.cs
-#if UNITY_SERVER || UNITY_EDITOR
-using Cysharp.Threading.Tasks;
-using Insthync.ManagedUpdating;
-using MultiplayerARPG.Server.Scheduling;
+//Updated
+using System;
 using UnityEngine;
-using UnityEngine.Rendering;
+using MultiplayerARPG.Server.Scheduling;
 
-namespace MultiplayerARPG
+namespace MultiplayerARPG.Server.Runtime
 {
-    // Server simulation bootstrap + driver as a partial of GameInstance
-    public partial class GameInstance
+    /// <summary>
+    /// Project adapter for the reusable scheduler core.
+    /// Keep kit/game-specific registrations here; keep the scheduler core reusable.
+    /// </summary>
+    public sealed class ServerRuntimeSimulation : MonoBehaviour
     {
-        private ServerTickScheduler _serverScheduler;
-        private bool _serverSimulationInitialized;
-        private float _nextInitAttemptTime;
+        [Header("Lifecycle")]
+        [SerializeField] private bool startOnAwake = true;
+        [SerializeField] private bool resetClockOnStart = true;
 
-        [System.Serializable]
-        private struct InspectorTickChannel
+        [Header("Diagnostics")]
+        [SerializeField] private bool logDiagnostics;
+        [SerializeField] private float diagnosticsIntervalSeconds = 10f;
+        [SerializeField] private int diagnosticsWorstSystemCount = 8;
+
+        private ServerTickScheduler scheduler;
+        private ServerDelayedTaskSystem gameplayDelayedTasks;
+        private ServerDelayedTaskSystem backgroundDelayedTasks;
+        private float nextDiagnosticsTime;
+        private bool started;
+
+        public ServerTickScheduler Scheduler { get { return scheduler; } }
+
+        private void Awake()
         {
-            public string name;
-            public int priority;
-            public double baseHz;
-            public double minHz;
-            public double maxMsPerFrame;
-
-            [Tooltip("Optional: max items a time-sliced (IIncrementalTickSystem) system should process per tick in this channel. 0 or less = unlimited.")]
-            public int maxItemsPerTick;
-
-            [Tooltip("Optional: max milliseconds a time-sliced (IIncrementalTickSystem) system may spend per tick in this channel. 0 or less = unlimited.")]
-            public double maxSystemMsPerTick;
-
-            public bool allowThrottling;
+            if (startOnAwake)
+                StartServerSimulation();
         }
 
-        [System.Serializable]
-        private class AdvancedTickOverrides
+        public void StartServerSimulation()
         {
-            [Tooltip("When enabled, these values are used as-is (no special 0 behavior).")]
-            public bool enabled = false;
+            if (started)
+                return;
 
-            public double monsterAISystemHz = 5;
-            public double monsterActivityMoveIntentHz = 20;
-            public double monsterActivityCombatHz = 20;
-            public double delayedTasksHz = 1;
+#if !UNITY_SERVER && !UNITY_EDITOR
+            // In non-server player builds this component should not drive authoritative server simulation.
+            enabled = false;
+            return;
+#endif
+            if (resetClockOnStart)
+                MultiplayerARPG.Server.Time.ServerClock.Reset();
+
+            ServerTickSettings settings = BuildDefaultSettings();
+            scheduler = new ServerTickScheduler(settings);
+
+            RegisterOptionalProjectSystems(scheduler);
+
+            gameplayDelayedTasks = new ServerDelayedTaskSystem
+            {
+                MaxCallbacksPerTick = 512,
+                MaxMsPerTick = 1.0d
+            };
+            scheduler.RegisterSystem(gameplayDelayedTasks, "GameplayTimers", 20, 0);
+            ServerDelayedTasks.Bind(gameplayDelayedTasks);
+
+            backgroundDelayedTasks = new ServerDelayedTaskSystem
+            {
+                MaxCallbacksPerTick = 128,
+                MaxMsPerTick = 0.5d
+            };
+            scheduler.RegisterSystem(backgroundDelayedTasks, "LowFreq", 1, 0);
+
+            started = true;
+            nextDiagnosticsTime = UnityEngine.Time.unscaledTime + diagnosticsIntervalSeconds;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log("[ServerRuntimeSimulation] Started server scheduler.");
+#endif
         }
 
-        [Header("Server Simulation")]
-        [SerializeField] private bool driveServerSimulationFromUnityUpdate = true;
-
-        [Header("Legacy UpdateManager Bridge")]
-        [Tooltip("When enabled on authoritative/headless server, UpdateManager's Update/LateUpdate/FixedUpdate loops are disabled and driven by ServerTickScheduler instead.")]
-        [SerializeField] private bool tickDriveUpdateManager = true;
-
-        [Tooltip("Tick rate for the UpdateManager bridge. <= 0 uses the Movement channel BaseHz.")]
-        [SerializeField] private double managedUpdateManagerHz = 0;
-
-        [Tooltip("If true, server simulation will run when the current process is authoritative (dedicated server or listen/host).")]
-        [SerializeField] private bool runWhenNetworkIsServer = true;
-
-        [Tooltip("If true, allow server simulation to run when not connected/started as client/server (offline/local authority testing).")]
-        [SerializeField] private bool runWhenOffline = false;
-
-        [Header("Tick Channels")]
-        [SerializeField] private InspectorTickChannel[] tickChannels = new InspectorTickChannel[]
+        public void StopServerSimulation()
         {
-            // NOTE: maxItemsPerTick/maxSystemMsPerTick only apply to systems that implement IIncrementalTickSystem.
-            // These defaults are conservative and aim for stability at high entity counts.
-            new InspectorTickChannel { name = "Movement", priority = 100, baseHz = 20, minHz = 15, maxMsPerFrame = 5.0, maxItemsPerTick = 2048, maxSystemMsPerTick = 0.5, allowThrottling = true },
-            new InspectorTickChannel { name = "Combat",   priority =  80, baseHz = 20, minHz = 10, maxMsPerFrame = 2.0, maxItemsPerTick = 2048, maxSystemMsPerTick = 0.75, allowThrottling = true  },
-            new InspectorTickChannel { name = "AI",       priority =  40, baseHz =  10, minHz =  5, maxMsPerFrame = 3.0, maxItemsPerTick = 1024, maxSystemMsPerTick = 1.0, allowThrottling = true  },
-            new InspectorTickChannel { name = "LowFreq",  priority =  10, baseHz =  1, minHz = 0.5, maxMsPerFrame = 1, maxItemsPerTick = 4096, maxSystemMsPerTick = 1, allowThrottling = true },
-        };
+            if (!started)
+                return;
 
-        // Collapsed foldout in default inspector
-        [SerializeField] private AdvancedTickOverrides advancedOverrides = new AdvancedTickOverrides();
+            ServerDelayedTasks.Unbind();
 
-        // Tracks whether we've auto-filled override values from channels for the current "enabled" session
-        [SerializeField, HideInInspector] private bool advancedOverridesSeededFromChannels;
+            if (gameplayDelayedTasks != null)
+                gameplayDelayedTasks.Clear();
+            if (backgroundDelayedTasks != null)
+                backgroundDelayedTasks.Clear();
+            if (scheduler != null)
+                scheduler.Shutdown();
 
-        private void OnEnable()
-        {
-            TryInitServerSimulationDeferred().Forget();
+            gameplayDelayedTasks = null;
+            backgroundDelayedTasks = null;
+            scheduler = null;
+            started = false;
         }
 
         private void Update()
         {
-            if (!driveServerSimulationFromUnityUpdate)
+            if (!started || scheduler == null)
                 return;
 
-            // If host/server starts after scene load, keep trying to init.
-            if (!_serverSimulationInitialized && Time.unscaledTime >= _nextInitAttemptTime)
-            {
-                _nextInitAttemptTime = Time.unscaledTime + 0.5f;
-                if (ShouldRunServerSimulation())
-                    InitServerSimulation();
-            }
+            scheduler.Update();
 
-            TickServerSimulation();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (logDiagnostics && diagnosticsIntervalSeconds > 0f && UnityEngine.Time.unscaledTime >= nextDiagnosticsTime)
+            {
+                nextDiagnosticsTime = UnityEngine.Time.unscaledTime + diagnosticsIntervalSeconds;
+                Debug.Log(scheduler.BuildDiagnosticsReport(diagnosticsWorstSystemCount));
+            }
+#endif
         }
 
         private void OnDisable()
         {
-            ShutdownServerSimulation();
+            StopServerSimulation();
         }
 
-        /// <summary>
-        /// Call this from your heartbeat if you disable driveServerSimulationFromUnityUpdate.
-        /// </summary>
-        public void TickServerSimulation()
+        private void OnDestroy()
         {
-            if (!_serverSimulationInitialized)
-                return;
-
-            _serverScheduler?.Update();
+            StopServerSimulation();
         }
 
-        private async UniTaskVoid TryInitServerSimulationDeferred()
+        private static ServerTickSettings BuildDefaultSettings()
         {
-            // Ensure GameInstance.Awake() has completed (Singleton, settings, etc.)
-            await UniTask.Yield();
-
-            if (!this || !gameObject)
-                return;
-
-            if (_serverSimulationInitialized)
-                return;
-
-            if (!ShouldRunServerSimulation())
-                return;
-
-            InitServerSimulation();
-        }
-
-        private bool ShouldRunServerSimulation()
-        {
-            // Dedicated/headless server (fast path)
-            if (Application.isBatchMode)
-                return true;
-
-            if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)
-                return true;
-
-#if UNITY_SERVER
-            return true;
-#endif
-
-            // Listen server / LAN host / any authoritative server process
-            if (runWhenNetworkIsServer)
+            ServerTickSettings settings = new ServerTickSettings
             {
-                var nm = BaseGameNetworkManager.Singleton;
-                if (nm != null)
-                    return nm.IsServer;
-            }
+                ExecutionMode = TickExecutionMode.SingleThreaded,
+                MaxTicksPerFrame = 5,
+                MaxBacklogSeconds = 0.25d,
+                LogBudgetWarnings = true,
+                LogExceptionDetails = true
+            };
 
-            // Optional: offline/local authority testing
-            if (runWhenOffline)
+            settings.Channels.Add(new TickChannelConfig
             {
-                var nm = BaseGameNetworkManager.Singleton;
-                if (nm == null)
-                    return true;
+                Name = "Movement",
+                Priority = 100,
+                BaseHz = 20,
+                MinHz = 20,
+                MaxMsPerFrame = 2.0d,
+                PhaseOffsetSeconds = 0.000d,
+                AllowThrottling = false
+            });
 
-                return !nm.IsClient && !nm.IsServer;
-            }
+            settings.Channels.Add(new TickChannelConfig
+            {
+                Name = "Combat",
+                Priority = 80,
+                BaseHz = 20,
+                MinHz = 10,
+                MaxMsPerFrame = 2.0d,
+                PhaseOffsetSeconds = 0.010d,
+                AllowThrottling = true
+            });
 
-            return false;
+            settings.Channels.Add(new TickChannelConfig
+            {
+                Name = "GameplayTimers",
+                Priority = 70,
+                BaseHz = 20,
+                MinHz = 10,
+                MaxMsPerFrame = 1.0d,
+                PhaseOffsetSeconds = 0.020d,
+                AllowThrottling = true
+            });
+
+            settings.Channels.Add(new TickChannelConfig
+            {
+                Name = "AI",
+                Priority = 40,
+                BaseHz = 5,
+                MinHz = 2,
+                MaxMsPerFrame = 3.0d,
+                PhaseOffsetSeconds = 0.040d,
+                AllowThrottling = true
+            });
+
+            settings.Channels.Add(new TickChannelConfig
+            {
+                Name = "LowFreq",
+                Priority = 10,
+                BaseHz = 1,
+                MinHz = 0.5d,
+                MaxMsPerFrame = 0.5d,
+                PhaseOffsetSeconds = 0.125d,
+                AllowThrottling = true
+            });
+
+            return settings;
         }
 
-        private void InitServerSimulation()
+        private static void RegisterOptionalProjectSystems(ServerTickScheduler scheduler)
         {
-            _serverSimulationInitialized = true;
-            BaseGameEntityTickDriver.Enabled = true;
-            MovementTickDriver.Enabled = true;
-            CharacterRecoveryTickDriver.Enabled = true;
+            TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.AI.MonsterActivityAISystem", "AI", 5, 0);
+            TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.Runtime.MonsterActivityMoveIntentSystem", "Movement", 20, 0);
+            TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.Runtime.MonsterActivityCombatSystem", "Combat", 20, 0);
+        }
+
+        private static void TryRegisterByTypeName(ServerTickScheduler scheduler, string typeName, string channelName, double tickRate, int order)
+        {
+            Type type = FindType(typeName);
+            if (type == null)
+                return;
+
+            if (!typeof(ITickSystem).IsAssignableFrom(type))
+            {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log("[GameInstance] Initializing Server Simulation...");
+                Debug.LogWarning("[ServerRuntimeSimulation] Type exists but does not implement ITickSystem: " + typeName);
 #endif
-
-            // If overrides were disabled, allow reseeding next time they are enabled
-            if (advancedOverrides == null)
-                advancedOverrides = new AdvancedTickOverrides();
-
-            if (!advancedOverrides.enabled)
-                advancedOverridesSeededFromChannels = false;
-
-            // When overrides are enabled, seed them ONCE from channel BaseHz (no "0 means inherit" behavior)
-            if (advancedOverrides.enabled && !advancedOverridesSeededFromChannels)
-            {
-                SeedAdvancedOverridesFromChannels();
-                advancedOverridesSeededFromChannels = true;
-            }
-
-            var settings = new ServerTickSettings();
-
-            // Channels editable from inspector
-            if (tickChannels != null)
-            {
-                for (int i = 0; i < tickChannels.Length; ++i)
-                {
-                    var c = tickChannels[i];
-                    if (string.IsNullOrWhiteSpace(c.name))
-                        continue;
-
-                    settings.Channels.Add(new TickChannelConfig
-                    {
-                        Name = c.name,
-                        Priority = c.priority,
-                        BaseHz = c.baseHz,
-                        MinHz = c.minHz,
-                        MaxMsPerFrame = c.maxMsPerFrame,
-                        MaxItemsPerTick = c.maxItemsPerTick > 0 ? c.maxItemsPerTick : int.MaxValue,
-                        MaxSystemMsPerTick = c.maxSystemMsPerTick > 0 ? c.maxSystemMsPerTick : double.MaxValue,
-                        AllowThrottling = c.allowThrottling,
-                    });
-                }
-            }
-
-            _serverScheduler = new ServerTickScheduler(settings);
-
-            // Register systems (default: channel BaseHz, optional: advanced override values)
-            _serverScheduler.RegisterSystem(new MultiplayerARPG.Server.AI.MonsterActivityAISystem(), "AI", (advancedOverrides != null && advancedOverrides.enabled) ? advancedOverrides.monsterAISystemHz : GetChannelBaseHz("AI", 5));
-            _serverScheduler.RegisterSystem(new MultiplayerARPG.Server.Runtime.MonsterActivityMoveIntentSystem(), "Movement", (advancedOverrides != null && advancedOverrides.enabled) ? advancedOverrides.monsterActivityMoveIntentHz : GetChannelBaseHz("Movement", 20));
-            _serverScheduler.RegisterSystem(new MultiplayerARPG.Server.Runtime.MovementTickSystem(), "Movement", GetChannelBaseHz("Movement", 20));
-            _serverScheduler.RegisterSystem(new MultiplayerARPG.Server.Runtime.MonsterActivityCombatSystem(), "Combat", (advancedOverrides != null && advancedOverrides.enabled) ? advancedOverrides.monsterActivityCombatHz : GetChannelBaseHz("Combat", 20));
-            var delayedTasks = new ServerDelayedTaskSystem();
-            _serverScheduler.RegisterSystem(delayedTasks, "LowFreq", (advancedOverrides != null && advancedOverrides.enabled) ? advancedOverrides.delayedTasksHz : GetChannelBaseHz("LowFreq", 1));
-            _serverScheduler.RegisterSystem(new MultiplayerARPG.Server.Runtime.BaseGameEntityTickSystem(), "Movement", GetChannelBaseHz("Movement", 20));
-            ServerDelayedTasks.Unbind();
-            ServerDelayedTasks.Bind(delayedTasks);
-            _serverScheduler.RegisterSystem(new MultiplayerARPG.Server.Runtime.CharacterRecoveryTickSystem(), "LowFreq", GetChannelBaseHz("LowFreq", 1));
-        }
-
-        private void SeedAdvancedOverridesFromChannels()
-        {
-            if (tickChannels == null)
                 return;
-
-            advancedOverrides.monsterAISystemHz = GetChannelBaseHz("AI", advancedOverrides.monsterAISystemHz);
-            advancedOverrides.monsterActivityMoveIntentHz = GetChannelBaseHz("Movement", advancedOverrides.monsterActivityMoveIntentHz);
-            advancedOverrides.monsterActivityCombatHz = GetChannelBaseHz("Combat", advancedOverrides.monsterActivityCombatHz);
-            advancedOverrides.delayedTasksHz = GetChannelBaseHz("LowFreq", advancedOverrides.delayedTasksHz);
-        }
-
-        private double GetChannelBaseHz(string channel, double fallback)
-        {
-            if (tickChannels == null)
-                return fallback;
-
-            for (int i = 0; i < tickChannels.Length; ++i)
-            {
-                if (tickChannels[i].name == channel)
-                    return tickChannels[i].baseHz > 0 ? tickChannels[i].baseHz : fallback;
             }
-            return fallback;
-        }
 
-        private void ShutdownServerSimulation()
-        {
-            if (!_serverSimulationInitialized)
-                return;
-
-            _serverSimulationInitialized = false;
-            BaseGameEntityTickDriver.Enabled = false;
-            MovementTickDriver.Enabled = false;
-            BaseGameEntityTickDriver.Clear();
-            MovementTickDriver.Clear();
-            ServerDelayedTasks.Unbind();
-            ServerDelayedTasks.Unbind();
-            _serverScheduler = null;
-            CharacterRecoveryTickDriver.Enabled = false;
-            CharacterRecoveryTickDriver.Clear();
-
-            
+            try
+            {
+                ITickSystem system = (ITickSystem)Activator.CreateInstance(type);
+                scheduler.RegisterSystem(system, channelName, tickRate, order);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log("[GameInstance] Shutdown Server Simulation...");
+                Debug.Log("[ServerRuntimeSimulation] Registered optional tick system: " + typeName + " -> " + channelName);
 #endif
+            }
+            catch (Exception ex)
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                Debug.LogError("[ServerRuntimeSimulation] Failed to register optional tick system '" + typeName + "':\n" + ex);
+#endif
+            }
+        }
+
+        private static Type FindType(string typeName)
+        {
+            Type type = Type.GetType(typeName);
+            if (type != null)
+                return type;
+
+            System.Reflection.Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                type = assemblies[i].GetType(typeName);
+                if (type != null)
+                    return type;
+            }
+            return null;
         }
     }
 }
-#endif
