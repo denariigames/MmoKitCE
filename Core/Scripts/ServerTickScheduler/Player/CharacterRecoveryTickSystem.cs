@@ -1,16 +1,23 @@
 using MultiplayerARPG.Server.Scheduling;
-using UnityEngine;
 
 namespace MultiplayerARPG.Server.Runtime
 {
     /// <summary>
-    /// Ticks CharacterRecoveryComponent for all registered characters.
-    /// Intended to run on LowFreq (usually ~1 Hz), but works at higher Hz too.
+    /// Ticks CharacterRecoveryComponent for registered characters.
+    /// Intended for LowFreq/background cadence.
     /// </summary>
-    public sealed class CharacterRecoveryTickSystem : ITickSystem
+    public sealed class CharacterRecoveryTickSystem : ITickSystem, IOrderedTickSystem, ILoadSheddingTickSystem
     {
-        public string Name => nameof(CharacterRecoveryTickSystem);
-        private bool _loggedFirstExecute;
+        public string Name { get { return nameof(CharacterRecoveryTickSystem); } }
+        public int Order { get { return 200; } }
+
+        public bool ShouldRun(in TickContext ctx, SchedulerPressureLevel pressureLevel)
+        {
+            // Recovery is not transaction-critical, but globally skipping it can cause odd player-visible behavior.
+            // Keep it running; Execute filters unobserved non-player entities.
+            return true;
+        }
+
         public void Prepare(in TickContext ctx) { }
 
         public void Execute(in TickContext ctx)
@@ -18,15 +25,14 @@ namespace MultiplayerARPG.Server.Runtime
             var list = MultiplayerARPG.CharacterRecoveryTickDriver.Components;
             for (int i = 0; i < list.Count; ++i)
             {
-                var comp = list[i];
-                if (comp == null)
+                CharacterRecoveryComponent comp = list[i];
+                if (!comp)
                     continue;
 
-                var ent = comp.Entity;
-                if (ent == null || !ent.IsServer)
+                BaseGameEntity ent = comp.Entity;
+                if (!ent || !ent.IsServer)
                     continue;
 
-                // Optional perf gate (same as skill/buff). If you don't want behavior change, remove this.
                 var identity = ent.Identity;
                 if (identity != null && identity.CountSubscribers() == 0 && !(ent is BasePlayerCharacterEntity))
                     continue;

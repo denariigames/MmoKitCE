@@ -9,20 +9,14 @@ namespace MultiplayerARPG
     /// </summary>
     public static class CharacterSkillAndBuffTickDriver
     {
-        /// <summary>
-        /// Allows you to disable tick-driving globally if needed.
-        /// ServerRuntimeSimulation should set this when scheduler is running.
-        /// </summary>
         public static bool Enabled = true;
 
-        // Simple list registry; swap-remove to keep O(1) removals.
         private static readonly List<CharacterSkillAndBuffComponent> _components = new List<CharacterSkillAndBuffComponent>(1024);
+        private static readonly HashSet<CharacterSkillAndBuffComponent> _set = new HashSet<CharacterSkillAndBuffComponent>();
 
-        public static IReadOnlyList<CharacterSkillAndBuffComponent> Components => _components;
+        public static IReadOnlyList<CharacterSkillAndBuffComponent> Components { get { return _components; } }
+        public static int Count { get { return _components.Count; } }
 
-        /// <summary>
-        /// True when we should tick-drive on this runtime (dedicated/headless server).
-        /// </summary>
         public static bool ShouldTickDriveOnThisRuntime()
         {
             if (!Enabled)
@@ -46,17 +40,16 @@ namespace MultiplayerARPG
             if (!comp)
                 return;
 
-            for (int i = 0; i < _components.Count; ++i)
-            {
-                if (_components[i] == comp)
-                    return;
-            }
-            _components.Add(comp);
+            if (_set.Add(comp))
+                _components.Add(comp);
         }
 
         public static void Unregister(CharacterSkillAndBuffComponent comp)
         {
             if (!comp)
+                return;
+
+            if (!_set.Remove(comp))
                 return;
 
             for (int i = 0; i < _components.Count; ++i)
@@ -71,9 +64,28 @@ namespace MultiplayerARPG
             }
         }
 
+        public static void Compact()
+        {
+            for (int i = _components.Count - 1; i >= 0; --i)
+            {
+                CharacterSkillAndBuffComponent comp = _components[i];
+                if (!comp)
+                    _components.RemoveAt(i);
+            }
+
+            _set.Clear();
+            for (int i = 0; i < _components.Count; ++i)
+            {
+                CharacterSkillAndBuffComponent comp = _components[i];
+                if (comp)
+                    _set.Add(comp);
+            }
+        }
+
         public static void Clear()
         {
             _components.Clear();
+            _set.Clear();
         }
     }
 }

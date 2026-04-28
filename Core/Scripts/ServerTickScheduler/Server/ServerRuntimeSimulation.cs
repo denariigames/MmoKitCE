@@ -1,4 +1,3 @@
-//Updated
 using System;
 using UnityEngine;
 using MultiplayerARPG.Server.Scheduling;
@@ -40,7 +39,6 @@ namespace MultiplayerARPG.Server.Runtime
                 return;
 
 #if !UNITY_SERVER && !UNITY_EDITOR
-            // In non-server player builds this component should not drive authoritative server simulation.
             enabled = false;
             return;
 #endif
@@ -145,6 +143,17 @@ namespace MultiplayerARPG.Server.Runtime
 
             settings.Channels.Add(new TickChannelConfig
             {
+                Name = "Entities",
+                Priority = 90,
+                BaseHz = 20,
+                MinHz = 20,
+                MaxMsPerFrame = 2.0d,
+                PhaseOffsetSeconds = 0.005d,
+                AllowThrottling = false
+            });
+
+            settings.Channels.Add(new TickChannelConfig
+            {
                 Name = "Combat",
                 Priority = 80,
                 BaseHz = 20,
@@ -192,6 +201,11 @@ namespace MultiplayerARPG.Server.Runtime
 
         private static void RegisterOptionalProjectSystems(ServerTickScheduler scheduler)
         {
+            TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.Runtime.BaseGameEntityTickSystem", "Entities", 20, 0);
+            TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.Runtime.MovementTickSystem", "Movement", 20, 100);
+            TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.Runtime.CharacterSkillAndBuffTickSystem", "LowFreq", 1, 100);
+            TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.Runtime.CharacterRecoveryTickSystem", "LowFreq", 1, 200);
+
             TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.AI.MonsterActivityAISystem", "AI", 5, 0);
             TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.Runtime.MonsterActivityMoveIntentSystem", "Movement", 20, 0);
             TryRegisterByTypeName(scheduler, "MultiplayerARPG.Server.Runtime.MonsterActivityCombatSystem", "Combat", 20, 0);
