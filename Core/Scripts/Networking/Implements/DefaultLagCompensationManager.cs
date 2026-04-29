@@ -27,7 +27,7 @@ namespace MultiplayerARPG
                 if (isDisabled)
                     return false;
                 float time = Time.unscaledTime;
-                bool should = time - _lastHistoryStoreTime < SnapShotInterval;
+                bool should = time - _lastHistoryStoreTime >= SnapShotInterval;
                 if (should)
                     _lastHistoryStoreTime = time;
                 return should;
