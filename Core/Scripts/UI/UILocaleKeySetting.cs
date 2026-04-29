@@ -34,7 +34,7 @@ namespace MultiplayerARPG
                 return ZString.Concat(LanguageManager.RETURN_KEY_AS_DEFAULT_VALUE_PREFIX, customValue);
             if (localeKey == UIFormatKeys.UI_CUSTOM)
                 return customKey;
-            return localeKey.ToString();
+            return localeKey.GetCachedString();
         }
 
         public string GetText()

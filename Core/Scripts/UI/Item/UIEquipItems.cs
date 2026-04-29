@@ -127,6 +127,11 @@ namespace MultiplayerARPG
             UpdateData(GameInstance.PlayingCharacter);
         }
 
+        public void UpdateOwningCharacterData(BaseCharacterEntity target)
+        {
+            UpdateOwningCharacterData();
+        }
+
         protected virtual void OnDialogHide()
         {
             CacheSelectionManager.DeselectSelectedUI();

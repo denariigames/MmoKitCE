@@ -416,20 +416,21 @@ namespace MultiplayerARPG
                     _currentInput = Entity.SetInputPosition(_currentInput, CacheNavMeshAgent.destination);
                 }
             }
-            else
+            else if (IsClient)
             {
+                // Have to check `IsClient` because only clients will simulate movement by `SetMovePath` function
                 // Disable obstacle avoidance because it won't predict movement, it is just moving to destination without obstacle avoidance
                 CacheNavMeshAgent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
                 if (CacheNavMeshAgent.velocity.magnitude > MIN_MAGNITUDE_TO_DETERMINE_MOVING)
                 {
                     MovementState = _acceptedMovementStateBeforeStopped;
-                    ExtraMovementState = _acceptedExtraMovementStateBeforeStopped;
                 }
                 else
                 {
                     MovementState = MovementState.IsGrounded;
-                    ExtraMovementState = ExtraMovementState.None;
                 }
+                // Always use server's ExtraMovementState for remote clients to preserve crawl/etc. state
+                ExtraMovementState = _acceptedExtraMovementStateBeforeStopped;
             }
 
             if (replaceMovementForceApplierMode == ApplyMovementForceMode.Dash)
@@ -792,7 +793,7 @@ namespace MultiplayerARPG
             if (moveableDist < 0.001f)
                 moveableDist = 0.001f;
             // Movement validating, if it is valid, set the position follow the client, if not set position to proper one and tell client to teleport
-            float clientMoveDist = Vector3.Distance(oldPos.GetXY(), newPos.GetXY());
+            float clientMoveDist = Vector3.Distance(oldPos, newPos);
             // Increase accumulate data to detect hacking
             float moveDistDiff = clientMoveDist > moveableDist ? (clientMoveDist - moveableDist) : 0f;
             _accumulateDeltaTime += unityDeltaTime;

@@ -714,9 +714,9 @@ namespace MultiplayerARPG
             Cursor.visible = true;
         }
 
-        protected void SetupEquipWeapons()
+        protected void SetupEquipWeapons(BaseCharacterEntity target)
         {
-            SetupEquipWeapons(PlayingCharacterEntity.EquipWeapons);
+            SetupEquipWeapons(target.EquipWeapons);
         }
 
         protected virtual void SetupEquipWeapons(EquipWeapons equipWeapons)
@@ -1739,6 +1739,7 @@ namespace MultiplayerARPG
         }
 
         public void OnLaunchDamageEntity(
+            BaseCharacterEntity target,
             bool isLeftHand,
             CharacterItem weapon,
             int simulateSeed,

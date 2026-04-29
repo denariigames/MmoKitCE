@@ -102,5 +102,10 @@ namespace MultiplayerARPG
                 UpdateStatus();
             }
         }
+
+        private void UpdateStatus(BaseCharacterEntity target)
+        {
+            UpdateStatus();
+        }
     }
 }

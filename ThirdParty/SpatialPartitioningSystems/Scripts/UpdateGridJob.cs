@@ -8,7 +8,7 @@ namespace Insthync.SpatialPartitioningSystems
     [BurstCompile]
     public struct UpdateGridJob : IJobParallelFor
     {
-        [ReadOnly] public NativeArray<SpatialObject> Objects;
+        [ReadOnly] public NativeList<SpatialObject> Objects;
         public NativeParallelMultiHashMap<int, SpatialObject>.ParallelWriter CellToObjects;
         public float CellSize;
         public float3 WorldMin;

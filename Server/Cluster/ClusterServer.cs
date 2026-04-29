@@ -561,7 +561,7 @@ RequestProceedResultDelegate<ResponseChannelsMessage> result)
 #if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
             bool despawned = true;
             if (!string.IsNullOrEmpty(request.userId))
-                despawned = await ConfirmDespawnCharacter(request.userId);
+                despawned = await ConfirmDespawnCharacter(request.userId, request.characterId, request.channelId);
 
             if (despawned)
                 result.InvokeSuccess(EmptyMessage.Value);
@@ -731,7 +731,7 @@ RequestProceedResultDelegate<ResponseChannelsMessage> result)
             return false;
         }
 
-        public async UniTask<bool> ConfirmDespawnCharacter(string userId)
+        public async UniTask<bool> ConfirmDespawnCharacter(string userId, string characterId, string channelId)
         {
             bool allDone = true;
 #if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
@@ -741,6 +741,8 @@ RequestProceedResultDelegate<ResponseChannelsMessage> result)
                 AsyncResponseData<EmptyMessage> result = await SendRequestAsync<RequestForceDespawnCharacterMessage, EmptyMessage>(connectionId, MMORequestTypes.ForceDespawnCharacter, new RequestForceDespawnCharacterMessage()
                 {
                     userId = userId,
+                    characterId = characterId,
+                    channelId = channelId,
                 });
                 switch (result.ResponseCode)
                 {

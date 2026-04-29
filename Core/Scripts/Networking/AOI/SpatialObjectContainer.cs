@@ -51,11 +51,27 @@ namespace MultiplayerARPG
             }
         }
 
-        public static IEnumerable<ISpatialObjectComponent> GetValues()
+        public static Dictionary<uint, ISpatialObjectComponent>.KeyCollection GetKeys()
+        {
+            lock (s_lock)
+            {
+                return s_components.Keys;
+            }
+        }
+
+        public static Dictionary<uint, ISpatialObjectComponent>.ValueCollection GetValues()
         {
             lock (s_lock)
             {
                 return s_components.Values;
+            }
+        }
+
+        public static Dictionary<uint, ISpatialObjectComponent>.Enumerator GetEnumerator()
+        {
+            lock (s_lock)
+            {
+                return s_components.GetEnumerator();
             }
         }
 

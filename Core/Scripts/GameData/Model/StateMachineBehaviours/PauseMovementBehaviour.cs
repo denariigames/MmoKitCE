@@ -25,7 +25,7 @@ namespace MultiplayerARPG
             _entity.onCanMoveValidated -= _entity_onCanMoveValidated;
         }
 
-        private void _entity_onCanMoveValidated(ref bool canMove)
+        private void _entity_onCanMoveValidated(BaseGameEntity target, ref bool canMove)
         {
             if (_updatedNormalizedTime >= minNormalizedTime)
                 canMove = false;

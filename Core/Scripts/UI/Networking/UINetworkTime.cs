@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Cysharp.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,9 +15,9 @@ namespace MultiplayerARPG
                 BaseGameNetworkManager.Singleton.IsServer)
             {
                 if (textRtt)
-                    textRtt.text = "RTT: " + BaseGameNetworkManager.Singleton.Rtt.ToString("N0");
+                    textRtt.text = ZString.Format("RTT: {0:N0}", BaseGameNetworkManager.Singleton.Rtt);
                 if (textServerTimestamp)
-                    textServerTimestamp.text = "ServerTimestamp: " + BaseGameNetworkManager.Singleton.ServerTimestamp.ToString("N0");
+                    textServerTimestamp.text = ZString.Format("ServerTimestamp: {0:N0}", BaseGameNetworkManager.Singleton.ServerTimestamp);
                 return;
             }
             if (textRtt)

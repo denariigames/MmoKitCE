@@ -74,6 +74,11 @@ namespace MultiplayerARPG
             InvokeRepeating(nameof(UpdateIndicator), 0, updateRepeatDelay);
         }
 
+        private void SetupUpdating(BaseCharacterEntity target)
+        {
+            SetupUpdating();
+        }
+
         private void UpdateIndicator()
         {
             if (_characterEntity == null)

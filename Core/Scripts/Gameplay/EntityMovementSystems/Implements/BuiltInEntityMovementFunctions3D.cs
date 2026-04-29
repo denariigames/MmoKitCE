@@ -435,6 +435,19 @@ namespace MultiplayerARPG
             return result;
         }
 
+        public bool TryGetWaterSurfacePoint(out Vector3 point)
+        {
+            if (_waterCollider == null || EntityTransform == null)
+            {
+                point = Vector3.zero;
+                return false;
+            }
+
+            float surfaceY = _waterCollider.bounds.max.y;
+            point = new Vector3(EntityTransform.position.x, surfaceY, EntityTransform.position.z);
+            return true;
+        }
+
         public void UpdateMovement(float deltaTime)
         {
             _moveDirection = Vector3.zero;
@@ -1559,11 +1572,11 @@ namespace MultiplayerARPG
                 else
                 {
                     // It's both server and client, simulate movement
-                    if (Vector3.Distance(position, oldPos) > MIN_DISTANCE_TO_SIMULATE_MOVEMENT)
+                    if (Vector3.Distance(newPos, oldPos) > MIN_DISTANCE_TO_SIMULATE_MOVEMENT)
                     {
                         _acceptedPosition = newPos;
                         _simulatingKeyMovement = true;
-                        SetMovePaths(position, false);
+                        SetMovePaths(newPos, false);
                     }
                     RemoteTurnSimulation(true, yAngle, unityDeltaTime);
                 }

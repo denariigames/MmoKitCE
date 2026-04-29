@@ -104,8 +104,6 @@ MonoBehaviour:
   updateFps: 20
   maxConnections: 1100
   transportFactory: {fileID: 0}
-  facebookLoginRequestType: 210
-  googlePlayLoginRequestType: 211
   clusterServerPort: 6010
   mapSpawnMillisecondsTimeout: 0
   defaultChannelMaxConnections: 500
@@ -312,7 +310,7 @@ MonoBehaviour:
   clusterServerAddress: 127.0.0.1
   clusterServerPort: 6010
   publicAddress: 127.0.0.1
-  spawnExePath: ./Build.exe
+  spawnExePath: ./MmoKitCE.exe
   notSpawnInBatchMode: 0
   startPort: 8000
   batchModeArguments: -batchmode -nographics
@@ -322,14 +320,14 @@ MonoBehaviour:
   spawningMaps:
   - {fileID: 11400000, guid: de8b0e4099f8d444692e88f92309e90d, type: 2}
   - {fileID: 11400000, guid: fbe2a93dfafee544cbeaf175d3491e33, type: 2}
-  - {fileID: 11400000, guid: 7d05446271b4d8f459650ee3e2489a34, type: 2}
+  - {fileID: 0}
   spawningAllocateMaps:
   - mapInfo: {fileID: 11400000, guid: de8b0e4099f8d444692e88f92309e90d, type: 2}
     allocateAmount: 0
   - mapInfo: {fileID: 11400000, guid: fbe2a93dfafee544cbeaf175d3491e33, type: 2}
     allocateAmount: 0
   isOverrideExePath: 1
-  overrideExePath: C:\Users\Ittipon\Desktop\UnityBuilds\MMORPG_KIT\UnityMultiplayerARPG.exe
+  overrideExePath: C:\Projects\MmoKitCE\builds\windows\MmoKitCE.exe
   editorNotSpawnInBatchMode: 1
 --- !u!1 &1834896065226248
 GameObject:
@@ -387,8 +385,8 @@ MonoBehaviour:
   transportFactory: {fileID: 0}
   database: {fileID: 114414512406587944}
   databaseOptions:
-  - {fileID: 114715813743394434}
   - {fileID: 114414512406587944}
+  - {fileID: 114715813743394434}
 --- !u!1 &9006753358993515565
 GameObject:
   m_ObjectHideFlags: 0
