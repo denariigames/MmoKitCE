@@ -42,6 +42,7 @@ namespace LiteNetLibManager
         public LiteNetLibLoadSceneEvent onLoadSceneStart = new LiteNetLibLoadSceneEvent();
         public LiteNetLibLoadSceneEvent onLoadSceneProgress = new LiteNetLibLoadSceneEvent();
         public LiteNetLibLoadSceneEvent onLoadSceneFinish = new LiteNetLibLoadSceneEvent();
+        public UnityEvent onLoadSceneFail = new UnityEvent();
         public UnityEvent onSceneFileSizeRetrieving = new UnityEvent();
         public AddressableAssetFileSizeEvent onSceneFileSizeRetrieved = new AddressableAssetFileSizeEvent();
         public UnityEvent onSceneDepsDownloading = new UnityEvent();
@@ -463,13 +464,7 @@ namespace LiteNetLibManager
                 if (Manager.LogWarn) Logging.LogWarning(LogTag, "NetworkDestroy - gameObject is null.");
                 return false;
             }
-            LiteNetLibIdentity identity = gameObject.GetComponent<LiteNetLibIdentity>();
-            if (identity == null)
-            {
-                if (Manager.LogWarn) Logging.LogWarning(LogTag, "NetworkSpawn - identity is null.");
-                return false;
-            }
-            return NetworkDestroy(identity.ObjectId, reasons);
+            return NetworkDestroy(gameObject.GetComponent<LiteNetLibIdentity>(), reasons);
         }
 
         public bool NetworkDestroy(uint objectId, byte reasons)
@@ -483,26 +478,36 @@ namespace LiteNetLibManager
             LiteNetLibIdentity spawnedObject;
             if (SpawnedObjects.TryGetValue(objectId, out spawnedObject))
             {
-                // Call this function to tell behaviour that the identity is being destroyed
-                spawnedObject.OnNetworkDestroy(reasons);
-                if (onObjectDestroy != null)
-                    onObjectDestroy.Invoke(spawnedObject);
-                // If the object is scene object, don't destroy just hide it, otherwise destroy
-                if (spawnedObject.IsSceneObject)
-                {
-                    spawnedObject.gameObject.SetActive(false);
-                }
-                else
-                {
-                    DestroyObjectInstance(spawnedObject);
-                }
-                return true;
+                return NetworkDestroy(spawnedObject, reasons);
             }
             else if (Manager.LogWarn)
             {
                 Logging.LogWarning(LogTag, $"NetworkDestroy - Object Id: {objectId} is not spawned.");
             }
             return false;
+        }
+
+        public bool NetworkDestroy(LiteNetLibIdentity spawnedObject, byte reasons)
+        {
+            if (spawnedObject == null)
+            {
+                if (Manager.LogWarn) Logging.LogWarning(LogTag, "NetworkSpawn - identity is null.");
+                return false;
+            }
+            // Call this function to tell behaviour that the identity is being destroyed
+            spawnedObject.OnNetworkDestroy(reasons);
+            if (onObjectDestroy != null)
+                onObjectDestroy.Invoke(spawnedObject);
+            // If the object is scene object, don't destroy just hide it, otherwise destroy
+            if (spawnedObject.IsSceneObject)
+            {
+                spawnedObject.gameObject.SetActive(false);
+            }
+            else
+            {
+                DestroyObjectInstance(spawnedObject);
+            }
+            return true;
         }
 
         public void DestroyObjectInstance(LiteNetLibIdentity instance)
@@ -595,9 +600,9 @@ namespace LiteNetLibManager
             return false;
         }
 
-        public IEnumerable<LiteNetLibIdentity> GetSceneObjects()
+        public Dictionary<int, LiteNetLibIdentity>.Enumerator GetSceneObjects()
         {
-            return SceneObjects.Values;
+            return SceneObjects.GetEnumerator();
         }
 
         public bool ContainsSpawnedObject(uint objectId)
@@ -622,9 +627,9 @@ namespace LiteNetLibManager
             return false;
         }
 
-        public IEnumerable<LiteNetLibIdentity> GetSpawnedObjects()
+        public Dictionary<uint, LiteNetLibIdentity>.Enumerator GetSpawnedObjects()
         {
-            return SpawnedObjects.Values;
+            return SpawnedObjects.GetEnumerator();
         }
 
         public static void ResetSpawnPositionCounter()

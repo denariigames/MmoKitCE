@@ -1,5 +1,4 @@
 using Cysharp.Threading.Tasks;
-using LiteNetLib;
 using LiteNetLib.Utils;
 using LiteNetLibManager;
 using System.Collections.Generic;
@@ -232,6 +231,7 @@ namespace MultiplayerARPG
         public void OnSetOwnerClient(bool isOwnerClient)
         {
             NavPaths = null;
+            _simulatingKeyMovement = false;
         }
 
         public void OnAnimatorMove()
@@ -433,6 +433,19 @@ namespace MultiplayerARPG
             Bounds movementBounds = EntityMovement.GetMovementBounds();
             float result = waterCollider.bounds.max.y - (underWaterThreshold * movementBounds.size.y);
             return result;
+        }
+
+        public bool TryGetWaterSurfacePoint(out Vector3 point)
+        {
+            if (_waterCollider == null || EntityTransform == null)
+            {
+                point = Vector3.zero;
+                return false;
+            }
+
+            float surfaceY = _waterCollider.bounds.max.y;
+            point = new Vector3(EntityTransform.position.x, surfaceY, EntityTransform.position.z);
+            return true;
         }
 
         public void UpdateMovement(float deltaTime)
@@ -1224,6 +1237,58 @@ namespace MultiplayerARPG
             return false;
         }
 
+        // This is used to create movement data for server, and it will be sent to clients, so it can be used to sync movement state from server to clients, and it's called at server, so it can be used to create movement data from server state.
+        public MovementData CreateMovementData(out List<EntityMovementForceApplier> forceAppliers)
+        {
+            bool shouldSendReliably = false;
+            // Sync transform from server to all clients (include owner client)
+            if (_sendingJump)
+            {
+                shouldSendReliably = true;
+                MovementState |= MovementState.IsJump;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsJump;
+            }
+            if (_sendingDash)
+            {
+                shouldSendReliably = true;
+                MovementState |= MovementState.IsDash;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsDash;
+            }
+            if (_isTeleporting)
+            {
+                shouldSendReliably = true;
+                if (_stillMoveAfterTeleport)
+                    MovementState |= MovementState.IsTeleport;
+                else
+                    MovementState = MovementState.IsTeleport;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsTeleport;
+            }
+
+            MovementData movementData = new MovementData();
+            movementData.movementState = (uint)MovementState;
+            movementData.extraMovementState = (byte)ExtraMovementState;
+            movementData.worldPosition = EntityTransform.position;
+            movementData.yAngle = EntityTransform.eulerAngles.y;
+            movementData.shouldSendReliably = shouldSendReliably;
+            forceAppliers = _movementForceAppliers;
+
+            _sendingJump = false;
+            _sendingDash = false;
+            _isTeleporting = false;
+            _stillMoveAfterTeleport = false;
+
+            return movementData;
+        }
+
         public bool WriteServerState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
         {
             shouldSendReliably = false;
@@ -1260,6 +1325,7 @@ namespace MultiplayerARPG
             {
                 MovementState &= ~MovementState.IsTeleport;
             }
+
             Entity.ServerWriteSyncTransform3D(_movementForceAppliers, writer);
             _sendingJump = false;
             _sendingDash = false;
@@ -1314,7 +1380,6 @@ namespace MultiplayerARPG
                     if (movementSecure == MovementSecure.ServerAuthoritative || !IsOwnerClient)
                     {
                         EntityMovement.SetPosition(position);
-                        CurrentGameManager.ShouldPhysicSyncTransforms = true;
                         RemoteTurnSimulation(true, yAngle, unityDeltaTime);
                     }
                     MovementState = _tempMovementState = movementState;
@@ -1483,35 +1548,47 @@ namespace MultiplayerARPG
             _accumulateDeltaTime += unityDeltaTime;
             _accumulateDiffHorMoveDist += horMoveDistDiff;
             _accumulateDiffVerMoveDist += verMoveDistDiff;
-            // TODO: Speed hack detection
-            if (!IsClient)
+            if (!Entity.CanMove())
             {
-                // Allow to move to the position
+                // Do not move
+                if (clientHorMoveDist > 0.001f)
+                {
+                    newPos.x = oldPos.x;
+                    newPos.z = oldPos.z;
+                }
                 _acceptedPosition = newPos;
-                EntityMovement.SetPosition(newPos);
-                CurrentGameManager.ShouldPhysicSyncTransforms = true;
-                // Update character rotation
-                RemoteTurnSimulation(true, yAngle, unityDeltaTime);
             }
             else
             {
-                // It's both server and client, simulate movement
-                if (Vector3.Distance(position, oldPos) > MIN_DISTANCE_TO_SIMULATE_MOVEMENT)
+                // TODO: Speed hack detection
+                if (!IsClient)
                 {
+                    // Allow to move to the position
                     _acceptedPosition = newPos;
-                    _simulatingKeyMovement = true;
-                    SetMovePaths(position, false);
+                    EntityMovement.SetPosition(newPos);
+                    // Update character rotation
+                    RemoteTurnSimulation(true, yAngle, unityDeltaTime);
                 }
-                RemoteTurnSimulation(true, yAngle, unityDeltaTime);
-            }
-            if (movementState.Has(MovementState.IsJump))
-            {
-                _acceptedJump = true;
-            }
-            if (movementState.Has(MovementState.IsDash))
-            {
-                _acceptedDash = true;
-                TurnImmediately(yAngle);
+                else
+                {
+                    // It's both server and client, simulate movement
+                    if (Vector3.Distance(newPos, oldPos) > MIN_DISTANCE_TO_SIMULATE_MOVEMENT)
+                    {
+                        _acceptedPosition = newPos;
+                        _simulatingKeyMovement = true;
+                        SetMovePaths(newPos, false);
+                    }
+                    RemoteTurnSimulation(true, yAngle, unityDeltaTime);
+                }
+                if (movementState.Has(MovementState.IsJump))
+                {
+                    _acceptedJump = true;
+                }
+                if (movementState.Has(MovementState.IsDash))
+                {
+                    _acceptedDash = true;
+                    TurnImmediately(yAngle);
+                }
             }
             _acceptedPositionTimestamp = peerTimestamp;
         }
@@ -1529,7 +1606,6 @@ namespace MultiplayerARPG
                 NavPaths = null;
             _verticalVelocity = 0;
             EntityMovement.SetPosition(position);
-            CurrentGameManager.ShouldPhysicSyncTransforms = true;
             TurnImmediately(yAngle);
             if (!IsServer && IsOwnerClient)
                 _isClientConfirmingTeleport = true;

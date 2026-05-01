@@ -1,13 +1,17 @@
-﻿using ConcurrentCollections;
+﻿// ce stability: #46
+
+using ConcurrentCollections;
 using Cysharp.Threading.Tasks;
-using Insthync.AddressableAssetTools;
 using Insthync.DevExtension;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using LiteNetLibManager;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
@@ -29,6 +33,9 @@ namespace MultiplayerARPG
         // Others
         public ILagCompensationManager LagCompensationManager { get; protected set; }
         public IHitRegistrationManager HitRegistrationManager { get; protected set; }
+
+        //Grid Manager for AOI system and Quantizing positions, it will be used if interest manager is not set
+        public IBaseGridManagerComponenent GridManager { get; protected set; }
         public BaseGameNetworkManagerComponent[] ManagerComponents { get; private set; }
 
         public bool IsTemporarilyClose { get; set; } = false;
@@ -39,10 +46,6 @@ namespace MultiplayerARPG
         public string ChannelPassword { get; set; } = string.Empty;
         public BaseMapInfo MapInfo { get; protected set; } = null;
         public static BaseMapInfo CurrentMapInfo => Singleton == null ? null : Singleton.MapInfo;
-        public bool ShouldPhysicSyncTransforms { get; set; }
-        public bool ShouldPhysicSyncTransforms2D { get; set; }
-
-        public bool useUnityAutoPhysicSyncTransform = true;
         // Spawn entities events
         public LiteNetLibLoadSceneEvent onSpawnEntitiesStart = new LiteNetLibLoadSceneEvent();
         public LiteNetLibLoadSceneEvent onSpawnEntitiesProgress = new LiteNetLibLoadSceneEvent();
@@ -110,13 +113,11 @@ namespace MultiplayerARPG
             doNotDestroyOnSceneChanges = true;
             LagCompensationManager = gameObject.GetOrAddComponent<ILagCompensationManager, DefaultLagCompensationManager>();
             HitRegistrationManager = gameObject.GetOrAddComponent<IHitRegistrationManager, DefaultHitRegistrationManager>();
+            GridManager = gameObject.GetOrAddComponent<IBaseGridManagerComponenent, DefaultGridManagerComponent>();
             _defaultInterestManager = GetComponent<BaseInterestManager>();
             if (_defaultInterestManager == null)
                 _defaultInterestManager = gameObject.AddComponent<JobifiedGridSpatialPartitioningAOI>();
             ManagerComponents = GetComponents<BaseGameNetworkManagerComponent>();
-            // Force change physic auto sync transforms mode to manual
-            Physics.autoSyncTransforms = useUnityAutoPhysicSyncTransform;
-            Physics2D.autoSyncTransforms = useUnityAutoPhysicSyncTransform;
             // Setup character hidding condition
             LiteNetLibIdentity.ForceHideFunctions.Add(IsHideEntity);
             base.Awake();
@@ -125,7 +126,12 @@ namespace MultiplayerARPG
         protected override void OnServerUpdate(LogicUpdater updater)
         {
             base.OnServerUpdate(updater);
-            SendServerEntityMovementState(ServerTimestamp);
+
+            if (DefaultGridManagerComponent.Instance.IsDisabled)
+                SendServerEntityMovementState(ServerTimestamp);
+            else
+                SendServerEntityMovementStateJob(ServerTimestamp);
+
         }
 
         protected override void OnClientUpdate(LogicUpdater updater)
@@ -169,13 +175,6 @@ namespace MultiplayerARPG
                     SendTimeOfDay();
                 }
             }
-            // Network messages were handled (in base.Update()), enity movement proceeded, it may have transform changing manually, and need to sync tranforms before update physic movement
-            if (ShouldPhysicSyncTransforms && !Physics.autoSyncTransforms)
-                Physics.SyncTransforms();
-            ShouldPhysicSyncTransforms = false;
-            if (ShouldPhysicSyncTransforms2D && !Physics2D.autoSyncTransforms)
-                Physics2D.SyncTransforms();
-            ShouldPhysicSyncTransforms2D = false;
 
             // Update game entity, it may update entities movement
             if (IsNetworkActive)
@@ -255,6 +254,9 @@ namespace MultiplayerARPG
             }
             CurrentGameInstance.DayNightTimeUpdater.InitTimeOfDay(this);
             base.OnStartServer();
+
+            //Populate Grid for AOI system
+            GridManager.SetupDynamicGrid();
         }
 
         public override void OnStopServer()
@@ -285,6 +287,9 @@ namespace MultiplayerARPG
                 component.OnStartClient(this, client);
             }
             base.OnStartClient(client);
+
+            //Populate Grid for AOI system
+            GridManager.SetupDynamicGrid();
         }
 
         public override void OnStopClient()
@@ -592,7 +597,7 @@ namespace MultiplayerARPG
                 int positionBeforeRead = reader.Position;
                 if (!_entityMovementDataHandlers.TryGetValue(objectId, out IEntityMovementDataHandler dataHandler))
                 {
-                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, entity movement not found.");
+                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, entity movement not found: {objectId}.");
                     reader.SetPosition(positionBeforeRead);
                     reader.SkipBytes(dataLength);
                     continue;
@@ -604,7 +609,7 @@ namespace MultiplayerARPG
                 }
                 catch
                 {
-                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, error occurs while reading.");
+                    if (LogWarn) Logging.LogWarning(LogTag, $"Unable to read entity movement state properly, error occurs while reading: {objectId}.");
                     reader.SetPosition(positionBeforeRead);
                     reader.SkipBytes(dataLength);
                 }
@@ -615,7 +620,7 @@ namespace MultiplayerARPG
         {
             if (IsServer)
                 return;
-            BasePlayerCharacterEntity entity = GameInstance.PlayingCharacterEntity;
+            BaseGameEntity entity = GetSyncTransformEntity(GameInstance.PlayingCharacterEntity);
             if (entity == null)
                 return;
             if (!_entityMovementDataHandlers.TryGetValue(entity.ObjectId, out IEntityMovementDataHandler dataHandler))
@@ -630,6 +635,28 @@ namespace MultiplayerARPG
             ClientSendMessage(BaseGameEntity.MOVEMENT_DATA_CHANNEL, shouldSendReliably ? DeliveryMethod.ReliableOrdered : DeliveryMethod.Unreliable, EntityMovementDataBuffers.StateMessageWriter);
         }
 
+        private BaseGameEntity GetSyncTransformEntity(BaseGameEntity entity)
+        {
+            if (entity == null)
+                return null;
+            IVehicleEntity passengingVehicleEntity;
+            do
+            {
+                passengingVehicleEntity = entity.PassengingVehicleEntity;
+                if (passengingVehicleEntity.IsNull())
+                {
+                    // No passenging vehicle, no changes to syncing entity
+                    break;
+                }
+                if (!passengingVehicleEntity.IsDriver(entity.PassengingVehicleSeatIndex))
+                {
+                    // Passenging on vehicle, but not a driver, do not sync
+                    return null;
+                }
+                entity = passengingVehicleEntity.Entity;
+            } while (true);
+            return entity;
+        }
         internal void SendServerEntityMovementState(long writeTimestamp)
         {
             NetDataWriter reliableWriter = EntityMovementDataBuffers.ReliablePacketWriter;
@@ -651,17 +678,20 @@ namespace MultiplayerARPG
 
             int tempLastPosition;
 
-            foreach (LiteNetLibPlayer player in Players.Values)
+            foreach (KeyValuePair<long, LiteNetLibPlayer> playerKvp in Players)
             {
-                if (player.ConnectionId == ClientConnectionId)
+                if (playerKvp.Key == ClientConnectionId)
                     continue;
 
-                HashSet<uint> objectIds = player.GetSubscribingObjectIds();
-                foreach (uint objectId in objectIds)
+                LiteNetLibPlayer player = playerKvp.Value;
+                var objectIds = player.GetSubscribingObjectIds();
+                while (objectIds.MoveNext())
                 {
+                    uint objectId = objectIds.Current;
                     if (!_entityMovementDataHandlers.TryGetValue(objectId, out IEntityMovementDataHandler dataHandler))
                         continue;
                     EntityMovementDataBuffers.StateDataWriter.Reset();
+
                     if (!dataHandler.WriteServerState(writeTimestamp, EntityMovementDataBuffers.StateDataWriter, out bool shouldSendReliably))
                         continue;
                     // Increase data writing counter
@@ -676,13 +706,20 @@ namespace MultiplayerARPG
                     {
                         tempLastPosition = unreliableWriter.Length;
                         // If packet will too big, send created one then re-create a new packet
-                        const byte intSize = 4;
-                        if (tempLastPosition + EntityMovementDataBuffers.StateDataWriter.Length + intSize > MAX_UNRELIABLE_PACKET_SIZE)
+                        const byte idAndLengthSize = 8; // Use 2 ints for object ID and state data length
+                        if (tempLastPosition + EntityMovementDataBuffers.StateDataWriter.Length + idAndLengthSize >= MAX_UNRELIABLE_PACKET_SIZE)
                         {
                             unreliableWriter.SetPosition(posBeforeWriteUnreliableStateCount);
                             unreliableWriter.Put(unreliableStateCount);
                             unreliableWriter.SetPosition(tempLastPosition);
-                            ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+                            try
+                            {
+                                ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+                            }
+                            catch (TooBigPacketException)
+                            {
+                                Logging.LogError(LogTag, $"Too Big Packet {unreliableWriter.Length}");
+                            }
                             unreliableStateCount = 0;
                             unreliableWriter.SetPosition(posAfterWriteUnreliableStateCount);
                         }
@@ -708,7 +745,186 @@ namespace MultiplayerARPG
                     unreliableWriter.SetPosition(posBeforeWriteUnreliableStateCount);
                     unreliableWriter.Put(unreliableStateCount);
                     unreliableWriter.SetPosition(tempLastPosition);
-                    ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+                    try
+                    {
+                        ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+                    }
+                    catch (TooBigPacketException)
+                    {
+                        Logging.LogError(LogTag, $"Too Big Packet {unreliableWriter.Length}");
+                    }
+                }
+            }
+        }
+        internal void SendServerEntityMovementStateJob(long writeTimestamp)
+        {
+            NetDataWriter reliableWriter = EntityMovementDataBuffers.ReliablePacketWriter;
+            NetDataWriter unreliableWriter = EntityMovementDataBuffers.UnreliablePacketWriter;
+
+            // Prepare packets
+            TransportHandler.WritePacket(reliableWriter, GameNetworkingConsts.EntityState);
+            reliableWriter.PutPackedLong(writeTimestamp);
+            int posBeforeWriteReliableStateCount = reliableWriter.Length;
+            int reliableStateCount = 0;
+            reliableWriter.Put(reliableStateCount);
+
+            TransportHandler.WritePacket(unreliableWriter, GameNetworkingConsts.EntityState);
+            unreliableWriter.PutPackedLong(writeTimestamp);
+            int posBeforeWriteUnreliableStateCount = unreliableWriter.Length;
+            int unreliableStateCount = 0;
+            unreliableWriter.Put(unreliableStateCount);
+            int posAfterWriteUnreliableStateCount = unreliableWriter.Length;
+
+            int tempLastPosition;
+
+            //Native collections for job
+            NativeHashMap<uint, MovementData> movementDatas;
+            //Native collection for results
+            NativeList<MovementResult> movementEnttitiesDataResults;
+            NativeHashMap<uint, byte> ModesResults;
+
+            foreach (LiteNetLibPlayer player in Players.Values)
+            {
+                //if (player.ConnectionId == ClientConnectionId)
+                //    continue;
+
+                //Try get position for interest management, it will be used for determining data compression mode, but it's not required, so it won't cause problem if failed to get position
+                if (!DefaultServerUserHandlers.PlayerCharacters.TryGetValue(player.ConnectionId, out IPlayerCharacterData playerCharacter))
+                    continue;
+
+                //HashSet<uint> objectIds = player.GetSubscribingObjectIds();
+                //DG fix
+                var objectIds = new HashSet<uint>();
+                var enumerator = player.GetSubscribingObjectIds();
+                while (enumerator.MoveNext())
+                {
+                    objectIds.Add(enumerator.Current);
+                }
+
+                movementDatas = new NativeHashMap<uint, MovementData>(objectIds.Count, Allocator.TempJob);
+                movementEnttitiesDataResults = new NativeList<MovementResult>(objectIds.Count, Allocator.TempJob);
+                ModesResults = new NativeHashMap<uint, byte>(objectIds.Count, Allocator.TempJob);
+                BasePlayerCharacterEntity basePlayerCharacterEntity = playerCharacter as BasePlayerCharacterEntity;
+
+                Dictionary<uint, List<EntityMovementForceApplier>> forceApplyers = new Dictionary<uint, List<EntityMovementForceApplier>>();
+
+                foreach (uint objectId in objectIds)
+                {
+                    if (!_entityMovementDataHandlers.TryGetValue(objectId, out IEntityMovementDataHandler dataHandler))
+                        continue;
+
+                    MovementData movementData = dataHandler.CreateMovementData(out List<EntityMovementForceApplier> forceAppliers);
+                    movementDatas[objectId] = movementData;
+                    forceApplyers[objectId] = forceAppliers;
+                }
+
+                var job = new MovementJob
+                {
+                    previousModes = (playerCharacter as BasePlayerCharacterEntity).EntityCompressionModes,
+                    gridData = DefaultGridManagerComponent.Instance.GridData,
+                    objectIds = new NativeArray<uint>(objectIds.ToArray(), Allocator.TempJob),
+                    entityData = movementDatas,
+                    receivingPlayerPosition = playerCharacter.CurrentPosition,
+                    movementResults = movementEnttitiesDataResults,
+                    ModesResults = ModesResults
+                };
+
+                JobHandle handle = job.Schedule();
+                handle.Complete(); // wait for job
+
+                basePlayerCharacterEntity.EntityCompressionModes.Clear();
+                var it = ModesResults.GetEnumerator();
+
+                while (it.MoveNext())
+                {
+                    var kv = it.Current;
+                    basePlayerCharacterEntity.EntityCompressionModes.TryAdd(kv.Key, kv.Value);
+                }
+
+                foreach (MovementResult MovementResult in movementEnttitiesDataResults)
+                {
+                    EntityMovementDataBuffers.StateDataWriter.Reset();
+                    forceApplyers.TryGetValue(MovementResult.objectId, out List<EntityMovementForceApplier> entityForceApplyers);
+
+                    if (!DefaultGridManagerComponent.Instance.WriteEntityServerState(EntityMovementDataBuffers.StateDataWriter, MovementResult, entityForceApplyers))
+                        continue;
+
+                    // Increase data writing counter
+                    if (MovementResult.reliably)
+                    {
+                        reliableWriter.PutPackedUInt(MovementResult.objectId);
+                        reliableWriter.Put(EntityMovementDataBuffers.StateDataWriter.Length);
+                        reliableWriter.Put(EntityMovementDataBuffers.StateDataWriter.Data, 0, EntityMovementDataBuffers.StateDataWriter.Length);
+                        reliableStateCount++;
+                    }
+                    else
+                    {
+                        tempLastPosition = unreliableWriter.Length;
+                        // If packet will too big, send created one then re-create a new packet
+                        const byte intSize = 4;
+                        if (tempLastPosition + EntityMovementDataBuffers.StateDataWriter.Length + intSize >= MAX_UNRELIABLE_PACKET_SIZE)
+                        {
+                            unreliableWriter.SetPosition(posBeforeWriteUnreliableStateCount);
+                            unreliableWriter.Put(unreliableStateCount);
+                            unreliableWriter.SetPosition(tempLastPosition);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                            try
+                            {
+#endif
+                                ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                            }
+                            catch (TooBigPacketException ex)
+                            {
+                                Logging.LogError(LogTag, $"Too Big Packet {unreliableWriter.Length}");
+                                throw ex;
+                            }
+#endif
+                            unreliableStateCount = 0;
+                            unreliableWriter.SetPosition(posAfterWriteUnreliableStateCount);
+                        }
+                        unreliableWriter.PutPackedUInt(MovementResult.objectId);
+                        unreliableWriter.Put(EntityMovementDataBuffers.StateDataWriter.Length);
+                        unreliableWriter.Put(EntityMovementDataBuffers.StateDataWriter.Data, 0, EntityMovementDataBuffers.StateDataWriter.Length);
+                        unreliableStateCount++;
+                    }
+                }
+                movementDatas.Dispose();
+                movementEnttitiesDataResults.Dispose();
+                job.ModesResults.Dispose();
+                job.objectIds.Dispose();
+                forceApplyers.Clear();
+
+                // Send reliable data to client
+                if (reliableStateCount > 0)
+                {
+                    tempLastPosition = reliableWriter.Length;
+                    reliableWriter.SetPosition(posBeforeWriteReliableStateCount);
+                    reliableWriter.Put(reliableStateCount);
+                    reliableWriter.SetPosition(tempLastPosition);
+                    ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.ReliableOrdered, reliableWriter);
+                }
+                // Send unreliable data to client
+                if (unreliableStateCount > 0)
+                {
+                    tempLastPosition = unreliableWriter.Length;
+                    unreliableWriter.SetPosition(posBeforeWriteUnreliableStateCount);
+                    unreliableWriter.Put(unreliableStateCount);
+                    unreliableWriter.SetPosition(tempLastPosition);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    try
+                    {
+#endif
+                        ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    }
+                    catch (TooBigPacketException ex)
+                    {
+                        Logging.LogError(LogTag, $"Too Big Packet {unreliableWriter.Length}");
+                        throw ex;
+                    }
+#endif
                 }
             }
         }
@@ -940,6 +1156,22 @@ namespace MultiplayerARPG
             {
                 component.OnServerOnlineSceneLoaded(this);
             }
+
+            if (InterestManager is JobifiedGridSpatialPartitioningAOI gridAOI)
+            {
+                gridAOI.PrepareSystem();
+                //if (gridAOI.IsSystemReady)
+                //    Logging.Log(LogTag, "[AOI] Grid spatial partitioning system initialized successfully.");
+                //else
+                    Logging.LogWarning(LogTag, "[AOI] Grid AOI system not initialized after PrepareSystem. " +
+                        "Running in degraded fallback mode. Add AOIMapBounds to your scene.");
+            }
+            else if (InterestManager is DefaultInterestManager)
+            {
+                Logging.LogWarning(LogTag, "[AOI] Using DefaultInterestManager (O(N*M) brute force). " +
+                    "This will not scale. Ensure JobifiedGridSpatialPartitioningAOI is configured.");
+            }
+
             _serverSceneLoadedTime = Time.unscaledTime;
             _serverReadyToInstantiateObjectsStates.Clear();
             _isServerReadyToInstantiateObjects = false;
@@ -1099,12 +1331,22 @@ namespace MultiplayerARPG
             progress = 1f;
             onSpawnEntitiesProgress.Invoke(sceneName, false, true, progress);
             // If it's server (not host) spawn simple camera controller
-            if (!IsClient && GameInstance.Singleton.serverCharacterPrefab != null &&
-                SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null)
+            if (!IsClient && SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null)
             {
                 if (LogInfo)
                     Logging.Log(LogTag, "Spawning server character");
-                Instantiate(GameInstance.Singleton.serverCharacterPrefab, MapInfo.StartPosition, Quaternion.identity);
+                Vector3 startPosition = MapInfo != null ? MapInfo.StartPosition : Vector3.zero;
+                if (GameInstance.Singleton.serverCharacterPrefab != null)
+                {
+                    Instantiate(GameInstance.Singleton.serverCharacterPrefab, startPosition, Quaternion.identity);
+                }
+                else
+                {
+                    GameObject serverCharacter = new GameObject("_SERVER_CHARACTER");
+                    serverCharacter.AddComponent<ServerCharacter>();
+                    serverCharacter.AddComponent<Camera>();
+                    serverCharacter.tag = "MainCamera";
+                }
             }
             await UniTask.NextFrame();
             // Entities were spawned

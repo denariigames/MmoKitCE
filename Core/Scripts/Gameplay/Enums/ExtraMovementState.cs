@@ -1,4 +1,6 @@
-﻿namespace MultiplayerARPG
+﻿//DG: 20260403 add sitting state
+
+namespace MultiplayerARPG
 {
     /// <summary>
     /// Toggleable movement states
@@ -11,5 +13,6 @@
         IsCrouching,
         IsCrawling,
         IsFlying,
+        IsSitting,
     }
 }

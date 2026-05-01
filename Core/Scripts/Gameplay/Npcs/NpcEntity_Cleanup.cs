@@ -16,6 +16,9 @@ namespace MultiplayerARPG
             if (_questIndicator != null)
                 Destroy(_questIndicator.gameObject);
             _questIndicator = null;
+
+            InstantiatedObjects.DestroyAndNullify();
+            InstantiatedObjects.Clear();
         }
     }
 }

@@ -29,10 +29,12 @@ namespace MultiplayerARPG
                 entity.gameObject.GetOrAddComponent<PlayerCharacterVendingComponent>();
             if (enablePlayerCharacterPk)
                 entity.gameObject.GetOrAddComponent<PlayerCharacterPkComponent>();
+            entity.gameObject.GetOrAddComponent<DashAttackHandler>();
         }
 
         public override void InitialMonsterCharacterEntityComponents(BaseMonsterCharacterEntity entity)
         {
+            entity.gameObject.GetOrAddComponent<DashAttackHandler>();
         }
 
         public override void InitialHarvestableEntityComponents(HarvestableEntity entity)

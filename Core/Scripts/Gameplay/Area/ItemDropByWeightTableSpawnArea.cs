@@ -251,7 +251,7 @@ namespace MultiplayerARPG
             _pending.Add(data);
         }
 
-        protected virtual void NewEntity_onNetworkDestroy(byte reasons)
+        protected virtual void NewEntity_onNetworkDestroy(BaseGameEntity target, byte reasons)
         {
             if (!AbleToSpawn())
             {

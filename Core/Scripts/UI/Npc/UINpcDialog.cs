@@ -95,6 +95,11 @@ namespace MultiplayerARPG
                 await _lastData.RenderUI(this);
         }
 
+        protected void ReRenderUI(BaseCharacterEntity target)
+        {
+            ReRenderUI();
+        }
+
         protected override async void UpdateData()
         {
             if (_lastData != null)

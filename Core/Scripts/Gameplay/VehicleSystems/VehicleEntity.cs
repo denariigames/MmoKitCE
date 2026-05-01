@@ -123,16 +123,6 @@ namespace MultiplayerARPG
             GameDataHelpers.CombineArmors(armors, Armors, Level, 1);
         }
 
-        protected override void SetupNetElements()
-        {
-            base.SetupNetElements();
-            level.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
-            isInvincible.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
-            currentHp.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
-            passengerIds.forOwnerOnly = false;
-            passengerIds.onOperation += OnPassengerIdsOperation;
-        }
-
         public override void OnIdentityInitialize()
         {
             base.OnIdentityInitialize();
@@ -148,6 +138,16 @@ namespace MultiplayerARPG
             }
             // Vehicle must not being destroyed when owner player is disconnect to avoid vehicle exiting issues
             Identity.DoNotDestroyWhenDisconnect = true;
+        }
+
+        protected override void SetupNetElements()
+        {
+            base.SetupNetElements();
+            level.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
+            isInvincible.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
+            currentHp.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
+            passengerIds.forOwnerOnly = false;
+            passengerIds.onOperation += OnPassengerIdsOperation;
         }
 
         protected override void EntityOnDestroy()

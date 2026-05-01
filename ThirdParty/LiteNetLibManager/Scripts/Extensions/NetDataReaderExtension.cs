@@ -64,6 +64,61 @@ namespace LiteNetLib.Utils
             return new Vector3(reader.GetFloat(), reader.GetFloat(), reader.GetFloat());
         }
 
+        /// <summary>
+        ///Read a quantized Vector3 from the reader, the vector is quantized into integers based on the cell size and compression mode, which determines how many bits are used for each component.
+        public static Vector3 GetQuantizedVector3(this NetDataReader reader, ushort cellSize, out int compressionMode)
+        {
+            //Read Mode from the first byte, the mode is determined by the top 2 bits of the first byte, and the remaining 6 bits are used for quantized data. The mode determines how many bits are used for each component of the vector, which can be 3, 4, 5, or 6 bits for x, y, and z respectively.
+            byte first = reader.GetByte();
+            compressionMode = ((first >> 6) & 0b11) + 3;
+
+            int bx, by, bz;
+
+            switch (compressionMode)
+            {
+                case 3: bx = 10; by = 4; bz = 10; break;
+                case 4: bx = 11; by = 10; bz = 11; break;
+                case 5: bx = 14; by = 12; bz = 14; break;
+                case 6: bx = 16; by = 16; bz = 16; break;
+                default: throw new Exception("Invalid mode");
+            }
+
+            int totalBits = bx + by + bz;
+            int byteCount = (totalBits + 7) / 8;
+
+            ulong data = (ulong)(first & 0x3F); // first 6 bits
+            int shift = 6;
+
+            for (int i = 1; i < byteCount; i++)
+            {
+                byte b = reader.GetByte();
+                data |= ((ulong)b << shift);
+                shift += 8;
+            }
+
+
+            //Extract quantized values for x, y, and z from the combined data using bitwise operations. The values are extracted in the order of x, z, and y, based on the number of bits allocated for each component.
+            int s = 0;
+
+            int qx = (int)((data >> s) & ((1UL << bx) - 1)); s += bx;
+            int qz = (int)((data >> s) & ((1UL << bz) - 1)); s += bz;
+            int qy = (int)((data >> s) & ((1UL << by) - 1));
+
+            float x = Dequantize(qx, cellSize, bx);
+            float y = Dequantize(qy, cellSize, by);
+            float z = Dequantize(qz, cellSize, bz);
+
+            return new Vector3(x, y, z);
+        }
+
+        /// <summary>
+        /// Dequantize an integer value to a float based on the cell size and the number of bits used for quantization. The value is first normalized to the range [0, 1] by dividing it by the maximum integer value that can be represented with the given number of bits, and then scaled by the cell size to get the final float value.
+        static float Dequantize(int value, ushort cellSize, int bits)
+        {
+            float maxInt = (1 << bits) - 1;
+            return ((float)value / maxInt) * cellSize;
+        }
+
         public static Vector3Int GetVector3Int(this NetDataReader reader)
         {
             return new Vector3Int(reader.GetInt(), reader.GetInt(), reader.GetInt());

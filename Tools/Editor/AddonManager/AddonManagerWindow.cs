@@ -1,7 +1,7 @@
 /**
  * AddonManager
  * Author: Denarii Games
- * Version: 1.0-rc1
+ * Version: 1.1
  */
 
 using UnityEngine;
@@ -15,6 +15,7 @@ namespace MmoKitCE.AddonManager
 	{
 		public static IReadOnlyList<string> Categories { get; } = new List<string>
 		{
+			"Demos",
 			"Characters",
 			"Monsters",
 			"NPCs",

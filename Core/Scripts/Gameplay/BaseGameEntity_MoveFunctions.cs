@@ -183,7 +183,7 @@ namespace MultiplayerARPG
         {
             bool canMove = CanMove_Implementation();
             if (onCanMoveValidated != null)
-                onCanMoveValidated(ref canMove);
+                onCanMoveValidated(this, ref canMove);
             return canMove;
         }
 
@@ -196,7 +196,7 @@ namespace MultiplayerARPG
         {
             bool canSprint = CanSprint_Implementation();
             if (onCanSprintValidated != null)
-                onCanSprintValidated(ref canSprint);
+                onCanSprintValidated(this, ref canSprint);
             return canSprint;
         }
 
@@ -209,7 +209,7 @@ namespace MultiplayerARPG
         {
             bool canWalk = CanWalk_Implementation();
             if (onCanWalkValidated != null)
-                onCanWalkValidated(ref canWalk);
+                onCanWalkValidated(this, ref canWalk);
             return canWalk;
         }
 
@@ -222,7 +222,7 @@ namespace MultiplayerARPG
         {
             bool canCrouch = CanCrouch_Implementation();
             if (onCanCrouchValidated != null)
-                onCanCrouchValidated(ref canCrouch);
+                onCanCrouchValidated(this, ref canCrouch);
             return canCrouch;
         }
 
@@ -235,7 +235,7 @@ namespace MultiplayerARPG
         {
             bool canCrawl = CanCrawl_Implementation();
             if (onCanCrawlValidated != null)
-                onCanCrawlValidated(ref canCrawl);
+                onCanCrawlValidated(this, ref canCrawl);
             return canCrawl;
         }
 
@@ -248,7 +248,7 @@ namespace MultiplayerARPG
         {
             bool canJump = CanJump_Implementation();
             if (onCanJumpValidated != null)
-                onCanJumpValidated(ref canJump);
+                onCanJumpValidated(this, ref canJump);
             return canJump;
         }
 
@@ -261,7 +261,7 @@ namespace MultiplayerARPG
         {
             bool canDash = CanDash_Implementation();
             if (onCanDashValidated != null)
-                onCanDashValidated(ref canDash);
+                onCanDashValidated(this, ref canDash);
             return canDash;
         }
 
@@ -274,7 +274,7 @@ namespace MultiplayerARPG
         {
             bool canTurn = CanTurn_Implementation();
             if (onCanTurnValidated != null)
-                onCanTurnValidated(ref canTurn);
+                onCanTurnValidated(this, ref canTurn);
             return canTurn;
         }
 
@@ -406,7 +406,7 @@ namespace MultiplayerARPG
         public void OnJumpForceApplied(float verticalVelocity)
         {
             if (onJumpForceApplied != null)
-                onJumpForceApplied.Invoke(verticalVelocity);
+                onJumpForceApplied.Invoke(this, verticalVelocity);
         }
 
         public bool AllowToJump()

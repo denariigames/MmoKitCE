@@ -77,18 +77,18 @@ namespace MultiplayerARPG
             GameInstance_onSetPlayingCharacter(null);
         }
 
-        protected void OnRecached()
+        protected void OnRecached(BaseCharacterEntity target)
         {
             UpdateHp();
             UpdateMp();
         }
 
-        protected void OnLevelChange(int level)
+        protected void OnLevelChange(BaseCharacterEntity target, int oldLevel, int level)
         {
             UpdateLevel();
         }
 
-        protected void OnCurrentMpChange(int mp)
+        protected void OnCurrentMpChange(BaseCharacterEntity target, int oldMp, int mp)
         {
             UpdateMp();
         }
@@ -98,7 +98,7 @@ namespace MultiplayerARPG
             UpdateBuffs();
         }
 
-        protected void OnPkPointChange(int pkPoint)
+        protected void OnPkPointChange(BaseCharacterEntity target, int oldPkPoint, int pkPoint)
         {
             UpdateTitle();
         }
@@ -118,7 +118,7 @@ namespace MultiplayerARPG
             }
         }
 
-        protected void PlayingCharacterEntity_onLevelChange(int level)
+        protected void PlayingCharacterEntity_onLevelChange(BaseCharacterEntity target, int oldLevel, int level)
         {
             UpdateTitle();
         }

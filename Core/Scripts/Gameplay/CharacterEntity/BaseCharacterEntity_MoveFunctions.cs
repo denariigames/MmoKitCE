@@ -1,3 +1,5 @@
+//DG: 20260403 add sitting state
+
 using UnityEngine;
 
 namespace MultiplayerARPG
@@ -73,6 +75,9 @@ namespace MultiplayerARPG
                         break;
                     case ExtraMovementState.IsCrawling:
                         moveSpeed = CurrentGameplayRule.GetCrawlMoveSpeed(this, CachedData.Stats);
+                        break;
+                    case ExtraMovementState.IsSitting:
+                        moveSpeed *= 0;
                         break;
                 }
             }
@@ -160,7 +165,7 @@ namespace MultiplayerARPG
             {
                 return false;
             }
-            return ExtraMovementState != ExtraMovementState.IsCrawling;
+            return (ExtraMovementState != ExtraMovementState.IsCrawling && ExtraMovementState != ExtraMovementState.IsSitting);
         }
 
         protected override bool CanDash_Implementation()
@@ -185,7 +190,7 @@ namespace MultiplayerARPG
             {
                 return false;
             }
-            return ExtraMovementState != ExtraMovementState.IsCrawling;
+            return (ExtraMovementState != ExtraMovementState.IsCrawling && ExtraMovementState != ExtraMovementState.IsSitting);
         }
 
         protected override bool CanTurn_Implementation()
@@ -210,7 +215,7 @@ namespace MultiplayerARPG
             {
                 return false;
             }
-            return true;
+            return ExtraMovementState != ExtraMovementState.IsSitting;
         }
 
         protected override void OnTeleport(Vector3 position, Quaternion rotation)

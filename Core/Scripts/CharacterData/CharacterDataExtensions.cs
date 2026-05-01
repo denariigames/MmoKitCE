@@ -134,26 +134,29 @@ namespace MultiplayerARPG
         {
             if (itemList == null || increasingItems == null)
                 return false;
-            List<CharacterItem> simulatingItemList = new List<CharacterItem>(itemList);
-            foreach (ItemAmount receiveItem in increasingItems)
+            using (CollectionPool<List<CharacterItem>, CharacterItem>.Get(out List<CharacterItem> simulatingItemList))
             {
-                if (receiveItem.item == null || receiveItem.amount <= 0) continue;
-                if (simulatingItemList.IncreasingItemsWillOverwhelming(
-                    receiveItem.item.DataId,
-                    receiveItem.amount,
-                    isLimitWeight,
-                    weightLimit,
-                    totalItemWeight,
-                    isLimitSlot,
-                    slotLimit))
+                simulatingItemList.AddRange(itemList);
+                foreach (ItemAmount receiveItem in increasingItems)
                 {
-                    // Overwhelming
-                    return true;
-                }
-                else
-                {
-                    // Add item to temp list to check it will overwhelming or not later
-                    simulatingItemList.AddOrSetItems(CharacterItem.Create(receiveItem.item, 1, receiveItem.amount));
+                    if (receiveItem.item == null || receiveItem.amount <= 0) continue;
+                    if (simulatingItemList.IncreasingItemsWillOverwhelming(
+                        receiveItem.item.DataId,
+                        receiveItem.amount,
+                        isLimitWeight,
+                        weightLimit,
+                        totalItemWeight,
+                        isLimitSlot,
+                        slotLimit))
+                    {
+                        // Overwhelming
+                        return true;
+                    }
+                    else
+                    {
+                        // Add item to temp list to check it will overwhelming or not later
+                        simulatingItemList.AddOrSetItems(CharacterItem.Create(receiveItem.item, 1, receiveItem.amount));
+                    }
                 }
             }
             return false;
@@ -163,26 +166,29 @@ namespace MultiplayerARPG
         {
             if (itemList == null || increasingItems == null)
                 return false;
-            List<CharacterItem> simulatingItemList = new List<CharacterItem>(itemList);
-            foreach (RewardedItem receiveItem in increasingItems)
+            using (CollectionPool<List<CharacterItem>, CharacterItem>.Get(out List<CharacterItem> simulatingItemList))
             {
-                if (receiveItem.item == null || receiveItem.amount <= 0) continue;
-                if (simulatingItemList.IncreasingItemsWillOverwhelming(
-                    receiveItem.item.DataId,
-                    receiveItem.amount,
-                    isLimitWeight,
-                    weightLimit,
-                    totalItemWeight,
-                    isLimitSlot,
-                    slotLimit))
+                simulatingItemList.AddRange(itemList);
+                foreach (RewardedItem receiveItem in increasingItems)
                 {
-                    // Overwhelming
-                    return true;
-                }
-                else
-                {
-                    // Add item to temp list to check it will overwhelming or not later
-                    simulatingItemList.AddOrSetItems(CharacterItem.Create(receiveItem.item, receiveItem.level, receiveItem.amount, receiveItem.randomSeed));
+                    if (receiveItem.item == null || receiveItem.amount <= 0) continue;
+                    if (simulatingItemList.IncreasingItemsWillOverwhelming(
+                        receiveItem.item.DataId,
+                        receiveItem.amount,
+                        isLimitWeight,
+                        weightLimit,
+                        totalItemWeight,
+                        isLimitSlot,
+                        slotLimit))
+                    {
+                        // Overwhelming
+                        return true;
+                    }
+                    else
+                    {
+                        // Add item to temp list to check it will overwhelming or not later
+                        simulatingItemList.AddOrSetItems(CharacterItem.Create(receiveItem.item, receiveItem.level, receiveItem.amount, receiveItem.randomSeed));
+                    }
                 }
             }
             return false;
@@ -192,26 +198,29 @@ namespace MultiplayerARPG
         {
             if (itemList == null || increasingItems == null)
                 return false;
-            List<CharacterItem> simulatingItemList = new List<CharacterItem>(itemList);
-            foreach (CharacterItem receiveItem in increasingItems)
+            using (CollectionPool<List<CharacterItem>, CharacterItem>.Get(out List<CharacterItem> simulatingItemList))
             {
-                if (receiveItem.IsEmptySlot()) continue;
-                if (simulatingItemList.IncreasingItemsWillOverwhelming(
-                    receiveItem.dataId,
-                    receiveItem.amount,
-                    isLimitWeight,
-                    weightLimit,
-                    totalItemWeight,
-                    isLimitSlot,
-                    slotLimit))
+                simulatingItemList.AddRange(itemList);
+                foreach (CharacterItem receiveItem in increasingItems)
                 {
-                    // Overwhelming
-                    return true;
-                }
-                else
-                {
-                    // Add item to temp list to check it will overwhelming or not later
-                    simulatingItemList.AddOrSetItems(CharacterItem.Create(receiveItem.dataId, receiveItem.level, receiveItem.amount));
+                    if (receiveItem.IsEmptySlot()) continue;
+                    if (simulatingItemList.IncreasingItemsWillOverwhelming(
+                        receiveItem.dataId,
+                        receiveItem.amount,
+                        isLimitWeight,
+                        weightLimit,
+                        totalItemWeight,
+                        isLimitSlot,
+                        slotLimit))
+                    {
+                        // Overwhelming
+                        return true;
+                    }
+                    else
+                    {
+                        // Add item to temp list to check it will overwhelming or not later
+                        simulatingItemList.AddOrSetItems(CharacterItem.Create(receiveItem.dataId, receiveItem.level, receiveItem.amount));
+                    }
                 }
             }
             return false;
@@ -270,21 +279,14 @@ namespace MultiplayerARPG
         #region Decrease Then Increase Items
         public static bool AbleToDecreaseThenIncreaseItem(this IList<CharacterItem> itemList, int decreasingItemDataId, int decreasingItemAmount, int increasingItemDataId, int increasingItemAmount, bool isLimitWeight, float weightLimit, bool isLimitSlot, int slotLimit)
         {
-            List<CharacterItem> tempItemList = new List<CharacterItem>(itemList);
-            if (!tempItemList.DecreaseItems(decreasingItemDataId, decreasingItemAmount, isLimitSlot))
+            using (CollectionPool<List<CharacterItem>, CharacterItem>.Get(out List<CharacterItem> simulatingItemList))
             {
-                tempItemList.Clear();
-                tempItemList = null;
-                return false;
+                simulatingItemList.AddRange(itemList);
+                if (!simulatingItemList.DecreaseItems(decreasingItemDataId, decreasingItemAmount, isLimitSlot))
+                    return false;
+                if (simulatingItemList.IncreasingItemsWillOverwhelming(increasingItemDataId, increasingItemAmount, isLimitWeight, weightLimit, simulatingItemList.GetTotalItemWeight(), isLimitSlot, slotLimit))
+                    return false;
             }
-            if (tempItemList.IncreasingItemsWillOverwhelming(increasingItemDataId, increasingItemAmount, isLimitWeight, weightLimit, tempItemList.GetTotalItemWeight(), isLimitSlot, slotLimit))
-            {
-                tempItemList.Clear();
-                tempItemList = null;
-                return false;
-            }
-            tempItemList.Clear();
-            tempItemList = null;
             return true;
         }
         #endregion

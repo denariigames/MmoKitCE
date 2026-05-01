@@ -1,4 +1,7 @@
-﻿using Cysharp.Threading.Tasks;
+﻿// CE security: #31
+
+
+using Cysharp.Threading.Tasks;
 
 namespace MultiplayerARPG.MMO
 {
@@ -10,9 +13,9 @@ namespace MultiplayerARPG.MMO
             get { return MMOServerInstance.Singleton.DatabaseClient; }
         }
 
-        public CentralNetworkManager CentralNetworkManager
+        public LoginNetworkManager LoginNetworkManager
         {
-            get { return MMOServerInstance.Singleton.CentralNetworkManager; }
+            get { return MMOServerInstance.Singleton.LoginNetworkManager; }
         }
 
         public MapNetworkManager MapNetworkManager
@@ -117,11 +120,11 @@ namespace MultiplayerARPG.MMO
             {
                 return UITextKeys.UI_ERROR_INVALID_CHARACTER_NAME;
             }
-            if (characterName.Length < CentralNetworkManager.minCharacterNameLength)
+            if (characterName.Length < LoginNetworkManager.minCharacterNameLength)
             {
                 return UITextKeys.UI_ERROR_CHARACTER_NAME_TOO_SHORT;
             }
-            if (characterName.Length > CentralNetworkManager.maxCharacterNameLength)
+            if (characterName.Length > LoginNetworkManager.maxCharacterNameLength)
             {
                 return UITextKeys.UI_ERROR_CHARACTER_NAME_TOO_LONG;
             }

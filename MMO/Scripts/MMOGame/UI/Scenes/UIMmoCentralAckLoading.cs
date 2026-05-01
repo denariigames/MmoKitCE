@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿// CE security: #31
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -37,7 +39,7 @@ namespace MultiplayerARPG.MMO
         private void UpdateUI()
         {
             if (rootObject != null)
-                rootObject.SetActive(MMOClientInstance.Singleton != null && MMOClientInstance.Singleton.CentralNetworkManager.IsClientConnected && MMOClientInstance.Singleton.CentralNetworkManager.Client.RequestsCount > 0);
+                rootObject.SetActive(MMOClientInstance.Singleton != null && MMOClientInstance.Singleton.LoginNetworkManager.IsClientConnected && MMOClientInstance.Singleton.LoginNetworkManager.Client.RequestsCount > 0);
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using LiteNetLibManager;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -116,6 +115,11 @@ namespace MultiplayerARPG
         {
             if (notForOwningCharacter || GameInstance.PlayingCharacter == null) return;
             UpdateData(GameInstance.PlayingCharacter);
+        }
+
+        public void UpdateOwningCharacterData(BaseCharacterEntity target)
+        {
+            UpdateOwningCharacterData();
         }
 
         protected virtual void OnDialogHide()

@@ -1,0 +1,23 @@
+{
+  "name": "com.dands.coloredhierarchyheaders",
+  "displayName": "Colored Hierarchy Headers",
+  "version": "0.1.0",
+  "description": "Easily add headers/dividers to your hierarchy to better organize your scene.",
+  "keywords": [
+    "hierarchy",
+    "editor"
+  ],
+  "category": "editor extensions",
+  "samples": [
+    {
+      "displayName": "Demo Scene",
+      "description": "Demo Scene",
+      "path": "Samples/DemoScene"
+    }
+  ],
+  "author": {
+    "name": "Dands Salaun",
+    "url": "https://github.com/dands-salaun"
+  },
+  "type": "tool"
+}

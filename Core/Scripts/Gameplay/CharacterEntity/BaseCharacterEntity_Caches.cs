@@ -43,7 +43,7 @@
 
             // Invoke recached event
             if (onRecached != null)
-                onRecached.Invoke();
+                onRecached.Invoke(this);
         }
     }
 }

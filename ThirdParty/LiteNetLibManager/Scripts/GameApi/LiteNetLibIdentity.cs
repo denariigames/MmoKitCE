@@ -108,6 +108,10 @@ namespace LiteNetLibManager
         /// List of players which subscribe this identity
         /// </summary>
         internal readonly HashSet<long> Subscribers = new HashSet<long>();
+        /// <summary>
+        /// List of objects which want this object to be hidden
+        /// </summary>
+        internal readonly HashSet<object> HideObjects = new HashSet<object>();
 
         public string AssetId
         {
@@ -173,7 +177,7 @@ namespace LiteNetLibManager
         /// <summary>
         /// If this is `TRUE` it will disallow other connections to subscribe this networked object
         /// </summary>
-        public bool IsHide { get; set; }
+        public bool IsHide { get { return HideObjects.Count > 0; } }
         /// <summary>
         /// This will be used while `IsHide` is `TRUE` to allow some connections to subscribe this networked object
         /// </summary>
@@ -811,6 +815,14 @@ namespace LiteNetLibManager
             return true;
         }
 
+        public void SetIsHide(object setter, bool isHide)
+        {
+            if (isHide)
+                HideObjects.Add(setter);
+            else
+                HideObjects.Remove(setter);
+        }
+
         public void OnServerSubscribingAdded()
         {
             byte loopCounter;
@@ -895,31 +907,19 @@ namespace LiteNetLibManager
 
         public void NetworkDestroy()
         {
-            if (!IsServer)
+            if (IsDestroyed)
                 return;
-
-            DestroyFromAssets();
+            if (Manager.Assets.NetworkDestroy(this, DestroyObjectReasons.RequestedToDestroy))
+                IsDestroyed = true;
         }
 
         public void NetworkDestroy(float delay)
         {
+            if (delay < 0f)
+                return;
             if (!IsServer)
                 return;
-            InternalNetworkDestroy(delay).Forget();
-        }
-
-        private async UniTaskVoid InternalNetworkDestroy(float delay)
-        {
-            if (delay < 0)
-                return;
-            await UniTask.Delay((int)(1000 * delay));
-            DestroyFromAssets();
-        }
-
-        private void DestroyFromAssets()
-        {
-            if (!IsDestroyed && Manager.Assets.NetworkDestroy(ObjectId, DestroyObjectReasons.RequestedToDestroy))
-                IsDestroyed = true;
+            Invoke(nameof(NetworkDestroy), delay);
         }
 
         internal void OnNetworkDestroy(byte reasons)

@@ -635,21 +635,22 @@ namespace MultiplayerARPG
                     _currentInput = Entity.SetInputPosition(_currentInput, CacheNavMeshAgent.destination);
                 }
             }
-            else
+            else if (IsClient)
             {
+                // Have to check `IsClient` because only clients will simulate movement by `SetMovePath` function
                 // Disable obstacle avoidance because it won't predict movement, it is just moving to destination without obstacle avoidance
                 CacheNavMeshAgent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
 
                 if (CacheNavMeshAgent.velocity.sqrMagnitude > (s_minMagnitudeToDetermineMoving * s_minMagnitudeToDetermineMoving))
                 {
                     MovementState = _acceptedMovementStateBeforeStopped;
-                    ExtraMovementState = _acceptedExtraMovementStateBeforeStopped;
                 }
                 else
                 {
                     MovementState = MovementState.IsGrounded;
-                    ExtraMovementState = ExtraMovementState.None;
                 }
+                // Always use server's ExtraMovementState for remote clients to preserve crawl/etc. state
+                ExtraMovementState = _acceptedExtraMovementStateBeforeStopped;
             }
 
             if (replaceMovementForceApplierMode == ApplyMovementForceMode.Dash)
@@ -771,7 +772,46 @@ namespace MultiplayerARPG
             return false;
         }
 
-        public bool WriteServerState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
+        public MovementData CreateMovementData(out List<EntityMovementForceApplier> forceAppliers)
+        {
+            bool shouldSendReliably = false;
+            if (_sendingDash)
+            {
+                shouldSendReliably = true;
+                MovementState |= MovementState.IsDash;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsDash;
+            }
+            if (_isTeleporting)
+            {
+                shouldSendReliably = true;
+                if (_stillMoveAfterTeleport)
+                    MovementState |= MovementState.IsTeleport;
+                else
+                    MovementState = MovementState.IsTeleport;
+            }
+            else
+            {
+                MovementState &= ~MovementState.IsTeleport;
+            }
+
+            MovementData movementData = new MovementData();
+            movementData.movementState = (uint)MovementState;
+            movementData.extraMovementState = (byte)ExtraMovementState;
+            movementData.worldPosition = EntityTransform.position;
+            movementData.yAngle = EntityTransform.eulerAngles.y;
+            movementData.shouldSendReliably = shouldSendReliably;
+            forceAppliers = _movementForceAppliers;
+
+            _isTeleporting = false;
+            _stillMoveAfterTeleport = false;
+
+            return movementData;
+        }
+
+        public bool WriteServerState(long writeTimestamp, NetDataWriter writer,  out bool shouldSendReliably)
         {
             shouldSendReliably = false;
             if (!_isStarted)
@@ -979,7 +1019,7 @@ namespace MultiplayerARPG
             if (moveableDist < 0.001f)
                 moveableDist = 0.001f;
             // Movement validating, if it is valid, set the position follow the client, if not set position to proper one and tell client to teleport
-            float clientMoveDist = Vector3.Distance(oldPos.GetXY(), newPos.GetXY());
+            float clientMoveDist = Vector3.Distance(oldPos, newPos);
             // Increase accumulate data to detect hacking
             float moveDistDiff = clientMoveDist > moveableDist ? (clientMoveDist - moveableDist) : 0f;
             _accumulateDeltaTime += unityDeltaTime;
@@ -989,7 +1029,6 @@ namespace MultiplayerARPG
                 // If it is not a client, don't have to simulate movement, just set the position (but still simulate gravity)
                 _acceptedPosition = newPos;
                 EntityTransform.position = newPos;
-                CurrentGameManager.ShouldPhysicSyncTransforms = true;
                 // Update character rotation
                 RemoteTurnSimulation(yAngle, unityDeltaTime);
             }

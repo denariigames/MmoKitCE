@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace MultiplayerARPG
 {
@@ -72,10 +73,13 @@ namespace MultiplayerARPG
                             if (playerCharacterEntity != null)
                             {
                                 // Send messages to nearby characters
-                                List<BasePlayerCharacterEntity> receivers = playerCharacterEntity.FindEntities<BasePlayerCharacterEntity>(GameInstance.Singleton.localChatDistance, false, true, true, true, GameInstance.Singleton.playerLayer.Mask | GameInstance.Singleton.playingLayer.Mask);
-                                foreach (BasePlayerCharacterEntity receiver in receivers)
+                                using (CollectionPool<List<BasePlayerCharacterEntity>, BasePlayerCharacterEntity>.Get(out List<BasePlayerCharacterEntity> receivers))
                                 {
-                                    Manager.ServerSendPacket(receiver.ConnectionId, 0, DeliveryMethod.ReliableUnordered, GameNetworkingConsts.Chat, message);
+                                    playerCharacterEntity.FindEntities(receivers, GameInstance.Singleton.localChatDistance, false, true, true, true, GameInstance.Singleton.playerLayer.Mask | GameInstance.Singleton.playingLayer.Mask);
+                                    foreach (BasePlayerCharacterEntity receiver in receivers)
+                                    {
+                                        Manager.ServerSendPacket(receiver.ConnectionId, 0, DeliveryMethod.ReliableUnordered, GameNetworkingConsts.Chat, message);
+                                    }
                                 }
                                 // Send messages to sender
                                 Manager.ServerSendPacket(playerCharacterEntity.ConnectionId, 0, DeliveryMethod.ReliableUnordered, GameNetworkingConsts.Chat, message);

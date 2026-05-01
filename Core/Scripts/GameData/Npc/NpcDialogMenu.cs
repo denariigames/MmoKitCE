@@ -3,7 +3,9 @@ using Insthync.AddressableAssetTools;
 using Insthync.UnityEditorUtils;
 using System.Collections.Generic;
 using UnityEngine;
+#if !DISABLE_ADDRESSABLES
 using UnityEngine.AddressableAssets;
+#endif
 
 namespace MultiplayerARPG
 {

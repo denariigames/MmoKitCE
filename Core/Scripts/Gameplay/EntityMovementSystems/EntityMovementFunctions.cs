@@ -1,8 +1,8 @@
-﻿using LiteNetLibManager;
-using LiteNetLib.Utils;
+﻿using LiteNetLib.Utils;
+using LiteNetLibManager;
+using System.Buffers;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Buffers;
 
 namespace MultiplayerARPG
 {
@@ -166,8 +166,16 @@ namespace MultiplayerARPG
         {
             movementState = (MovementState)reader.GetPackedUInt();
             extraMovementState = (ExtraMovementState)reader.GetByte();
-            position = reader.GetVector3();
-            yAngle = GetDecompressedAngle(reader.GetPackedInt());
+            if (!DefaultGridManagerComponent.Instance.IsDisabled)
+            {
+                byte cellId = reader.GetByte();
+                Vector3 localPosition = reader.GetQuantizedVector3(DefaultGridManagerComponent.Instance.CellSize, out int compressionMode);
+                position = DefaultGridManagerComponent.Instance.GetWorldPosition(cellId, localPosition);
+            }
+            else
+                position = reader.GetVector3();
+
+            yAngle = DecompressAngle(reader.GetByte());
             movementForceAppliers = reader.GetList<EntityMovementForceApplier>();
         }
         #endregion
@@ -213,9 +221,13 @@ namespace MultiplayerARPG
         #endregion
 
         #region Helpers
+        public static float DecompressAngle(byte value)
+        {
+            return value * (360f / 255f);
+        }
         public static int GetCompressedAngle(float angle)
         {
-            return Mathf.RoundToInt(angle * 1000);
+            return Mathf.RoundToInt(angle * 1000f);
         }
 
         public static float GetDecompressedAngle(int compressedAngle)

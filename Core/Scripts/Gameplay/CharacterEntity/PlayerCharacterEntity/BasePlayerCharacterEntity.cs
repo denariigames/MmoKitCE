@@ -2,6 +2,7 @@
 using Insthync.UnityEditorUtils;
 using LiteNetLibManager;
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -29,47 +30,6 @@ namespace MultiplayerARPG
             }
             set { characterDatabases = value; }
         }
-
-#if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
-        [Tooltip("Leave this empty to use GameInstance's controller prefab")]
-        [SerializeField]
-        protected BasePlayerCharacterController controllerPrefab;
-#endif
-        public BasePlayerCharacterController ControllerPrefab
-        {
-            get
-            {
-#if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
-                if (TryGetMetaData(out PlayerCharacterEntityMetaData metaData))
-                    return metaData.ControllerPrefab;
-                return controllerPrefab;
-#else
-                return null;
-#endif
-            }
-            set
-            {
-#if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
-                controllerPrefab = value;
-#endif
-            }
-        }
-
-#if !DISABLE_ADDRESSABLES
-        [Tooltip("Leave this empty to use GameInstance's controller prefab")]
-        [SerializeField]
-        protected AssetReferenceBasePlayerCharacterController addressableControllerPrefab;
-        public AssetReferenceBasePlayerCharacterController AddressableControllerPrefab
-        {
-            get
-            {
-                if (TryGetMetaData(out PlayerCharacterEntityMetaData metaData))
-                    return metaData.AddressableControllerPrefab;
-                return addressableControllerPrefab;
-            }
-            set { addressableControllerPrefab = value; }
-        }
-#endif
 
         public PlayerCharacterItemLockAndExpireComponent ItemLockAndExpireComponent
         {
@@ -169,6 +129,8 @@ namespace MultiplayerARPG
             base.EntityAwake();
             gameObject.tag = CurrentGameInstance.playerTag;
             gameObject.layer = CurrentGameInstance.playerLayer;
+            //Create compression modes dictionary
+            EntityCompressionModes = new NativeHashMap<uint, byte>(1024, Allocator.Persistent);
         }
 
         protected override void EntityOnSetOwnerClient(bool isOwnerClient)
@@ -187,11 +149,7 @@ namespace MultiplayerARPG
             {
                 BasePlayerCharacterController controllerPrefab = null;
 #if !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
-                if (ControllerPrefab != null)
-                {
-                    controllerPrefab = ControllerPrefab;
-                }
-                else if (CurrentGameInstance.DefaultControllerPrefab != null)
+                if (CurrentGameInstance.DefaultControllerPrefab != null)
                 {
                     controllerPrefab = CurrentGameInstance.DefaultControllerPrefab;
                 }
@@ -201,19 +159,11 @@ namespace MultiplayerARPG
                     // Do nothing, just have it to make it able to compile properly (it have compile condition above)
                 }
 #if !DISABLE_ADDRESSABLES
-                else if (AddressableControllerPrefab.IsDataValid())
-                {
-                    controllerPrefab = await AddressableControllerPrefab.GetOrLoadAssetAsync<BasePlayerCharacterController>();
-                }
                 else if (CurrentGameInstance.AddressableDefaultControllerPrefab.IsDataValid())
                 {
                     controllerPrefab = await CurrentGameInstance.AddressableDefaultControllerPrefab.GetOrLoadAssetAsync<BasePlayerCharacterController>();
                 }
 #endif
-                else if (BasePlayerCharacterController.LastPrefab != null)
-                {
-                    controllerPrefab = BasePlayerCharacterController.LastPrefab;
-                }
                 else
                 {
                     Logging.LogWarning(ToString(), "`Controller Prefab` is empty so it cannot be instantiated");
@@ -221,7 +171,6 @@ namespace MultiplayerARPG
                 }
                 if (controllerPrefab != null)
                 {
-                    BasePlayerCharacterController.LastPrefab = controllerPrefab;
                     BasePlayerCharacterController controller = Instantiate(controllerPrefab);
                     controller.PlayingCharacterEntity = this;
                     InstantiatedObjects.Add(controller.gameObject);

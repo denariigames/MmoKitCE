@@ -50,6 +50,7 @@ namespace MultiplayerARPG
         }
 
         protected void OnReceivedDamage(
+            DamageableEntity target,
             HitBoxPosition position,
             Vector3 fromPosition,
             EntityInfo instigator,
@@ -64,7 +65,7 @@ namespace MultiplayerARPG
             _receivedDamageTime = Time.unscaledTime;
         }
 
-        protected void OnCurrentHpChange(int hp)
+        protected void OnCurrentHpChange(DamageableEntity target, int oldHp, int hp)
         {
             UpdateHp();
         }

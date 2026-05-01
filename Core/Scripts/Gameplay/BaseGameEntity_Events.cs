@@ -2,16 +2,16 @@
 {
     public partial class BaseGameEntity
     {
-        public event System.Action onStart;
-        public event System.Action onDestroy;
-        public event System.Action onIdentityInitialize;
-        public event System.Action onEnable;
-        public event System.Action onDisable;
-        public event System.Action onUpdate;
-        public event System.Action onLateUpdate;
-        public event System.Action onSetup;
-        public event System.Action onSetupNetElements;
-        public event System.Action onSetOwnerClient;
+        public event GameEntityDelegate onStart;
+        public event GameEntityDelegate onDestroy;
+        public event GameEntityDelegate onIdentityInitialize;
+        public event GameEntityDelegate onEnable;
+        public event GameEntityDelegate onDisable;
+        public event GameEntityDelegate onUpdate;
+        public event GameEntityDelegate onLateUpdate;
+        public event GameEntityDelegate onSetup;
+        public event GameEntityDelegate onSetupNetElements;
+        public event GameEntityDelegate onSetOwnerClient;
         public event IsUpdateEntityComponentsDelegate onIsUpdateEntityComponentsChanged;
         public event NetworkDestroyDelegate onNetworkDestroy;
         public event CanMoveDelegate onCanMoveValidated;

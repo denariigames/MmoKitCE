@@ -215,6 +215,11 @@ namespace MultiplayerARPG
             }
         }
 
+        public void UpdateData(BaseCharacterEntity target)
+        {
+            UpdateData();
+        }
+
         #region Mobile Controls
         public static void SetUsingHotkey(UICharacterHotkey hotkey)
         {

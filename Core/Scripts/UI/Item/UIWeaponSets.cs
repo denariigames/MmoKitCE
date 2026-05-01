@@ -29,6 +29,11 @@
             UpdateData(GameInstance.PlayingCharacter);
         }
 
+        public void UpdateOwningCharacterData(BaseCharacterEntity target)
+        {
+            UpdateOwningCharacterData();
+        }
+
         public void ChangeWeaponSet(byte index)
         {
             GameInstance.ClientInventoryHandlers.RequestSwitchEquipWeaponSet(new RequestSwitchEquipWeaponSetMessage()

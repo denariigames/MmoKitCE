@@ -80,7 +80,7 @@ namespace MultiplayerARPG
         [System.NonSerialized]
         public CharacterItem item;
         [System.NonSerialized]
-        public EquipmentModelDelegate onInstantiated;
+        public OnEquipmentModelInstantiateDelegate onInstantiated;
         #endregion
 
         public UniTask<GameObject> GetMeshPrefab()

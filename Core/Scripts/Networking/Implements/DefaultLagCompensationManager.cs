@@ -75,8 +75,10 @@ namespace MultiplayerARPG
 
         private bool InternalBeginSimlateHitBoxes(LiteNetLibPlayer player, long targetTime)
         {
-            foreach (uint subscribingObjectId in player.GetSubscribingObjectIds())
+            var subscribingObjectIds = player.GetSubscribingObjectIds();
+            while (subscribingObjectIds.MoveNext())
             {
+                uint subscribingObjectId = subscribingObjectIds.Current;
                 if (_damageableEntities.ContainsKey(subscribingObjectId))
                 {
                     _damageableEntities[subscribingObjectId].RewindHitBoxes(targetTime);

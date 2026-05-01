@@ -109,7 +109,7 @@ namespace MultiplayerARPG
 #endif
         }
 
-        private void OnSetup()
+        private void OnSetup(BaseGameEntity target)
         {
             Applying = true;
         }

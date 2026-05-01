@@ -1036,13 +1036,18 @@ namespace MultiplayerARPG
                 GameDataHelpers.MultiplyAttributes(multiplyAttributes, buffAttributesRate);
                 GameDataHelpers.CombineAttributes(resultAttributes, multiplyAttributes);
             }
-            List<Attribute> keys = new List<Attribute>(resultAttributes.Keys);
-            for (i = 0; i < keys.Count; ++i)
+            using (CollectionPool<List<Attribute>, Attribute>.Get(out List<Attribute> attributeKeys))
             {
-                if (keys[i].MaxAmount <= 0)
-                    continue;
-                if (resultAttributes[keys[i]] > keys[i].MaxAmount)
-                    resultAttributes[keys[i]] = keys[i].MaxAmount;
+                resultAttributes.AddKeysToList(attributeKeys);
+                for (i = 0; i < attributeKeys.Count; ++i)
+                {
+                    Attribute key = attributeKeys[i];
+                    if (key.MaxAmount <= 0)
+                        continue;
+                    float value = resultAttributes[key];
+                    if (value > key.MaxAmount)
+                        resultAttributes[key] = key.MaxAmount;
+                }
             }
             if (onGetAttributes != null)
                 onGetAttributes.Invoke(resultAttributes);
@@ -1067,15 +1072,17 @@ namespace MultiplayerARPG
             GameDataHelpers.CombineResistances(resultResistances, buffResistances);
             using (CollectionPool<List<DamageElement>, DamageElement>.Get(out List<DamageElement> resistanceKeys))
             {
-                resistanceKeys.AddRange(resultResistances.Keys);
+                resultResistances.AddKeysToList(resistanceKeys);
                 for (i = 0; i < resistanceKeys.Count; ++i)
                 {
-                    if (resultResistances[resistanceKeys[i]] > resistanceKeys[i].MaxResistanceAmount)
-                        resultResistances[resistanceKeys[i]] = resistanceKeys[i].MaxResistanceAmount;
+                    DamageElement key = resistanceKeys[i];
+                    float value = resultResistances[key];
+                    if (value > key.MaxResistanceAmount)
+                        resultResistances[key] = key.MaxResistanceAmount;
                 }
-                if (onGetResistances != null)
-                    onGetResistances.Invoke(resultResistances);
             }
+            if (onGetResistances != null)
+                onGetResistances.Invoke(resultResistances);
 
             // Armors result
             using (CollectionPool<Dictionary<DamageElement, float>, KeyValuePair<DamageElement, float>>.Get(out Dictionary<DamageElement, float> increaseArmors))
@@ -1122,11 +1129,13 @@ namespace MultiplayerARPG
             GameDataHelpers.CombineStatusEffectResistances(resultStatusEffectResistances, buffStatusEffectResistances);
             using (CollectionPool<List<StatusEffect>, StatusEffect>.Get(out List<StatusEffect> statusEffectKeys))
             {
-                statusEffectKeys.AddRange(resultStatusEffectResistances.Keys);
+                resultStatusEffectResistances.AddKeysToList(statusEffectKeys);
                 for (i = 0; i < statusEffectKeys.Count; ++i)
                 {
-                    if (resultStatusEffectResistances[statusEffectKeys[i]] > statusEffectKeys[i].MaxResistanceAmount)
-                        resultStatusEffectResistances[statusEffectKeys[i]] = statusEffectKeys[i].MaxResistanceAmount;
+                    StatusEffect key = statusEffectKeys[i];
+                    float value = resultStatusEffectResistances[key];
+                    if (value > key.MaxResistanceAmount)
+                        resultStatusEffectResistances[key] = key.MaxResistanceAmount;
                 }
                 if (onGetStatusEffectResistances != null)
                     onGetStatusEffectResistances.Invoke(resultStatusEffectResistances);

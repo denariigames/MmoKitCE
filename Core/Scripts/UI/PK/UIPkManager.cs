@@ -46,9 +46,9 @@ namespace MultiplayerARPG
 #if !DISABLE_CLASSIC_PK
             if (playerCharacterEntity != null)
             {
-                PlayingCharacterEntity_onIsPkOnChange(playingCharacterData.IsPkOn);
-                PlayingCharacterEntity_onPkPointChange(playingCharacterData.PkPoint);
-                PlayingCharacterEntity_onConsecutivePkKillsChange(playingCharacterData.ConsecutivePkKills);
+                PlayingCharacterEntity_onIsPkOnChange(_previousEntity, playingCharacterData.IsPkOn, playingCharacterData.IsPkOn);
+                PlayingCharacterEntity_onPkPointChange(_previousEntity, playingCharacterData.PkPoint, playingCharacterData.PkPoint);
+                PlayingCharacterEntity_onConsecutivePkKillsChange(_previousEntity, playingCharacterData.ConsecutivePkKills, playingCharacterData.ConsecutivePkKills);
             }
 #endif
         }
@@ -75,7 +75,7 @@ namespace MultiplayerARPG
 #endif
         }
 
-        private void PlayingCharacterEntity_onIsPkOnChange(bool val)
+        private void PlayingCharacterEntity_onIsPkOnChange(BaseCharacterEntity target, bool oldVal, bool val)
         {
             foreach (GameObject obj in pkOnObjects)
             {
@@ -88,13 +88,13 @@ namespace MultiplayerARPG
             }
         }
 
-        private void PlayingCharacterEntity_onPkPointChange(int val)
+        private void PlayingCharacterEntity_onPkPointChange(BaseCharacterEntity target, int oldVal, int val)
         {
             if (uiTextPkPoint != null)
                 uiTextPkPoint.text = ZString.Format(LanguageManager.GetText(formatPkPoint), val);
         }
 
-        private void PlayingCharacterEntity_onConsecutivePkKillsChange(int val)
+        private void PlayingCharacterEntity_onConsecutivePkKillsChange(BaseCharacterEntity target, int oldVal, int val)
         {
             if (uiTextConsecutivePkKills != null)
                 uiTextConsecutivePkKills.text = ZString.Format(LanguageManager.GetText(formatConsecutivePkKills), val);

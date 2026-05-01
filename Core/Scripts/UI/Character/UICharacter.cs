@@ -254,6 +254,11 @@ namespace MultiplayerARPG
             Data = GameInstance.PlayingCharacter;
         }
 
+        public void UpdateOwningCharacterData(BaseCharacterEntity target)
+        {
+            UpdateOwningCharacterData();
+        }
+
         public override void ManagedUpdate()
         {
             base.ManagedUpdate();

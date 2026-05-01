@@ -7,26 +7,26 @@ namespace MultiplayerARPG
     {
         // Note: You may use `Awake` dev extension to setup an events and `OnDestroy` to desetup an events
         // Sync variables
-        public event System.Action<int> onDataIdChange;
-        public event System.Action<int> onFactionIdChange;
-        public event System.Action<float> onStatPointChange;
-        public event System.Action<float> onSkillPointChange;
-        public event System.Action<int> onGoldChange;
-        public event System.Action<int> onUserGoldChange;
-        public event System.Action<int> onUserCashChange;
-        public event System.Action<int> onPartyIdChange;
-        public event System.Action<int> onGuildIdChange;
-        public event System.Action<int> onIconDataIdChange;
-        public event System.Action<int> onFrameDataIdChange;
-        public event System.Action<int> onBackgroundDataIdChange;
-        public event System.Action<int> onTitleDataIdChange;
+        public event CharacterEntityInt32ChangeDelegate onDataIdChange;
+        public event CharacterEntityInt32ChangeDelegate onFactionIdChange;
+        public event CharacterEntitySingleChangeDelegate onStatPointChange;
+        public event CharacterEntitySingleChangeDelegate onSkillPointChange;
+        public event CharacterEntityInt32ChangeDelegate onGoldChange;
+        public event CharacterEntityInt32ChangeDelegate onUserGoldChange;
+        public event CharacterEntityInt32ChangeDelegate onUserCashChange;
+        public event CharacterEntityInt32ChangeDelegate onPartyIdChange;
+        public event CharacterEntityInt32ChangeDelegate onGuildIdChange;
+        public event CharacterEntityInt32ChangeDelegate onIconDataIdChange;
+        public event CharacterEntityInt32ChangeDelegate onFrameDataIdChange;
+        public event CharacterEntityInt32ChangeDelegate onBackgroundDataIdChange;
+        public event CharacterEntityInt32ChangeDelegate onTitleDataIdChange;
 #if !DISABLE_CLASSIC_PK
-        public event System.Action<bool> onIsPkOnChange;
-        public event System.Action<int> onPkPointChange;
-        public event System.Action<int> onConsecutivePkKillsChange;
+        public event CharacterEntityBooleanChangeDelegate onIsPkOnChange;
+        public event CharacterEntityInt32ChangeDelegate onPkPointChange;
+        public event CharacterEntityInt32ChangeDelegate onConsecutivePkKillsChange;
 #endif
-        public event System.Action<int> onReputationChange;
-        public event System.Action<bool> onIsWarpingChange;
+        public event CharacterEntityInt32ChangeDelegate onReputationChange;
+        public event CharacterEntityBooleanChangeDelegate onIsWarpingChange;
         // Sync lists
         public event LiteNetLibSyncList<CharacterHotkey>.OnOperationDelegate onHotkeysOperation;
         public event LiteNetLibSyncList<CharacterQuest>.OnOperationDelegate onQuestsOperation;

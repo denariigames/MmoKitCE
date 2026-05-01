@@ -6,7 +6,7 @@
 
 ### The Three S's Guiding Principle
 
-Every change, fix, or removal in MmoKitCE is evaluated strictly against these core goals:
+Every change, fix, or removal in MmoKitCE is evaluated against these core goals:
 
 - **Scalability**: Can the system handle hundreds or thousands of concurrent players?
 - **Stability**: Does it reduce bugs, crashes, edge cases, and unexpected behavior?
@@ -17,12 +17,36 @@ Every change, fix, or removal in MmoKitCE is evaluated strictly against these co
 ## What's New in CE
 
 ### Addon Manager
-One of the biggest changes in the Community Edition is the introduction of the **Addon Manager**, an in-editor interface that allows the community and team to modularize functionality.
+Addon Manager is an in-editor interface that allows the community and team to modularize functionality.
 
 - Former "core" features that were too niche, experimental, or optional can be extracted into addons.
-- Addons are discovered, installed, updated, and managed directly inside Unity, similar to a private Unity Package Manager.
+- Addons are discovered, installed, and updated directly inside Unity, similar to a private Unity Package Manager.
 - This keeps the **core distribution lean**, focused, and easier to maintain long-term.
-- The Addon Manager pulls from a central, curated manifest (similar in spirit to how many modern Unity ecosystems work).
+
+
+### Login Manager
+Login Manager is a clean separation of login/authentication logic from the central game servers.
+
+- Impoved scalability: Concurrent login limit prevents the login server from being overwhelmed during spikes. The dedicated login server + cluster client allows independent scaling of auth traffic away from game logic.
+
+
+### Cell-Based Position Quantization
+Cell-based position quantization dramatically improves network efficiency for entity movement.
+
+- Improved scalability: Lower network traffic supports more concurrent players, higher update rates, and denser entity populations.
+- LOD based compression: Close entities (the ones the player actually interacts with) keep high-precision modes, while distance entities (the majority in large MMO worlds) now send position data in as little as 4 bytes.
+
+
+**World Size Assumptions:** The system uses a fixed square grid centered at the world origin. The maximum supported world size is determined by configurable CellSize. Positions outside the grid are clamped to edge cells.
+
+
+### Jobs Movement Pipeline
+All entity movement data processing converted from monothreaded per-entity updates to Unity Jobs + Burst parallel processing.
+
+- Improved scalability: Combined with vector quantization and packed serialization, network payloads shrink dramatically, improving both server tick rate and bandwidth usage.
+addons without touching core networking code.
+
+
 
 ## Quick Start / Installation Wizard
 
@@ -39,7 +63,7 @@ https://github.com/denariigames/MmoKitCE_Installer.git
 
 <img width="609" height="512" alt="setup-wizard" src="https://github.com/user-attachments/assets/cab53039-f83f-4034-82d3-d3a101b6afb2" />
 
-A setup wizard will appear automatically after the package is installed. If the Wizard does not appear or is inadventently closed, you can reopen at Window → MMORPG KIT → MMOKitCE → **Show Setup Wizard**
+A setup wizard will appear after the package is installed. If the Wizard does not appear or is inadventently closed, you can reopen at Window → MMORPG KIT → MMOKitCE → **Show Setup Wizard**
 
 Click **Import Settings** to install base project settings. The following settings will be overwritten by this process:
 
@@ -64,6 +88,11 @@ $ git clone https://github.com/denariigames/MmoKitCE.git
 
 After installation, browse available addons via the Addon Manager window (Window → MMORPG Kit → MmoKitCE → **Addon Manager**). Have fun building!
 
+## Yo! Where's the demo?
+
+In keeping with the philosophy of a clean core distribution, a demo will not be included in CE. However, a demo is currently under development as an Addon.
+
+
 ## Updating MmoKitCE
 
 To update CE, simply use a git pull.
@@ -75,4 +104,4 @@ $ git pull
 
 ## Thanks
 
-Huge thanks to Ittipon Teerapruettikulchai for open sourcing the original kit. Without this act of generosity, none of this would exist. Special thanks to the entire community of former customers and new developers who continue to keep this ecosystem alive.
+Huge thanks to Ittipon Teerapruettikulchai for open sourcing the original kit. Without his act of generosity, none of this would exist. Special thanks to the entire community of former customers and new developers who continue to keep this ecosystem alive.

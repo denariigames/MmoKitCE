@@ -163,7 +163,7 @@ namespace MmoKitCE.AddonManager
 			//final refresh to make sure everything is synced
 			//AssetDatabase.Refresh();
 
-			await Task.Delay(1000);
+			await Task.Delay(3000);
 			if (packages.Count > 0)
 			{
 				PackageInfo installedPackage = packages.FirstOrDefault(p => p.guid == pendingGuid);
@@ -183,6 +183,7 @@ namespace MmoKitCE.AddonManager
 					{
 						//write version to guid file
 						string installedGuidPath = AssetDatabase.GUIDToAssetPath(postInstallGuids[0]);
+						//Debug.Log($"[AddonManager {Time.time}] writing version {selectedPackage?.latestVersion} to {installedGuidPath}");
 						try
 						{
 							File.WriteAllText(installedGuidPath, selectedPackage?.latestVersion);

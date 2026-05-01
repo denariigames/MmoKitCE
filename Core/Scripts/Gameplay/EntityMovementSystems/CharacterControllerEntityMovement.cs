@@ -1,6 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using Insthync.ManagedUpdating;
-using LiteNetLib.Utils;
 using LiteNetLibManager;
 using System.Collections.Generic;
 using UnityEngine;
@@ -115,6 +114,9 @@ namespace MultiplayerARPG
         [Header("Networking Settings")]
         public float snapThreshold = 5.0f;
 
+        [Header("Other")]
+        public Transform skinWidthAdjustTarget;
+
         protected Animator _cacheAnimator;
         public Animator CacheAnimator
         {
@@ -168,6 +170,8 @@ namespace MultiplayerARPG
                 CacheAnimator = GetComponentInChildren<Animator>();
             // Prepare character controller component
             CacheCharacterController = gameObject.GetOrAddComponent<CharacterController>();
+            if (skinWidthAdjustTarget != null)
+                skinWidthAdjustTarget.localPosition = Vector3.zero;
             ColliderAdjustment = gameObject.GetComponent<MovementColliderAdjustment>();
             // Disable unused component
             LiteNetLibTransform disablingComp = gameObject.GetComponent<LiteNetLibTransform>();
@@ -234,8 +238,8 @@ namespace MultiplayerARPG
                 useRootMotionUnderWater = useRootMotionUnderWater,
                 useRootMotionClimbing = useRootMotionClimbing,
                 rootMotionGroundedVerticalVelocity = rootMotionGroundedVerticalVelocity,
-                
-            	snapThreshold = snapThreshold,
+
+                snapThreshold = snapThreshold,
             };
             Functions.StopMoveFunction();
         }
@@ -342,7 +346,7 @@ namespace MultiplayerARPG
             Functions.useRootMotionForFall = useRootMotionForFall;
             Functions.useRootMotionUnderWater = useRootMotionUnderWater;
             Functions.rootMotionGroundedVerticalVelocity = rootMotionGroundedVerticalVelocity;
-            
+
             Functions.snapThreshold = snapThreshold;
 #endif
             float deltaTime = Time.deltaTime;
@@ -357,6 +361,8 @@ namespace MultiplayerARPG
         {
             float deltaTime = Time.deltaTime;
             Functions.FixSwimUpPosition(deltaTime);
+            if (skinWidthAdjustTarget != null)
+                skinWidthAdjustTarget.localPosition = CacheCharacterController.enabled ? -CacheCharacterController.skinWidth * Vector3.up : Vector3.zero;
         }
 
         public bool GroundCheck()
@@ -445,7 +451,9 @@ namespace MultiplayerARPG
 
         public void SetPosition(Vector3 position)
         {
+            CacheCharacterController.enabled = false;
             EntityTransform.position = position;
+            CacheCharacterController.enabled = true;
         }
 
         public Bounds GetMovementBounds()

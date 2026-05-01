@@ -52,40 +52,6 @@ namespace MultiplayerARPG
             set { characterDatabases = value; }
         }
 
-#if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
-        [Tooltip("Leave this empty to use GameInstance's controller prefab")]
-        [SerializeField]
-        protected BasePlayerCharacterController controllerPrefab;
-#endif
-        public BasePlayerCharacterController ControllerPrefab
-        {
-            get
-            {
-#if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
-                return controllerPrefab;
-#else
-                return null;
-#endif
-            }
-            set
-            {
-#if UNITY_EDITOR || !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
-                controllerPrefab = value;
-#endif
-            }
-        }
-
-#if !DISABLE_ADDRESSABLES
-        [Tooltip("Leave this empty to use GameInstance's controller prefab")]
-        [SerializeField]
-        protected AssetReferenceBasePlayerCharacterController addressableControllerPrefab;
-        public AssetReferenceBasePlayerCharacterController AddressableControllerPrefab
-        {
-            get { return addressableControllerPrefab; }
-            set { addressableControllerPrefab = value; }
-        }
-#endif
-
         [SerializeField]
         protected CharacterRace race;
         public CharacterRace Race

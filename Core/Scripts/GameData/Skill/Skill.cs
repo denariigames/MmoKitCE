@@ -3,6 +3,7 @@ using Insthync.UnityEditorUtils;
 using LiteNetLibManager;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 using UnityEngine.Serialization;
 
 namespace MultiplayerARPG
@@ -49,6 +50,12 @@ namespace MultiplayerARPG
         public StatusEffectApplying[] attackStatusEffects;
         public HarvestType harvestType;
         public IncrementalMinMaxFloat harvestDamageAmount;
+        public SkillKnockback knockbackEffect = new SkillKnockback()
+        {
+            force = 0f,
+            deceleration = 0f,
+            duration = 1f,
+        };
 
         [Category(4, "Buff")]
         public SkillBuffType skillBuffType;
@@ -157,18 +164,24 @@ namespace MultiplayerARPG
                     skillUser.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
                     break;
                 case SkillBuffType.BuffToNearbyAllies:
-                    tempCharacters = skillUser.FindAliveEntities<BaseCharacterEntity>(buffDistance.GetAmount(skillLevel), true, false, false, overlapMask);
-                    foreach (BaseCharacterEntity applyBuffCharacter in tempCharacters)
+                    using (CollectionPool<List<BaseCharacterEntity>, BaseCharacterEntity>.Get(out tempCharacters))
                     {
-                        applyBuffCharacter.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
+                        skillUser.FindAliveEntities(tempCharacters, buffDistance.GetAmount(skillLevel), true, false, false, overlapMask);
+                        foreach (BaseCharacterEntity applyBuffCharacter in tempCharacters)
+                        {
+                            applyBuffCharacter.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
+                        }
                     }
                     skillUser.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
                     break;
                 case SkillBuffType.BuffToNearbyCharacters:
-                    tempCharacters = skillUser.FindAliveEntities<BaseCharacterEntity>(buffDistance.GetAmount(skillLevel), true, false, true, overlapMask);
-                    foreach (BaseCharacterEntity applyBuffCharacter in tempCharacters)
+                    using (CollectionPool<List<BaseCharacterEntity>, BaseCharacterEntity>.Get(out tempCharacters))
                     {
-                        applyBuffCharacter.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
+                        skillUser.FindAliveEntities(tempCharacters, buffDistance.GetAmount(skillLevel), true, false, true, overlapMask);
+                        foreach (BaseCharacterEntity applyBuffCharacter in tempCharacters)
+                        {
+                            applyBuffCharacter.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
+                        }
                     }
                     skillUser.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
                     break;
@@ -209,12 +222,15 @@ namespace MultiplayerARPG
                 case SkillBuffType.BuffToNearbyPartyMembers:
                     if (skillUserInfo.PartyId > 0)
                     {
-                        tempCharacters = skillUser.FindAliveEntities<BaseCharacterEntity>(buffDistance.GetAmount(skillLevel), true, false, false, overlapMask);
-                        foreach (BaseCharacterEntity applyBuffCharacter in tempCharacters)
+                        using (CollectionPool<List<BaseCharacterEntity>, BaseCharacterEntity>.Get(out tempCharacters))
                         {
-                            if (skillUserInfo.PartyId != applyBuffCharacter.GetInfo().PartyId)
-                                continue;
-                            applyBuffCharacter.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
+                            skillUser.FindAliveEntities(tempCharacters, buffDistance.GetAmount(skillLevel), true, false, false, overlapMask);
+                            foreach (BaseCharacterEntity applyBuffCharacter in tempCharacters)
+                            {
+                                if (skillUserInfo.PartyId != applyBuffCharacter.GetInfo().PartyId)
+                                    continue;
+                                applyBuffCharacter.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
+                            }
                         }
                     }
                     skillUser.ApplyBuff(DataId, BuffType.SkillBuff, skillLevel, skillUserInfo, weapon);
@@ -440,6 +456,15 @@ namespace MultiplayerARPG
             if (TryGetDamageInfo(skillUser, isLeftHand, out DamageInfo damageInfo))
                 return damageInfo.GetDamageTransform(skillUser, isLeftHand);
             return base.GetApplyTransform(skillUser, isLeftHand);
+        }
+
+        public override void OnSkillAttackHit(int skillLevel, EntityInfo instigator, CharacterItem weapon, BaseCharacterEntity target)
+        {
+            base.OnSkillAttackHit(skillLevel, instigator, weapon, target);
+
+            // Knockback Logic
+            if (knockbackEffect.force > 0 && instigator.TryGetEntity(out BaseCharacterEntity attacker))
+                knockbackEffect.ApplyKnockback(attacker, target);
         }
 
         public override bool CanUse(BaseCharacterEntity skillUser, int level, bool isLeftHand, uint targetObjectId, out UITextKeys gameMessage, bool isItem = false)
