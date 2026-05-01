@@ -1,33 +1,22 @@
-﻿// ce scalability: #4
-/*
-* PERF NOTES / CHANGELOG (since original baseline)
-*  Removed per-call NavMeshPath allocations by reusing a single NavMeshPath instance for SetMovePaths().
-*  Removed client-side pathfinding for remote proxies when receiving replicated positions.
-*    Remote proxies now converge to replicated positions without NavMesh.CalculatePath.
-*  Further: remote proxies now disable NavMeshAgent entirely (big CPU win at scale) and use
-*    MoveTowards transform smoothing.
-*  Further: RemainingDistance is now cached/throttled to reduce per-frame NavMeshAgent.remainingDistance cost.
-*/
-
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using MultiplayerARPG.Server.Scheduling;
+﻿using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Insthync.ManagedUpdating;
 using LiteNetLib.Utils;
 using LiteNetLibManager;
+using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace MultiplayerARPG
 {
     [RequireComponent(typeof(NavMeshAgent))]
-    public class NavMeshEntityMovement : BaseNetworkedGameEntityComponent<BaseGameEntity>, IEntityMovementComponent
+    public class NavMeshEntityMovement : BaseNetworkedGameEntityComponent<BaseGameEntity>, IEntityMovementComponent, IEntityMovementDataHandler, IManagedUpdate
     {
-
-        protected static readonly float s_minMagnitudeToDetermineMoving = 0.01f;
-        protected static readonly float s_minDistanceToSimulateMovement = 0.01f;
-        protected static readonly float s_timestampToUnityTimeMultiplier = 0.001f;
+        protected const float MIN_MAGNITUDE_TO_DETERMINE_MOVING = 0.01f;
+        protected const float MIN_DISTANCE_TO_SIMULATE_MOVEMENT = 0.01f;
+        protected const float TIMESTAMP_TO_UNITY_TIME_MULTIPLIER = 0.001f;
+        protected const float MIN_REMOTE_SIMULATION_DELTA_TIME = 0.05f;
+        protected static readonly ProfilerMarker s_UpdateProfilerMarker = new ProfilerMarker("NavMeshEntityMovement - Update");
 
         [Header("Movement Settings")]
         public ObstacleAvoidanceType obstacleAvoidanceWhileMoving = ObstacleAvoidanceType.MedQualityObstacleAvoidance;
@@ -50,29 +39,15 @@ namespace MultiplayerARPG
         public MovementState MovementState { get; protected set; }
         public ExtraMovementState ExtraMovementState { get; protected set; }
         public DirectionVector2 Direction2D { get { return Vector2.down; } set { } }
-        public float CurrentMoveSpeed { get { return (CacheNavMeshAgent == null || !CacheNavMeshAgent.enabled || CacheNavMeshAgent.isStopped) ? 0f : CacheNavMeshAgent.speed; } }
+        public float CurrentMoveSpeed { get { return CacheNavMeshAgent.isStopped ? 0f : CacheNavMeshAgent.speed; } }
+
+        private LogicUpdater _logicUpdater;
 
         // Input codes
         protected bool _isDashing;
         protected Vector3 _inputDirection;
         protected ExtraMovementState _tempExtraMovementState;
         protected bool _moveByDestination;
-
-        // NavMesh path caching (avoid per-call allocations)
-        protected NavMeshPath _reusablePath;
-
-        // Remote proxy movement target (avoid client-side pathfinding for replicated agents)
-        protected bool _hasRemoteTargetPosition;
-        protected Vector3 _remoteTargetPosition;
-
-        // Remote proxy: optionally disable NavMeshAgent completely to reduce CPU.
-        protected bool _remoteProxyAgentDisabled;
-
-        // RemainingDistance caching/throttling (NavMeshAgent.remainingDistance is not free)
-        protected const float k_RemainingDistanceUpdateInterval = 0.15f;
-        protected float _cachedRemainingDistance = -1f;
-        protected float _nextRemainingDistanceUpdateTime;
-        protected bool _cachedRemainingDistanceValid;
 
         // Move simulate codes
         protected readonly List<EntityMovementForceApplier> _movementForceAppliers = new List<EntityMovementForceApplier>();
@@ -113,29 +88,10 @@ namespace MultiplayerARPG
         protected bool _isClientConfirmingTeleport;
         protected bool _isStarted;
 
-        // ---------------------------------------------------------------------
-        // Tick-driven execution (no UpdateManager)
-        // ---------------------------------------------------------------------
-        // This component is driven ONLY by ServerTickScheduler ticks. It no longer
-        // registers with UpdateManager.
-        //
-        // Implementation detail:
-        // - We keep a static registry of enabled NavMeshEntityMovement instances.
-        // - A single tick system (NavMeshEntityMovementTickSystem) iterates and
-        //   executes movement/rotation using the scheduler-provided tick delta.
-        // - The tick system is registered at runtime via reflection against
-        //   ServerRuntimeSimulation's private `scheduler` field (keeps this change
-        //   isolated to this file for testing).
-        private static readonly List<NavMeshEntityMovement> s_tickInstances = new List<NavMeshEntityMovement>(1024);
-        private static NavMeshEntityMovementTickSystem s_tickSystem;
-        private static bool s_tickSystemRegistered;
-        private static bool s_tickSystemRegisterAttempted;
-
         protected virtual void Awake()
         {
             // Prepare nav mesh agent component
             CacheNavMeshAgent = gameObject.GetOrAddComponent<NavMeshAgent>();
-            _reusablePath = new NavMeshPath();
             TeleportPreparer = gameObject.GetComponent<IEntityTeleportPreparer>();
             _forceUpdateListeners = gameObject.GetComponents<IEntityMovementForceUpdateListener>();
 
@@ -157,30 +113,29 @@ namespace MultiplayerARPG
             _lookRotationApplied = true;
             _isClientConfirmingTeleport = true;
             _isStarted = true;
-
         }
 
         private void OnEnable()
         {
-            // Agent may be disabled for remote proxies (see UpdateMovement).
-            bool disableForRemoteProxy = IsClient && !IsOwnerClient && !IsServer && !CanPredictMovement();
-            CacheNavMeshAgent.enabled = !disableForRemoteProxy;
-            _remoteProxyAgentDisabled = disableForRemoteProxy;
-
-            // Tick-driven registration
-            if (!s_tickInstances.Contains(this))
-                s_tickInstances.Add(this);
-            EnsureTickSystemRegistered();
+            CacheNavMeshAgent.enabled = true;
+            UpdateManager.Register(this);
         }
 
         private void OnDisable()
         {
             CacheNavMeshAgent.enabled = false;
+            UpdateManager.Unregister(this);
+        }
 
-            // Tick-driven unregistration
-            int idx = s_tickInstances.IndexOf(this);
-            if (idx >= 0)
-                s_tickInstances.RemoveAt(idx);
+        public override void OnIdentityInitialize()
+        {
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryAdd(ObjectId, this);
+        }
+
+        public override void OnNetworkDestroy(byte reasons)
+        {
+            Entity.CurrentGameManager.EntityMovementDataHandlers.TryRemove(ObjectId, out _);
         }
 
         public void KeyMovement(Vector3 moveDirection, MovementState movementState)
@@ -284,6 +239,8 @@ namespace MultiplayerARPG
             }
             if (IsPreparingToTeleport)
                 return;
+            if (IsServer && !IsOwnerClientOrOwnedByServer)
+                _isServerWaitingTeleportConfirm = true;
             _acceptedPosition = position;
             _isTeleporting = true;
             _stillMoveAfterTeleport = stillMoveAfterTeleport;
@@ -334,21 +291,11 @@ namespace MultiplayerARPG
 
         protected float GetPathRemainingDistance()
         {
-            // Throttle expensive remainingDistance reads.
-            if (!CacheNavMeshAgent.enabled)
-                return -1f;
             if (CacheNavMeshAgent.pathPending ||
                 CacheNavMeshAgent.pathStatus == NavMeshPathStatus.PathInvalid)
                 return -1f;
 
-            float now = Time.time;
-            if (_cachedRemainingDistanceValid && now < _nextRemainingDistanceUpdateTime)
-                return _cachedRemainingDistance;
-
-                _cachedRemainingDistance = CacheNavMeshAgent.remainingDistance;
-                _cachedRemainingDistanceValid = true;
-                _nextRemainingDistanceUpdateTime = now + k_RemainingDistanceUpdateInterval;
-                return _cachedRemainingDistance;
+            return CacheNavMeshAgent.remainingDistance;
         }
 
         protected float GetPathRemainingDistanceByCorners()
@@ -366,185 +313,22 @@ namespace MultiplayerARPG
             return distance;
         }
 
-        /// <summary>
-        /// Tick-driven update entry point (called by NavMeshEntityMovementTickSystem).
-        /// </summary>
-        public virtual void TickUpdate(float deltaTime)
+        public virtual void ManagedUpdate()
         {
-            UpdateMovement(deltaTime);
-            UpdateRotation(deltaTime);
-            _isDashing = false;
-            _acceptedDash = false;
-        }
-
-        
-
-        // ---------------------------------------------------------------------
-        // Tick-system binding (ServerTickScheduler)
-        // ---------------------------------------------------------------------
-        // The scheduler lives on GameInstance (see ServerRuntimeSimulation.cs: private ServerTickScheduler _serverScheduler).
-        // We bind once (lazily) and register a single system that iterates all active NavMeshEntityMovement instances.
-        //
-        // This file is tick-only: if the scheduler cannot be found, this component will not update.
-        // ---------------------------------------------------------------------
-
-        private static ServerTickScheduler TryGetServerScheduler()
-        {
-            // Prefer GameInstance.Singleton if present
-            try
+            using (s_UpdateProfilerMarker.Auto())
             {
-                var prop = typeof(GameInstance).GetProperty("Singleton", BindingFlags.Public | BindingFlags.Static);
-                if (prop != null)
-                {
-                    var gi = prop.GetValue(null, null) as GameInstance;
-                    if (gi != null)
-                    {
-                        var fi = typeof(GameInstance).GetField("_serverScheduler", BindingFlags.Instance | BindingFlags.NonPublic);
-                        if (fi != null)
-                            return fi.GetValue(gi) as ServerTickScheduler;
-                    }
-                }
-            }
-            catch { }
-
-            // Fallback: find an instance in scene (editor / unusual bootstrap)
-            try
-            {
-                GameInstance gi = UnityEngine.Object.FindObjectOfType<GameInstance>();
-                if (gi != null)
-                {
-                    var fi = typeof(GameInstance).GetField("_serverScheduler", BindingFlags.Instance | BindingFlags.NonPublic);
-                    if (fi != null)
-                        return fi.GetValue(gi) as ServerTickScheduler;
-                }
-            }
-            catch { }
-
-            return null;
-        }
-
-        private static void EnsureTickSystemRegistered()
-        {
-            if (s_tickSystemRegistered || s_tickSystemRegisterAttempted)
-                return;
-
-            s_tickSystemRegisterAttempted = true;
-
-            ServerTickScheduler scheduler = TryGetServerScheduler();
-            if (scheduler == null)
-            {
-                Logging.LogWarning(nameof(NavMeshEntityMovement), "ServerTickScheduler not found; NavMeshEntityMovement will not tick.");
-                return;
-            }
-
-            if (s_tickSystem == null)
-                s_tickSystem = new NavMeshEntityMovementTickSystem();
-
-            // Register under the Movement channel.
-            // If the channel doesn't exist yet, scheduler will create one at 20 Hz (matches common movement rates).
-            scheduler.RegisterSystem(s_tickSystem, "Movement", 20);
-            s_tickSystemRegistered = true;
-        }
-
-        private sealed class NavMeshEntityMovementTickSystem : ITickSystem
-        {
-            public string Name => "NavMeshEntityMovement";
-
-            public void Prepare(in TickContext ctx)
-            {
-                // No pre-pass required.
-            }
-
-            public void Execute(in TickContext ctx)
-            {
-                float dt = ctx.FixedDelta;
-
-                for (int i = 0; i < s_tickInstances.Count; ++i)
-                {
-                    NavMeshEntityMovement inst = s_tickInstances[i];
-                    if (inst == null || !inst.isActiveAndEnabled)
-                        continue;
-
-                    if (!inst._isStarted)
-                        continue;
-
-                    inst.TickUpdate(dt);
-                }
-            }
-
-            public void Commit(in TickContext ctx)
-            {
-                // No post-pass required.
+                float deltaTime = Time.deltaTime;
+                UpdateMovement(deltaTime);
+                UpdateRotation(deltaTime);
+                _isDashing = false;
+                _acceptedDash = false;
             }
         }
-
-
 
         public void UpdateMovement(float deltaTime)
         {
             if (IsPreparingToTeleport)
                 return;
-
-            // Remote proxy: disable NavMeshAgent entirely and converge using simple transform smoothing.
-            // This avoids NavMeshAgent internal update costs across large numbers of replicated entities.
-            if (IsClient && !IsOwnerClient && !IsServer && !CanPredictMovement())
-            {
-                if (!_remoteProxyAgentDisabled)
-                {
-                    if (CacheNavMeshAgent.enabled)
-                        CacheNavMeshAgent.enabled = false;
-                    _remoteProxyAgentDisabled = true;
-                    _cachedRemainingDistanceValid = false;
-                }
-
-                if (_hasRemoteTargetPosition)
-                {
-                        float moveSpeed = Entity.GetMoveSpeed();
-                        Vector3 currentPos = EntityTransform.position;
-                        Vector3 targetPos = _remoteTargetPosition;
-                        Vector3 toTarget = targetPos - currentPos;
-                        float toTargetSqr = toTarget.sqrMagnitude;
-                        float minSqr = s_minDistanceToSimulateMovement * s_minDistanceToSimulateMovement;
-
-                        if (toTargetSqr > minSqr)
-                        {
-                            float maxStep = moveSpeed * deltaTime;
-                            Vector3 newPos = Vector3.MoveTowards(currentPos, targetPos, maxStep);
-                            Vector3 step = newPos - currentPos;
-                            EntityTransform.position = newPos;
-                            CurrentGameManager.ShouldPhysicSyncTransforms = true;
-
-                            if (_lookRotationApplied && Entity.CanTurn() && step.sqrMagnitude > 0.000001f)
-                                _targetYAngle = Quaternion.LookRotation(step).eulerAngles.y;
-
-                            // Drive animation states heuristically for remote proxies.
-                            MovementState = MovementState.IsGrounded | MovementState.Forward;
-                            ExtraMovementState = _acceptedExtraMovementStateBeforeStopped;
-                        }
-                        else
-                        {
-                            _hasRemoteTargetPosition = false;
-                            MovementState = MovementState.IsGrounded;
-                            ExtraMovementState = ExtraMovementState.None;
-                        }
-                }
-                else
-                {
-                    MovementState = MovementState.IsGrounded;
-                    ExtraMovementState = ExtraMovementState.None;
-                }
-
-                _currentInput = Entity.SetInputYAngle(_currentInput, EntityTransform.eulerAngles.y);
-                return;
-            }
-
-            // Ensure agent is enabled for non-remote-proxy simulation paths.
-            if (_remoteProxyAgentDisabled)
-            {
-                CacheNavMeshAgent.enabled = true;
-                _remoteProxyAgentDisabled = false;
-                _cachedRemainingDistanceValid = false;
-            }
 
             // Prepare speed
             CacheNavMeshAgent.speed = Entity.GetMoveSpeed();
@@ -563,11 +347,9 @@ namespace MultiplayerARPG
 
             // Apply Forces
             _forceUpdateListeners.OnPreUpdateForces(_movementForceAppliers);
-            Vector3 forceMotion;
-            EntityMovementForceApplier replaceMovementForceApplier;
-                _movementForceAppliers.UpdateForces(deltaTime,
-                    Entity.GetMoveSpeed(MovementState.Forward, ExtraMovementState.None),
-                    out forceMotion, out replaceMovementForceApplier);
+            _movementForceAppliers.UpdateForces(deltaTime,
+                Entity.GetMoveSpeed(MovementState.Forward, ExtraMovementState.None),
+                out Vector3 forceMotion, out EntityMovementForceApplier replaceMovementForceApplier);
             _forceUpdateListeners.OnPostUpdateForces(_movementForceAppliers);
 
             // Replace player's movement by this
@@ -588,7 +370,7 @@ namespace MultiplayerARPG
                 }
             }
 
-            if (forceMotion.sqrMagnitude > 0f && CacheNavMeshAgent.isOnNavMesh)
+            if (forceMotion.magnitude > 0 && CacheNavMeshAgent.isOnNavMesh)
             {
                 CacheNavMeshAgent.Move(forceMotion * deltaTime);
             }
@@ -612,10 +394,9 @@ namespace MultiplayerARPG
                     else
                     {
                         // Moving by clicked position
-                        float velSqr = CacheNavMeshAgent.velocity.sqrMagnitude;
-                        MovementState |= velSqr > (s_minMagnitudeToDetermineMoving * s_minMagnitudeToDetermineMoving) ? MovementState.Forward : MovementState.None;
+                        MovementState |= CacheNavMeshAgent.velocity.magnitude > MIN_MAGNITUDE_TO_DETERMINE_MOVING ? MovementState.Forward : MovementState.None;
                         // Turn character to destination
-                        if (_lookRotationApplied && Entity.CanTurn() && velSqr > (s_minMagnitudeToDetermineMoving * s_minMagnitudeToDetermineMoving))
+                        if (_lookRotationApplied && Entity.CanTurn() && CacheNavMeshAgent.velocity.magnitude > MIN_MAGNITUDE_TO_DETERMINE_MOVING)
                             _targetYAngle = Quaternion.LookRotation(CacheNavMeshAgent.velocity.normalized).eulerAngles.y;
                     }
                 }
@@ -640,8 +421,7 @@ namespace MultiplayerARPG
                 // Have to check `IsClient` because only clients will simulate movement by `SetMovePath` function
                 // Disable obstacle avoidance because it won't predict movement, it is just moving to destination without obstacle avoidance
                 CacheNavMeshAgent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
-
-                if (CacheNavMeshAgent.velocity.sqrMagnitude > (s_minMagnitudeToDetermineMoving * s_minMagnitudeToDetermineMoving))
+                if (CacheNavMeshAgent.velocity.magnitude > MIN_MAGNITUDE_TO_DETERMINE_MOVING)
                 {
                     MovementState = _acceptedMovementStateBeforeStopped;
                 }
@@ -694,20 +474,18 @@ namespace MultiplayerARPG
         {
             if (!Entity.CanMove())
                 return;
-                _inputDirection = Vector3.zero;
-                _moveByDestination = true;
-                CacheNavMeshAgent.updatePosition = true;
-                CacheNavMeshAgent.updateRotation = false;
-                if (CacheNavMeshAgent.isOnNavMesh)
-                {
-                    CacheNavMeshAgent.isStopped = false;
-                    // Reuse path allocation to avoid GC spikes
-                    _reusablePath.ClearCorners();
-                    {
-                        NavMesh.CalculatePath(transform.position, position, CacheNavMeshAgent.areaMask, _reusablePath);
-                    }
-                    CacheNavMeshAgent.SetPath(_reusablePath);
-                }
+            _inputDirection = Vector3.zero;
+            _moveByDestination = true;
+            CacheNavMeshAgent.updatePosition = true;
+            CacheNavMeshAgent.updateRotation = false;
+            if (CacheNavMeshAgent.isOnNavMesh)
+            {
+                CacheNavMeshAgent.isStopped = false;
+
+                NavMeshPath path = new NavMeshPath();
+                NavMesh.CalculatePath(transform.position, position, CacheNavMeshAgent.areaMask, path);
+                CacheNavMeshAgent.SetPath(path);
+            }
         }
 
         public bool WriteClientState(long writeTimestamp, NetDataWriter writer, out bool shouldSendReliably)
@@ -859,6 +637,7 @@ namespace MultiplayerARPG
 
         public async void ReadServerStateAtClient(long peerTimestamp, NetDataReader reader)
         {
+            reader.ClientReadSyncTransformMessage3D(out MovementState movementState, out ExtraMovementState extraMovementState, out Vector3 position, out float yAngle, out List<EntityMovementForceApplier> movementForceAppliers);
             if (IsServer)
             {
                 // Don't read and apply transform, because it was done at server
@@ -869,7 +648,6 @@ namespace MultiplayerARPG
                 // Not ready to apply transform
                 return;
             }
-            reader.ClientReadSyncTransformMessage3D(out MovementState movementState, out ExtraMovementState extraMovementState, out Vector3 position, out float yAngle, out List<EntityMovementForceApplier> movementForceAppliers);
             _movementForceAppliers.Clear();
             _movementForceAppliers.AddRange(movementForceAppliers);
             if (movementState.Has(MovementState.IsTeleport))
@@ -883,7 +661,7 @@ namespace MultiplayerARPG
             {
                 // Prepare time
                 long deltaTime = _acceptedPositionTimestamp > 0 ? (peerTimestamp - _acceptedPositionTimestamp) : 0;
-                float unityDeltaTime = (float)(deltaTime * s_timestampToUnityTimeMultiplier);
+                float unityDeltaTime = (float)(deltaTime * TIMESTAMP_TO_UNITY_TIME_MULTIPLIER);
                 if (Vector3.Distance(position, EntityTransform.position) >= snapThreshold)
                 {
                     // Snap character to the position if character is too far from the position
@@ -891,16 +669,12 @@ namespace MultiplayerARPG
                     {
                         EntityTransform.eulerAngles = new Vector3(0, yAngle, 0);
                         CacheNavMeshAgent.Warp(position);
-                        _hasRemoteTargetPosition = false;
                     }
                 }
                 else if (!IsOwnerClient)
                 {
                     RemoteTurnSimulation(yAngle, unityDeltaTime);
-                    // Do not pathfind to replicated position (very expensive at scale).
-                    // Remote proxies converge via transform smoothing with NavMeshAgent disabled.
-                    _remoteTargetPosition = position;
-                    _hasRemoteTargetPosition = true;
+                    SetMovePaths(position);
                 }
                 if (movementState.HasDirectionMovement())
                 {
@@ -951,7 +725,7 @@ namespace MultiplayerARPG
             }
             // Prepare time
             long deltaTime = _acceptedPositionTimestamp > 0 ? (peerTimestamp - _acceptedPositionTimestamp) : 0;
-            float unityDeltaTime = (float)(deltaTime * s_timestampToUnityTimeMultiplier);
+            float unityDeltaTime = (float)(deltaTime * TIMESTAMP_TO_UNITY_TIME_MULTIPLIER);
             _tempExtraMovementState = entityMovementInput.ExtraMovementState;
             if (inputState.Has(EntityMovementInputState.PositionChanged))
             {
@@ -1006,7 +780,7 @@ namespace MultiplayerARPG
             }
             // Prepare time
             long deltaTime = _acceptedPositionTimestamp > 0 ? (peerTimestamp - _acceptedPositionTimestamp) : 0;
-            float unityDeltaTime = (float)(deltaTime * s_timestampToUnityTimeMultiplier);
+            float unityDeltaTime = (float)(deltaTime * TIMESTAMP_TO_UNITY_TIME_MULTIPLIER);
             // Prepare movement state
             MovementState = movementState;
             ExtraMovementState = extraMovementState;
@@ -1035,7 +809,7 @@ namespace MultiplayerARPG
             else
             {
                 // It's both server and client, simulate movement
-                if (Vector3.Distance(position, EntityTransform.position) > s_minDistanceToSimulateMovement)
+                if (Vector3.Distance(position, EntityTransform.position) > MIN_DISTANCE_TO_SIMULATE_MOVEMENT)
                 {
                     _acceptedPosition = newPos;
                     SetMovePaths(position);
@@ -1061,7 +835,6 @@ namespace MultiplayerARPG
         {
             _inputDirection = Vector3.zero;
             _moveByDestination = false;
-            _hasRemoteTargetPosition = false;
             Vector3 beforeWarpDest = CacheNavMeshAgent.destination;
             CacheNavMeshAgent.Warp(position);
             if (!stillMoveAfterTeleport && CacheNavMeshAgent.isOnNavMesh)
@@ -1069,8 +842,6 @@ namespace MultiplayerARPG
             if (stillMoveAfterTeleport && CacheNavMeshAgent.isOnNavMesh)
                 CacheNavMeshAgent.SetDestination(beforeWarpDest);
             TurnImmediately(yAngle);
-            if (IsServer && !IsOwnedByServer)
-                _isServerWaitingTeleportConfirm = true;
             if (!IsServer && IsOwnerClient)
                 _isClientConfirmingTeleport = true;
         }
@@ -1090,6 +861,8 @@ namespace MultiplayerARPG
             }
             // Will turn smoothly later
             _targetYAngle = yAngle;
+            if (deltaTime < MIN_REMOTE_SIMULATION_DELTA_TIME)
+                deltaTime = MIN_REMOTE_SIMULATION_DELTA_TIME;
             _yTurnSpeed = 1f / deltaTime;
         }
 
@@ -1137,7 +910,7 @@ namespace MultiplayerARPG
         {
             while (this != null && _isServerWaitingTeleportConfirm)
             {
-                await UniTask.Delay(1000);
+                await UniTask.Yield();
             }
         }
 

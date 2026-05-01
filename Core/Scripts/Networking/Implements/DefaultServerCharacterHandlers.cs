@@ -1,6 +1,4 @@
-﻿// ce stability: #4
-
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using LiteNetLibManager;
@@ -72,12 +70,18 @@ namespace MultiplayerARPG
                 {
                     case WarpPortalType.Default:
                         bool isSameMap = respawnMapName.Equals(BaseGameNetworkManager.CurrentMapInfo.Id);
-                        // #4 ALWAYS respawn before warping (prevents same-map hang while dead)
-                        GameInstance.Singleton.GameplayRule.OnCharacterRespawn(playerCharacter);
+                        if (!isSameMap)
+                        {
+                            // Respawn immediately before move
+                            GameInstance.Singleton.GameplayRule.OnCharacterRespawn(playerCharacter);
+                        }
                         await Manager.WarpCharacter(entity, respawnMapName, respawnPosition, respawnOverrideRotation, respawnRotation);
-                        // #4 Keep the entity hook (usually resets state/visuals)
                         if (isSameMap)
+                        {
+                            // Wait until teleported before respawn
+                            GameInstance.Singleton.GameplayRule.OnCharacterRespawn(playerCharacter);
                             entity.OnRespawn();
+                        }
                         break;
                     case WarpPortalType.EnterInstance:
                         // Respawn immediately before move

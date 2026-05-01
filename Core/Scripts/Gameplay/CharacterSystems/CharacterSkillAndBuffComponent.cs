@@ -1,12 +1,11 @@
-﻿// ce scalability: #4 adds ServerTickDriver and removes UpdateManager
-
+﻿using Insthync.ManagedUpdating;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiplayerARPG
 {
     [DisallowMultipleComponent]
-    public class CharacterSkillAndBuffComponent : BaseGameEntityComponent<BaseCharacterEntity>
+    public class CharacterSkillAndBuffComponent : BaseGameEntityComponent<BaseCharacterEntity>, IManagedUpdate
     {
         public const float SKILL_BUFF_UPDATE_DURATION = 1f;
         public const string KEY_VEHICLE_BUFF = "<VEHICLE_BUFF>";
@@ -22,194 +21,164 @@ namespace MultiplayerARPG
 
         private void OnEnable()
         {
-            // Tick-driven on dedicated/headless server to avoid per-entity UpdateManager overhead.
-            // Falls back to UpdateManager on clients / non-tick runtimes.
-            if (CharacterSkillAndBuffTickDriver.ShouldTickDriveOnThisRuntime())
-                CharacterSkillAndBuffTickDriver.Register(this);
+            UpdateManager.Register(this);
         }
 
         private void OnDisable()
         {
-            if (CharacterSkillAndBuffTickDriver.ShouldTickDriveOnThisRuntime())
-                CharacterSkillAndBuffTickDriver.Unregister(this);
+            UpdateManager.Unregister(this);
         }
 
-        protected override void OnDestroy()
+        public void ManagedUpdate()
         {
-            base.OnDestroy();
-            // Safety: ensure we are not left in any driver list
-            CharacterSkillAndBuffTickDriver.Unregister(this);
-        }
-
-        //public void ManagedUpdate()
-        //{
-            // Legacy fallback path when not tick-driven.
-         //   if (!Entity || !Entity.IsServer)
-        //        return;
-
-        //    TickSkillAndBuff(Time.unscaledDeltaTime);
-        //}
-
-        /// <summary>
-        /// Tick-driven entry point. Called by CharacterSkillAndBuffTickSystem on server.
-        /// Also used by ManagedUpdate() as a legacy fallback.
-        /// </summary>
-        public void TickSkillAndBuff(float deltaSeconds)
-        {
-            if (!Entity || !Entity.IsServer)
+            if (!Entity.IsServer)
                 return;
 
-            _deltaTime = deltaSeconds;
+            _deltaTime = Time.unscaledDeltaTime;
             _updatingTime += _deltaTime;
 
             if (Entity.IsDead())
                 return;
 
-            if (_updatingTime < SKILL_BUFF_UPDATE_DURATION)
-                return;
-
-            float tempDuration;
-            CalculatedBuff tempCalculatedBuff;
-            CharacterRecoveryData tempRecoveryData;
-            int tempCount;
-
-            // Removing mount if it should
-            if (Entity.PassengingVehicleEntity != null)
+            if (_updatingTime >= SKILL_BUFF_UPDATE_DURATION)
             {
-                CharacterMount mount = Entity.Mount;
-                tempCalculatedBuff = Entity.PassengingVehicleEntity.GetBuff();
-                if (mount.ShouldRemove(Entity))
+                float tempDuration;
+                CalculatedBuff tempCalculatedBuff;
+                CharacterRecoveryData tempRecoveryData;
+                int tempCount;
+                // Removing mount if it should
+                if (Entity.PassengingVehicleEntity != null)
                 {
-                    _recoveryBuffs.Remove(KEY_VEHICLE_BUFF);
-                    Entity.ExitVehicleAndForget();
-                }
-                else
-                {
-                    mount.Update(Entity.PassengingVehicleEntity, _updatingTime);
-                    Entity.Mount = mount;
-                    tempDuration = tempCalculatedBuff.GetDuration();
-                    // If duration is 0, damages / recoveries will applied immediately, so don't apply it here
-                    if (tempDuration > 0f)
+                    CharacterMount mount = Entity.Mount;
+                    tempCalculatedBuff = Entity.PassengingVehicleEntity.GetBuff();
+                    if (mount.ShouldRemove(Entity))
                     {
-                        if (!_recoveryBuffs.TryGetValue(KEY_VEHICLE_BUFF, out tempRecoveryData))
-                        {
-                            tempRecoveryData = new CharacterRecoveryData(Entity);
-                            tempRecoveryData.SetupByBuff(CharacterBuff.Empty, tempCalculatedBuff);
-                            _recoveryBuffs.Add(KEY_VEHICLE_BUFF, tempRecoveryData);
-                        }
-                        tempRecoveryData.Apply(1 / tempDuration * _updatingTime);
-                    }
-                }
-            }
-
-            // Removing summons if it should
-            if (!Entity.IsDead())
-            {
-                tempCount = Entity.Summons.Count;
-                CharacterSummon summon;
-                for (int i = tempCount - 1; i >= 0; --i)
-                {
-                    summon = Entity.Summons[i];
-                    tempCalculatedBuff = summon.GetBuff();
-                    if (summon.ShouldRemove(Entity))
-                    {
-                        _recoveryBuffs.Remove(summon.id);
-                        Entity.Summons.RemoveAt(i);
-                        summon.UnSummon(Entity);
+                        _recoveryBuffs.Remove(KEY_VEHICLE_BUFF);
+                        Entity.ExitVehicleAndForget();
                     }
                     else
                     {
-                        summon.Update(Entity, _updatingTime);
-                        Entity.Summons[i] = summon;
+                        mount.Update(Entity.PassengingVehicleEntity, _updatingTime);
+                        Entity.Mount = mount;
                         tempDuration = tempCalculatedBuff.GetDuration();
                         // If duration is 0, damages / recoveries will applied immediately, so don't apply it here
                         if (tempDuration > 0f)
                         {
-                            if (!_recoveryBuffs.TryGetValue(summon.id, out tempRecoveryData))
+                            if (!_recoveryBuffs.TryGetValue(KEY_VEHICLE_BUFF, out tempRecoveryData))
                             {
                                 tempRecoveryData = new CharacterRecoveryData(Entity);
                                 tempRecoveryData.SetupByBuff(CharacterBuff.Empty, tempCalculatedBuff);
-                                _recoveryBuffs.Add(summon.id, tempRecoveryData);
+                                _recoveryBuffs.Add(KEY_VEHICLE_BUFF, tempRecoveryData);
                             }
                             tempRecoveryData.Apply(1 / tempDuration * _updatingTime);
                         }
                     }
-                    // Don't update next buffs if character dead
-                    if (Entity.IsDead())
-                        break;
                 }
-            }
-
-            // Can mount by buffs, so prepare data here
-            bool foundBuffMount = false;
-
-            // Removing buffs if it should
-            if (!Entity.IsDead())
-            {
-                tempCount = Entity.Buffs.Count;
-                CharacterBuff buff;
-                for (int i = tempCount - 1; i >= 0; --i)
+                // Removing summons if it should
+                if (!Entity.IsDead())
                 {
-                    buff = Entity.Buffs[i];
-                    tempCalculatedBuff = buff.GetBuff();
-                    if (buff.ShouldRemove())
+                    tempCount = Entity.Summons.Count;
+                    CharacterSummon summon;
+                    for (int i = tempCount - 1; i >= 0; --i)
                     {
-                        _recoveryBuffs.Remove(buff.id);
-                        Entity.OnRemoveBuff(buff, BuffRemoveReasons.Timeout);
-                        Entity.Buffs.RemoveAt(i);
-                    }
-                    else
-                    {
-                        buff.Update(_updatingTime);
-                        Entity.Buffs[i] = buff;
-                        tempDuration = tempCalculatedBuff.GetDuration();
-                        // If duration is 0, damages / recoveries will applied immediately, so don't apply it here
-                        if (tempDuration > 0f)
+                        summon = Entity.Summons[i];
+                        tempCalculatedBuff = summon.GetBuff();
+                        if (summon.ShouldRemove(Entity))
                         {
-                            if (!_recoveryBuffs.TryGetValue(buff.id, out tempRecoveryData))
+                            _recoveryBuffs.Remove(summon.id);
+                            Entity.Summons.RemoveAt(i);
+                            summon.UnSummon(Entity);
+                        }
+                        else
+                        {
+                            summon.Update(Entity, _updatingTime);
+                            Entity.Summons[i] = summon;
+                            tempDuration = tempCalculatedBuff.GetDuration();
+                            // If duration is 0, damages / recoveries will applied immediately, so don't apply it here
+                            if (tempDuration > 0f)
                             {
-                                tempRecoveryData = new CharacterRecoveryData(Entity);
-                                tempRecoveryData.SetupByBuff(buff, tempCalculatedBuff);
-                                _recoveryBuffs.Add(buff.id, tempRecoveryData);
+                                if (!_recoveryBuffs.TryGetValue(summon.id, out tempRecoveryData))
+                                {
+                                    tempRecoveryData = new CharacterRecoveryData(Entity);
+                                    tempRecoveryData.SetupByBuff(CharacterBuff.Empty, tempCalculatedBuff);
+                                    _recoveryBuffs.Add(summon.id, tempRecoveryData);
+                                }
+                                tempRecoveryData.Apply(1 / tempDuration * _updatingTime);
                             }
-                            tempRecoveryData.Apply(1 / tempDuration * _updatingTime);
                         }
-                        // Mount
-                        if (!foundBuffMount && tempCalculatedBuff.TryGetMount(out BuffMount tempBuffMount))
-                        {
-                            foundBuffMount = true;
-                            int tempMountLevel = tempCalculatedBuff.GetMountLevel();
-                            if (Entity.IsDifferMount(MountType.Buff, buff.id, tempMountLevel))
-                                Entity.SpawnMount(MountType.Buff, buff.id, 0f, tempMountLevel, 0);
-                        }
+                        // Don't update next buffs if character dead
+                        if (Entity.IsDead())
+                            break;
                     }
-                    // Don't update next buffs if character dead
-                    if (Entity.IsDead())
-                        break;
                 }
-            }
-
-            // Removing skill usages if it should
-            if (!Entity.IsDead())
-            {
-                tempCount = Entity.SkillUsages.Count;
-                CharacterSkillUsage skillUsage;
-                for (int i = tempCount - 1; i >= 0; --i)
+                // Can mount by buffs, so prepare data here
+                bool foundBuffMount = false;
+                // Removing buffs if it should
+                if (!Entity.IsDead())
                 {
-                    skillUsage = Entity.SkillUsages[i];
-                    if (skillUsage.ShouldRemove())
+                    tempCount = Entity.Buffs.Count;
+                    CharacterBuff buff;
+                    for (int i = tempCount - 1; i >= 0; --i)
                     {
-                        Entity.SkillUsages.RemoveAt(i);
-                    }
-                    else
-                    {
-                        skillUsage.Update(_updatingTime);
-                        Entity.SkillUsages[i] = skillUsage;
+                        buff = Entity.Buffs[i];
+                        tempCalculatedBuff = buff.GetBuff();
+                        if (buff.ShouldRemove())
+                        {
+                            _recoveryBuffs.Remove(buff.id);
+                            Entity.OnRemoveBuff(buff, BuffRemoveReasons.Timeout);
+                            Entity.Buffs.RemoveAt(i);
+                        }
+                        else
+                        {
+                            buff.Update(_updatingTime);
+                            Entity.Buffs[i] = buff;
+                            tempDuration = tempCalculatedBuff.GetDuration();
+                            // If duration is 0, damages / recoveries will applied immediately, so don't apply it here
+                            if (tempDuration > 0f)
+                            {
+                                if (!_recoveryBuffs.TryGetValue(buff.id, out tempRecoveryData))
+                                {
+                                    tempRecoveryData = new CharacterRecoveryData(Entity);
+                                    tempRecoveryData.SetupByBuff(buff, tempCalculatedBuff);
+                                    _recoveryBuffs.Add(buff.id, tempRecoveryData);
+                                }
+                                tempRecoveryData.Apply(1 / tempDuration * _updatingTime);
+                            }
+                            // Mount
+                            if (!foundBuffMount && tempCalculatedBuff.TryGetMount(out BuffMount tempBuffMount))
+                            {
+                                foundBuffMount = true;
+                                int tempMountLevel = tempCalculatedBuff.GetMountLevel();
+                                if (Entity.IsDifferMount(MountType.Buff, buff.id, tempMountLevel))
+                                    Entity.SpawnMount(MountType.Buff, buff.id, 0f, tempMountLevel, 0);
+                            }
+                        }
+                        // Don't update next buffs if character dead
+                        if (Entity.IsDead())
+                            break;
                     }
                 }
+                // Removing skill usages if it should
+                if (!Entity.IsDead())
+                {
+                    tempCount = Entity.SkillUsages.Count;
+                    CharacterSkillUsage skillUsage;
+                    for (int i = tempCount - 1; i >= 0; --i)
+                    {
+                        skillUsage = Entity.SkillUsages[i];
+                        if (skillUsage.ShouldRemove())
+                        {
+                            Entity.SkillUsages.RemoveAt(i);
+                        }
+                        else
+                        {
+                            skillUsage.Update(_updatingTime);
+                            Entity.SkillUsages[i] = skillUsage;
+                        }
+                    }
+                }
+                _updatingTime = 0;
             }
-
-            _updatingTime = 0;
         }
 
         public void OnAttack()

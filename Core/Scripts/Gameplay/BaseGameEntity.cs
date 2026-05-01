@@ -1,4 +1,4 @@
-﻿// CE scalability: #4, #6
+﻿// CE scalability: #6
 
 using Insthync.DevExtension;
 using Insthync.ManagedUpdating;
@@ -288,15 +288,6 @@ namespace MultiplayerARPG
             EntityOnEnable();
             if (onEnable != null)
                 onEnable.Invoke(this);
-
-            // Player-only optimization: on dedicated/headless servers, keep players out of UpdateManager
-            // and drive them from ServerTickScheduler via PlayerMobilesTickDriver.
-            if (this is BasePlayerCharacterEntity player && PlayerMobilesTickDriver.ShouldTickDriveOnThisRuntime())
-            {
-                PlayerMobilesTickDriver.Register(player);
-                return;
-            }
-
             UpdateManager.Register(DefaultExecutionOrders.BASE_GAME_ENTITY, this);
         }
         protected virtual void EntityOnEnable() { }
@@ -306,14 +297,6 @@ namespace MultiplayerARPG
             EntityOnDisable();
             if (onDisable != null)
                 onDisable.Invoke(this);
-
-            // Player-only optimization: unregister from tick driver when applicable
-            if (this is BasePlayerCharacterEntity player && PlayerMobilesTickDriver.ShouldTickDriveOnThisRuntime())
-            {
-                PlayerMobilesTickDriver.Unregister(player);
-                return;
-            }
-
             UpdateManager.Unregister(DefaultExecutionOrders.BASE_GAME_ENTITY, this);
         }
         protected virtual void EntityOnDisable() { }
