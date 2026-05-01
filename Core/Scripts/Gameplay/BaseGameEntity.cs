@@ -287,7 +287,7 @@ namespace MultiplayerARPG
         {
             EntityOnEnable();
             if (onEnable != null)
-                onEnable.Invoke();
+                onEnable.Invoke(this);
 
             // Player-only optimization: on dedicated/headless servers, keep players out of UpdateManager
             // and drive them from ServerTickScheduler via PlayerMobilesTickDriver.
@@ -305,7 +305,7 @@ namespace MultiplayerARPG
         {
             EntityOnDisable();
             if (onDisable != null)
-                onDisable.Invoke();
+                onDisable.Invoke(this);
 
             // Player-only optimization: unregister from tick driver when applicable
             if (this is BasePlayerCharacterEntity player && PlayerMobilesTickDriver.ShouldTickDriveOnThisRuntime())
