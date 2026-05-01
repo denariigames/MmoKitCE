@@ -823,7 +823,7 @@ namespace MultiplayerARPG
                         false, /* Don't find allies */
                         isAggressive,  /* Find enemies */
                         isAggressive,  /* Find neutral */
-                        overlapMask));
+                        overlapMask);
                 }
                 else
                 {
@@ -833,7 +833,7 @@ namespace MultiplayerARPG
                         false, /* Don't find allies */
                         true,  /* Find enemies */
                         false, /* Don't find neutral */
-                        overlapMask));
+                        overlapMask);
                 }
 
                 // Find one enemy from a found list
