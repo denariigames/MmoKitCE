@@ -8,7 +8,7 @@ using UnityEditor;
 
 namespace MultiplayerARPG
 {
-    public class HarvestableSpawnArea : GameSpawnArea<HarvestableEntity>
+    public partial class HarvestableSpawnArea : GameSpawnArea<HarvestableEntity>
     {
         [Tooltip("This is deprecated, might be removed in future version, set your asset to `Asset` instead.")]
         [ReadOnlyField]

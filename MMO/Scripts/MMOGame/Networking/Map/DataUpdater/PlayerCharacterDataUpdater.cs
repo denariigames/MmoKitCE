@@ -1,3 +1,4 @@
+// ce scability: #53
 using LiteNetLibManager;
 using UnityEngine;
 
@@ -19,6 +20,19 @@ namespace MultiplayerARPG.MMO
         private Vector3 _dirtyCurrentPosition;
         // Respawn location state
         private Vector3 _dirtyRespawnPosition;
+        private bool _positionDirtyScheduled;
+
+        private void MarkDirty(TransactionUpdateCharacterState state)
+        {
+            _updateState |= state;
+            if (MMOServerInstance.Singleton != null &&
+                MMOServerInstance.Singleton.MapNetworkManager != null &&
+                MMOServerInstance.Singleton.MapNetworkManager.DataUpdater != null)
+            {
+                MMOServerInstance.Singleton.MapNetworkManager.DataUpdater.EnqueuePlayerCharacterSave(_updateState, _entity);
+                _updateState = TransactionUpdateCharacterState.None;
+            }
+        }
 
         private void Awake()
         {
@@ -127,151 +141,160 @@ namespace MultiplayerARPG.MMO
 
         private void _entity_onIsPkOnChange(BaseCharacterEntity target, bool oldVal, bool newVal)
         {
-            _updateState |= TransactionUpdateCharacterState.Pk;
+            MarkDirty(TransactionUpdateCharacterState.Pk);
         }
 
         private void _entity_onPkPointChange(BaseCharacterEntity target, int oldVal, int newVal)
         {
-            _updateState |= TransactionUpdateCharacterState.Pk;
+            MarkDirty(TransactionUpdateCharacterState.Pk);
         }
 
         private void _entity_onConsecutivePkKillsChange(BaseCharacterEntity target, int oldVal, int newVal)
         {
-            _updateState |= TransactionUpdateCharacterState.Pk;
+            MarkDirty(TransactionUpdateCharacterState.Pk);
         }
 
         private void _entity_onAttributesOperation(LiteNetLibSyncListOp operation, int index, CharacterAttribute oldItem, CharacterAttribute newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Attributes;
+            MarkDirty(TransactionUpdateCharacterState.Attributes);
         }
 
         private void _entity_onSkillsOperation(LiteNetLibSyncListOp operation, int index, CharacterSkill oldItem, CharacterSkill newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Skills;
+            MarkDirty(TransactionUpdateCharacterState.Skills);
         }
 
         private void _entity_onSkillUsagesOperation(LiteNetLibSyncListOp operation, int index, CharacterSkillUsage oldItem, CharacterSkillUsage newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.SkillUsages;
+            MarkDirty(TransactionUpdateCharacterState.SkillUsages);
         }
 
         private void _entity_onBuffsOperation(LiteNetLibSyncListOp operation, int index, CharacterBuff oldItem, CharacterBuff newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Buffs;
+            MarkDirty(TransactionUpdateCharacterState.Buffs);
         }
 
         private void _entity_onEquipItemsOperation(LiteNetLibSyncListOp operation, int index, CharacterItem oldItem, CharacterItem newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Items;
+            MarkDirty(TransactionUpdateCharacterState.Items);
         }
 
         private void _entity_onNonEquipItemsOperation(LiteNetLibSyncListOp operation, int index, CharacterItem oldItem, CharacterItem newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Items;
+            MarkDirty(TransactionUpdateCharacterState.Items);
         }
 
         private void _entity_onSelectableWeaponSetsOperation(LiteNetLibSyncListOp operation, int index, EquipWeapons oldItem, EquipWeapons newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Items;
+            MarkDirty(TransactionUpdateCharacterState.Items);
         }
 
         private void _entity_onSummonsOperation(LiteNetLibSyncListOp operation, int index, CharacterSummon oldItem, CharacterSummon newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Summons;
+            MarkDirty(TransactionUpdateCharacterState.Summons);
         }
 
         private void _entity_onHotkeysOperation(LiteNetLibSyncListOp operation, int index, CharacterHotkey oldItem, CharacterHotkey newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Hotkeys;
+            MarkDirty(TransactionUpdateCharacterState.Hotkeys);
         }
 
         private void _entity_onQuestsOperation(LiteNetLibSyncListOp operation, int index, CharacterQuest oldItem, CharacterQuest newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Quests;
+            MarkDirty(TransactionUpdateCharacterState.Quests);
         }
 
         private void _entity_onCurrenciesOperation(LiteNetLibSyncListOp operation, int index, CharacterCurrency oldItem, CharacterCurrency newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.Currencies;
+            MarkDirty(TransactionUpdateCharacterState.Currencies);
         }
 
         private void _entity_onServerBoolsOperation(NotifiableCollection.NotifiableListAction operation, int index, CharacterDataBoolean oldItem, CharacterDataBoolean newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.ServerCustomData;
+            MarkDirty(TransactionUpdateCharacterState.ServerCustomData);
         }
 
         private void _entity_onServerIntsOperation(NotifiableCollection.NotifiableListAction operation, int index, CharacterDataInt32 oldItem, CharacterDataInt32 newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.ServerCustomData;
+            MarkDirty(TransactionUpdateCharacterState.ServerCustomData);
         }
 
         private void _entity_onServerFloatsOperation(NotifiableCollection.NotifiableListAction operation, int index, CharacterDataFloat32 oldItem, CharacterDataFloat32 newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.ServerCustomData;
+            MarkDirty(TransactionUpdateCharacterState.ServerCustomData);
         }
 
         private void _entity_onPrivateBoolsOperation(LiteNetLibSyncListOp operation, int index, CharacterDataBoolean oldItem, CharacterDataBoolean newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.PrivateCustomData;
+            MarkDirty(TransactionUpdateCharacterState.PrivateCustomData);
         }
 
         private void _entity_onPrivateIntsOperation(LiteNetLibSyncListOp operation, int index, CharacterDataInt32 oldItem, CharacterDataInt32 newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.PrivateCustomData;
+            MarkDirty(TransactionUpdateCharacterState.PrivateCustomData);
         }
 
         private void _entity_onPrivateFloatsOperation(LiteNetLibSyncListOp operation, int index, CharacterDataFloat32 oldItem, CharacterDataFloat32 newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.PrivateCustomData;
+            MarkDirty(TransactionUpdateCharacterState.PrivateCustomData);
         }
 
         private void _entity_onPublicBoolsOperation(LiteNetLibSyncListOp operation, int index, CharacterDataBoolean oldItem, CharacterDataBoolean newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.PublicCustomData;
+            MarkDirty(TransactionUpdateCharacterState.PublicCustomData);
         }
 
         private void _entity_onPublicIntsOperation(LiteNetLibSyncListOp operation, int index, CharacterDataInt32 oldItem, CharacterDataInt32 newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.PublicCustomData;
+            MarkDirty(TransactionUpdateCharacterState.PublicCustomData);
         }
 
         private void _entity_onPublicFloatsOperation(LiteNetLibSyncListOp operation, int index, CharacterDataFloat32 oldItem, CharacterDataFloat32 newItem)
         {
-            _updateState |= TransactionUpdateCharacterState.PublicCustomData;
+            MarkDirty(TransactionUpdateCharacterState.PublicCustomData);
         }
 
         private void _entity_onMountChange(BaseCharacterEntity target, CharacterMount oldVal, CharacterMount newVal)
         {
-            _updateState |= TransactionUpdateCharacterState.Mount;
+            MarkDirty(TransactionUpdateCharacterState.Mount);
         }
 
         internal void EnqueuePlayerCharacterSave(MapNetworkManagerDataUpdater updater)
+        {
+            if (_updateState == TransactionUpdateCharacterState.None)
+                return;
+
+            updater.EnqueuePlayerCharacterSave(_updateState, _entity);
+            _updateState = TransactionUpdateCharacterState.None;
+        }
+
+        internal void EnqueuePositionOnlySave(MapNetworkManagerDataUpdater updater)
         {
             int combinedHash = GetCombinedHashCode();
             if (_dirtyCombinedHash != combinedHash)
             {
                 _dirtyCombinedHash = combinedHash;
-                _updateState |= TransactionUpdateCharacterState.Character;
+                _positionDirtyScheduled = true;
             }
 
             if (Vector3.Distance(_dirtyCurrentPosition, _entity.CurrentPosition) > POSITION_CHANGE_THRESHOLD)
             {
                 _dirtyCurrentPosition = _entity.CurrentPosition;
-                _updateState |= TransactionUpdateCharacterState.Character;
+                _positionDirtyScheduled = true;
             }
 
 #if !DISABLE_DIFFER_MAP_RESPAWNING
             if (Vector3.Distance(_dirtyRespawnPosition, _entity.RespawnPosition) > POSITION_CHANGE_THRESHOLD)
             {
                 _dirtyRespawnPosition = _entity.RespawnPosition;
-                _updateState |= TransactionUpdateCharacterState.Character;
+                _positionDirtyScheduled = true;
             }
 #endif
 
-            if (_updateState != TransactionUpdateCharacterState.None)
+            if (_positionDirtyScheduled)
             {
-                updater.EnqueuePlayerCharacterSave(_updateState, _entity);
-                _updateState = TransactionUpdateCharacterState.None;
+                updater.EnqueuePlayerCharacterSave(TransactionUpdateCharacterState.Character, _entity);
+                _positionDirtyScheduled = false;
             }
         }
 

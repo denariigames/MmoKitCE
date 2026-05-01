@@ -1,7 +1,13 @@
-﻿using System.Linq;
+﻿// ce scability: #53
+
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using Insthync.DevExtension;
 using LiteNetLibManager;
 using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
+
 #if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
 using UnityEngine;
 #endif
@@ -38,6 +44,37 @@ namespace MultiplayerARPG.MMO
         {
             get; set;
         }
+
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        [SerializeField]
+#endif
+        private bool useDeferredCharacterSaveScheduler = true;
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        [SerializeField]
+#endif
+        private int characterSaveLaneCount = 32;
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        [SerializeField]
+#endif
+        private int characterSaveTickMilliseconds = 500;
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        [SerializeField]
+#endif
+        private int characterSaveMaxPerTick = 8;
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        [SerializeField]
+#endif
+        private float characterSaveMinIntervalSeconds = 20f;
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        [SerializeField]
+#endif
+        private float characterSaveRetryDelaySeconds = 5f;
+
+        private DatabaseCharacterSaveScheduler _characterSaveScheduler;
+        private readonly ConcurrentDictionary<string, List<PlayerCharacterData>> _charactersByUserIdCache = new ConcurrentDictionary<string, List<PlayerCharacterData>>();
+
+
+        public bool UseDeferredCharacterSaveScheduler => useDeferredCharacterSaveScheduler;
 
         public bool ProceedingBeforeQuit { get; private set; } = false;
         public bool ReadyToQuit { get; private set; } = false;
@@ -89,6 +126,7 @@ namespace MultiplayerARPG.MMO
 #endif
                 seconds--;
             } while (seconds > 0);
+            await FlushCharacterSavesAsync();
             await UniTask.Yield();
             ReadyToQuit = true;
             // Request to quit again
@@ -105,7 +143,137 @@ namespace MultiplayerARPG.MMO
 #endif
 #if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
             await Database.DoMigration();
+
+            if (useDeferredCharacterSaveScheduler)
+            {
+                _characterSaveScheduler = new DatabaseCharacterSaveScheduler(
+                    this,
+                    characterSaveLaneCount,
+                    characterSaveTickMilliseconds,
+                    characterSaveMaxPerTick,
+                    characterSaveMinIntervalSeconds,
+                    characterSaveRetryDelaySeconds);
+                _characterSaveScheduler.Start();
+
+                Logging.Log(nameof(DatabaseNetworkManager),
+                    $"Character save scheduler started. lanes={characterSaveLaneCount}, tickMs={characterSaveTickMilliseconds}, maxPerTick={characterSaveMaxPerTick}, minInterval={characterSaveMinIntervalSeconds}s");
+            }
 #endif
+        }
+
+        public void EnqueueCharacterSave(UpdateCharacterReq request, bool forceImmediate = false)
+        {
+            if (_characterSaveScheduler == null)
+                return;
+
+            _characterSaveScheduler.Enqueue(request, forceImmediate);
+        }
+
+        public async UniTask<bool> InternalPersistCharacterUpdate(UpdateCharacterReq request)
+        {
+            try
+            {
+                await Database.UpdateCharacter(
+                    request.State,
+                    request.CharacterData,
+                    request.SummonBuffs,
+                    request.DeleteStorageReservation);
+
+                await UniTask.WhenAll(
+                    DatabaseCache.SetPlayerCharacter(request.CharacterData),
+                    DatabaseCache.SetSummonBuffs(request.CharacterData.Id, request.SummonBuffs));
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logging.LogError(nameof(DatabaseNetworkManager),
+                    $"Deferred character save failed for characterId={request.CharacterData.Id}. {ex}");
+                return false;
+            }
+        }
+
+        public async UniTask FlushCharacterSavesAsync()
+        {
+            if (_characterSaveScheduler != null)
+                await _characterSaveScheduler.FlushAllAsync();
+        }
+
+        public bool TryGetCharactersByUserIdFromCache(string userId, out List<PlayerCharacterData> characters)
+        {
+            if (_charactersByUserIdCache.TryGetValue(userId, out characters))
+            {
+                if (characters == null)
+                {
+                    characters = new List<PlayerCharacterData>();
+                    return true;
+                }
+                characters = new List<PlayerCharacterData>(characters);
+                return true;
+            }
+            characters = null;
+            return false;
+        }
+
+        public void SetCharactersByUserIdCache(string userId, List<PlayerCharacterData> characters)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return;
+
+            _charactersByUserIdCache[userId] = characters == null
+                ? new List<PlayerCharacterData>()
+                : new List<PlayerCharacterData>(characters);
+        }
+
+        public void InvalidateCharactersByUserIdCache(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return;
+
+            _charactersByUserIdCache.TryRemove(userId, out _);
+        }
+
+        public void UpsertCharacterInUserIdCache(PlayerCharacterData characterData)
+        {
+            if (characterData == null || string.IsNullOrEmpty(characterData.UserId) || string.IsNullOrEmpty(characterData.Id))
+                return;
+
+            _charactersByUserIdCache.AddOrUpdate(
+                characterData.UserId,
+                _ => new List<PlayerCharacterData>() { characterData },
+                (_, existing) =>
+                {
+                    List<PlayerCharacterData> list = existing == null
+                        ? new List<PlayerCharacterData>()
+                        : new List<PlayerCharacterData>(existing);
+
+                    int index = list.FindIndex(c => c != null && c.Id == characterData.Id);
+                    if (index >= 0)
+                        list[index] = characterData;
+                    else
+                        list.Add(characterData);
+
+                    return list;
+                });
+        }
+
+        public void RemoveCharacterFromUserIdCache(string userId, string characterId)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(characterId))
+                return;
+
+            _charactersByUserIdCache.AddOrUpdate(
+                userId,
+                _ => new List<PlayerCharacterData>(),
+                (_, existing) =>
+                {
+                    List<PlayerCharacterData> list = existing == null
+                        ? new List<PlayerCharacterData>()
+                        : new List<PlayerCharacterData>(existing);
+
+                    list.RemoveAll(c => c != null && c.Id == characterId);
+                    return list;
+                });
         }
 
         protected override void RegisterMessages()
