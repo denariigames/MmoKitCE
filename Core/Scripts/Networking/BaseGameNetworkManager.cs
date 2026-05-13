@@ -678,14 +678,16 @@ namespace MultiplayerARPG
 
             int tempLastPosition;
 
-            foreach (LiteNetLibPlayer player in Players.Values)
+            foreach (KeyValuePair<long, LiteNetLibPlayer> playerKvp in Players)
             {
-                if (player.ConnectionId == ClientConnectionId)
+                if (playerKvp.Key == ClientConnectionId)
                     continue;
 
-                HashSet<uint> objectIds = player.GetSubscribingObjectIds();
-                foreach (uint objectId in objectIds)
+                LiteNetLibPlayer player = playerKvp.Value;
+                var objectIds = player.GetSubscribingObjectIds();
+                while (objectIds.MoveNext())
                 {
+                    uint objectId = objectIds.Current;
                     if (!_entityMovementDataHandlers.TryGetValue(objectId, out IEntityMovementDataHandler dataHandler))
                         continue;
                     EntityMovementDataBuffers.StateDataWriter.Reset();
@@ -704,25 +706,20 @@ namespace MultiplayerARPG
                     {
                         tempLastPosition = unreliableWriter.Length;
                         // If packet will too big, send created one then re-create a new packet
-                        const byte intSize = 4;
-                        if (tempLastPosition + EntityMovementDataBuffers.StateDataWriter.Length + intSize >= MAX_UNRELIABLE_PACKET_SIZE)
+                        const byte idAndLengthSize = 8; // Use 2 ints for object ID and state data length
+                        if (tempLastPosition + EntityMovementDataBuffers.StateDataWriter.Length + idAndLengthSize >= MAX_UNRELIABLE_PACKET_SIZE)
                         {
                             unreliableWriter.SetPosition(posBeforeWriteUnreliableStateCount);
                             unreliableWriter.Put(unreliableStateCount);
                             unreliableWriter.SetPosition(tempLastPosition);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                             try
                             {
-#endif
                                 ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                             }
-                            catch (TooBigPacketException ex)
+                            catch (TooBigPacketException)
                             {
                                 Logging.LogError(LogTag, $"Too Big Packet {unreliableWriter.Length}");
-                                throw ex;
                             }
-#endif
                             unreliableStateCount = 0;
                             unreliableWriter.SetPosition(posAfterWriteUnreliableStateCount);
                         }
@@ -748,20 +745,14 @@ namespace MultiplayerARPG
                     unreliableWriter.SetPosition(posBeforeWriteUnreliableStateCount);
                     unreliableWriter.Put(unreliableStateCount);
                     unreliableWriter.SetPosition(tempLastPosition);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                     try
                     {
-#endif
                         ServerSendMessage(player.ConnectionId, BaseGameEntity.MOVEMENT_DATA_CHANNEL, DeliveryMethod.Unreliable, unreliableWriter);
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                     }
-                    catch (TooBigPacketException ex)
+                    catch (TooBigPacketException)
                     {
                         Logging.LogError(LogTag, $"Too Big Packet {unreliableWriter.Length}");
-                        throw ex;
                     }
-#endif
                 }
             }
         }
@@ -801,7 +792,15 @@ namespace MultiplayerARPG
                 if (!DefaultServerUserHandlers.PlayerCharacters.TryGetValue(player.ConnectionId, out IPlayerCharacterData playerCharacter))
                     continue;
 
-                HashSet<uint> objectIds = player.GetSubscribingObjectIds();
+                //HashSet<uint> objectIds = player.GetSubscribingObjectIds();
+                //DG fix
+                var objectIds = new HashSet<uint>();
+                var enumerator = player.GetSubscribingObjectIds();
+                while (enumerator.MoveNext())
+                {
+                    objectIds.Add(enumerator.Current);
+                }
+
                 movementDatas = new NativeHashMap<uint, MovementData>(objectIds.Count, Allocator.TempJob);
                 movementEnttitiesDataResults = new NativeList<MovementResult>(objectIds.Count, Allocator.TempJob);
                 ModesResults = new NativeHashMap<uint, byte>(objectIds.Count, Allocator.TempJob);
@@ -1161,9 +1160,9 @@ namespace MultiplayerARPG
             if (InterestManager is JobifiedGridSpatialPartitioningAOI gridAOI)
             {
                 gridAOI.PrepareSystem();
-                if (gridAOI.IsSystemReady)
-                    Logging.Log(LogTag, "[AOI] Grid spatial partitioning system initialized successfully.");
-                else
+                //if (gridAOI.IsSystemReady)
+                //    Logging.Log(LogTag, "[AOI] Grid spatial partitioning system initialized successfully.");
+                //else
                     Logging.LogWarning(LogTag, "[AOI] Grid AOI system not initialized after PrepareSystem. " +
                         "Running in degraded fallback mode. Add AOIMapBounds to your scene.");
             }

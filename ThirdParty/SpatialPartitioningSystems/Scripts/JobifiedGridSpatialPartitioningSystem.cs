@@ -1,4 +1,3 @@
-// CE scalability: #47
 using Unity.Jobs;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -11,10 +10,8 @@ namespace Insthync.SpatialPartitioningSystems
     [BurstCompile]
     public class JobifiedGridSpatialPartitioningSystem : System.IDisposable
     {
-        private NativeArray<SpatialObject> _spatialObjects;
-        private int _spatialObjectsCapacity;
+        private NativeList<SpatialObject> _spatialObjects;
         private NativeParallelMultiHashMap<int, SpatialObject> _cellToObjects;
-        private NativeList<SpatialObject> _queryResults;
 
         private readonly int _gridSizeX;
         private readonly int _gridSizeY;
@@ -24,8 +21,7 @@ namespace Insthync.SpatialPartitioningSystems
         private readonly bool _disableZAxis;
         private readonly float _cellSize;
         private readonly float3 _worldMin;
-
-        public NativeList<SpatialObject> QueryResults => _queryResults;
+        private JobHandle _jobHandle;
 
         public JobifiedGridSpatialPartitioningSystem(Bounds bounds, float cellSize, int maxObjects, bool disableXAxis, bool disableYAxis, bool disableZAxis)
         {
@@ -44,9 +40,8 @@ namespace Insthync.SpatialPartitioningSystems
                 disableYAxis ? 0 : bounds.min.y,
                 disableZAxis ? 0 : bounds.min.z);
 
-            _cellToObjects = new NativeParallelMultiHashMap<int, SpatialObject>(maxObjects, Allocator.Persistent);
-            _queryResults = new NativeList<SpatialObject>(maxObjects, Allocator.Persistent);
-            _spatialObjectsCapacity = 0;
+            _spatialObjects = new NativeList<SpatialObject>(1024, Allocator.Persistent);
+            _cellToObjects = new NativeParallelMultiHashMap<int, SpatialObject>(maxObjects, Allocator.Persistent); // Multiplied by 8 because objects can span multiple cells
         }
 
         public void Dispose()
@@ -56,9 +51,6 @@ namespace Insthync.SpatialPartitioningSystems
 
             if (_cellToObjects.IsCreated)
                 _cellToObjects.Dispose();
-
-            if (_queryResults.IsCreated)
-                _queryResults.Dispose();
         }
 
         ~JobifiedGridSpatialPartitioningSystem()
@@ -66,38 +58,35 @@ namespace Insthync.SpatialPartitioningSystems
             Dispose();
         }
 
-        public void UpdateGrid(List<SpatialObject> spatialObjects)
+        public void ClearObjects()
         {
-            int count = spatialObjects.Count;
+            _spatialObjects.Clear();
+        }
 
-            if (count > _spatialObjectsCapacity)
-            {
-                if (_spatialObjects.IsCreated)
-                    _spatialObjects.Dispose();
-                _spatialObjectsCapacity = Mathf.NextPowerOfTwo(Mathf.Max(count, 64));
-                _spatialObjects = new NativeArray<SpatialObject>(_spatialObjectsCapacity, Allocator.Persistent);
-            }
+        public void AddObjectToGrid(SpatialObject spatialObject)
+        {
+            int index = _spatialObjects.Length;
+            float3 postition = spatialObject.position;
+            if (_disableXAxis)
+                postition.x = 0f;
+            if (_disableYAxis)
+                postition.y = 0f;
+            if (_disableZAxis)
+                postition.z = 0f;
+            spatialObject.position = postition;
+            spatialObject.objectIndex = index;
+            _spatialObjects.Add(spatialObject);
+        }
 
-            for (int i = 0; i < count; i++)
-            {
-                SpatialObject spatialObject = spatialObjects[i];
-                float3 postition = spatialObject.position;
-                if (_disableXAxis)
-                    postition.x = 0f;
-                if (_disableYAxis)
-                    postition.y = 0f;
-                if (_disableZAxis)
-                    postition.z = 0f;
-                spatialObject.position = postition;
-                spatialObject.objectIndex = i;
-                _spatialObjects[i] = spatialObject;
-            }
-
+        public JobHandle UpdateGrid()
+        {
+            // Clear previous grid data
             _cellToObjects.Clear();
 
+            // Create and schedule update job
             var updateJob = new UpdateGridJob
             {
-                Objects = _spatialObjects.GetSubArray(0, count),
+                Objects = _spatialObjects,
                 CellToObjects = _cellToObjects.AsParallelWriter(),
                 CellSize = _cellSize,
                 WorldMin = _worldMin,
@@ -109,14 +98,17 @@ namespace Insthync.SpatialPartitioningSystems
                 DisableZAxis = _disableZAxis
             };
 
-            var handle = updateJob.Schedule(count, 64);
-            handle.Complete();
+            _jobHandle = updateJob.Schedule(_spatialObjects.Length, 64);
+            return _jobHandle;
         }
 
-        public void QuerySphere(Vector3 position, float radius)
+        public void Complete()
         {
-            _queryResults.Clear();
+            _jobHandle.Complete();
+        }
 
+        public JobHandle QuerySphere(Vector3 position, float radius, NativeList<SpatialObject> results)
+        {
             var queryJob = new QuerySphereJob
             {
                 CellToObjects = _cellToObjects,
@@ -130,16 +122,15 @@ namespace Insthync.SpatialPartitioningSystems
                 DisableXAxis = _disableXAxis,
                 DisableYAxis = _disableYAxis,
                 DisableZAxis = _disableZAxis,
-                Results = _queryResults,
+                Results = results,
             };
 
-            queryJob.Run();
+            _jobHandle = queryJob.Schedule(_jobHandle);
+            return _jobHandle;
         }
 
-        public void QueryBox(Vector3 center, Vector3 extents)
+        public JobHandle QueryBox(Vector3 center, Vector3 extents, NativeList<SpatialObject> results)
         {
-            _queryResults.Clear();
-
             var queryJob = new QueryBoxJob
             {
                 CellToObjects = _cellToObjects,
@@ -153,10 +144,11 @@ namespace Insthync.SpatialPartitioningSystems
                 DisableXAxis = _disableXAxis,
                 DisableYAxis = _disableYAxis,
                 DisableZAxis = _disableZAxis,
-                Results = _queryResults
+                Results = results,
             };
 
-            queryJob.Run();
+            _jobHandle = queryJob.Schedule(_jobHandle);
+            return _jobHandle;
         }
     }
 }

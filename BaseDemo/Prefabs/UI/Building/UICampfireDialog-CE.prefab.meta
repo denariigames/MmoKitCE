@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 602174d7b2cdf7943a0bf808e74ac87d
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Building/UICampfireDialog.prefab
+  uploadId: 857340

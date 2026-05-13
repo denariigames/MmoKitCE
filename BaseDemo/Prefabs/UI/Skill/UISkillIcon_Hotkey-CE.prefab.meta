@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 4b016de1c48ac334688ecd711b613d55
+timeCreated: 1522804530
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Skill/UISkillIcon_Hotkey.prefab
+  uploadId: 857340

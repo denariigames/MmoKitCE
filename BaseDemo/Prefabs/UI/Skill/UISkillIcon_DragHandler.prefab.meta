@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 232feda513b4e754bb15bb3d521cd117
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Skill/UISkillIcon_DragHandler.prefab
+  uploadId: 857340

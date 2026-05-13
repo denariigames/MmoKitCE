@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1287010141937558
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4257762974765350}
+  - component: {fileID: 114096437919969166}
+  - component: {fileID: 4649721385588621722}
+  m_Layer: 0
+  m_Name: PlayerCharacterController-CE
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4257762974765350
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1287010141937558}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114096437919969166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1287010141937558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43638d0fc9612d5448c201d1038910d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameplayCameraPrefab: {fileID: 114548782499701980, guid: 9e450ece85c264c48a1f642595379ac8,
+    type: 3}
+  minimapCameraPrefab: {fileID: 114548782499701980, guid: 280aed852e1f49946840d29f4118a058,
+    type: 3}
+  controllerMode: 2
+  wasdLockAttackTarget: 1
+  lockAttackTargetDistance: 10
+  wasdClearTargetDistance: 15
+  pointClickSetTargetImmediately: 1
+  pointClickInterruptCastingSkill: 0
+  turnSmoothSpeed: 10
+  targetObjectPrefab: {fileID: 1351887008497814, guid: 2ceafc14cf0f8c044a133a016b305afa,
+    type: 3}
+  buildGridSnap: 1
+  buildGridOffsets: {x: 0, y: 0, z: 0}
+  buildGridSize: 4
+  buildRotationSnap: 1
+  buildRotateAngle: 45
+  buildRotateSpeed: 200
+  distanceToActivateByActivateKey: 0
+  distanceToActivateByPickupKey: 0
+--- !u!114 &4649721385588621722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1287010141937558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c8056fb2a359df49b60f050a0b6229d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  indicatorPrefab: {fileID: 1351887008497814, guid: 875bd5e3e10f5724da3ea0aad00874db,
+    type: 3}
+  followTargetMode: 1
+  offsets: {x: 0, y: 0.5, z: 0}
+  followTargetRotation: 0

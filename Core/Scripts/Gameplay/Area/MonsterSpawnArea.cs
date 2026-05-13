@@ -8,7 +8,7 @@ using UnityEditor;
 
 namespace MultiplayerARPG
 {
-    public class MonsterSpawnArea : GameSpawnArea<BaseMonsterCharacterEntity>
+    public partial class MonsterSpawnArea : GameSpawnArea<BaseMonsterCharacterEntity>
     {
         [Tooltip("This is deprecated, might be removed in future version, set your asset to `Asset` instead.")]
         [ReadOnlyField]

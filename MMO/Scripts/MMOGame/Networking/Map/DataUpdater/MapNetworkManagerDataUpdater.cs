@@ -1,3 +1,5 @@
+// ce scability: #53
+
 using Cysharp.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,17 +19,20 @@ namespace MultiplayerARPG.MMO
         [SerializeField]
         private float buildingSaveInterval = 5f;
         [SerializeField]
-        private float playerCharacterSaveInterval = 1f;
+        private float playerCharacterPositionSaveInterval = 15f;
 
         [SerializeField]
         private float buildingSaveProceedInterval = 10f;
         [SerializeField]
-        private float playerCharacterSaveProceedInterval = 10f;
+        private float playerCharacterSaveProceedInterval = 5f;
+
+        [SerializeField]
+        private int maxPlayerCharacterSavesPerProceed = 50;
 
         private bool _updating = false;
 
         private float _lastBuildingSaveTime;
-        private float _lastPlayerCharacterSaveTime;
+        private float _lastPlayerCharacterPositionSaveTime;
 
         private float _lastBuildingSaveProceedTime;
         private float _lastPlayerCharacterSaveProceedTime;
@@ -57,12 +62,24 @@ namespace MultiplayerARPG.MMO
             if (playerCharacterData == null)
                 return;
             string id = playerCharacterData.Id;
+            if (string.IsNullOrEmpty(id))
+                return;
             if (!_playerCharacterUpdateDataDict.TryRemove(id, out PlayerCharacterUpdateData updateData))
             {
                 updateData = new PlayerCharacterUpdateData();
             }
             updateData.Update(appendState, playerCharacterData);
             _playerCharacterUpdateDataDict[id] = updateData;
+        }
+
+        public void EnqueuePlayerCharacterPositionSave()
+        {
+            foreach (var updater in PlayerCharacterDataUpdaters)
+            {
+                if (updater == null)
+                    continue;
+                updater.EnqueuePositionOnlySave(this);
+            }
         }
 
         public async void ProceedSaving()
@@ -82,13 +99,10 @@ namespace MultiplayerARPG.MMO
                 }
             }
 
-            if (currentTime - _lastPlayerCharacterSaveTime > playerCharacterSaveInterval)
+            if (currentTime - _lastPlayerCharacterPositionSaveTime > playerCharacterPositionSaveInterval)
             {
-                _lastPlayerCharacterSaveTime = currentTime;
-                foreach (var updater in PlayerCharacterDataUpdaters)
-                {
-                    updater.EnqueuePlayerCharacterSave(this);
-                }
+                _lastPlayerCharacterPositionSaveTime = currentTime;
+                EnqueuePlayerCharacterPositionSave();
             }
 
             List<UniTask<bool>> tasks = new List<UniTask<bool>>();
@@ -105,9 +119,13 @@ namespace MultiplayerARPG.MMO
             if (currentTime - _lastPlayerCharacterSaveProceedTime > playerCharacterSaveProceedInterval)
             {
                 _lastPlayerCharacterSaveProceedTime = currentTime;
+                int processedPlayerCharacters = 0;
                 foreach (var playerCharacterUpdaterData in _playerCharacterUpdateDataDict.Values)
                 {
                     tasks.Add(playerCharacterUpdaterData.ProceedSave(this));
+                    processedPlayerCharacters++;
+                    if (processedPlayerCharacters >= maxPlayerCharacterSavesPerProceed)
+                        break;
                 }
             }
 

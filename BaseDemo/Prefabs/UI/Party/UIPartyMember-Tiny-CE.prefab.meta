@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 87298cfb1618c4c4096e970d66b37990
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Party/UIPartyMember-Tiny.prefab
+  uploadId: 857340

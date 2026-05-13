@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2b4bf4459ea1d8445a4b319329589b3c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/GameData/CashPackageDatabase.asset
+  uploadId: 857340

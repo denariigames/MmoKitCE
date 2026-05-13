@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ce40a263e27c9034fa4ef0fc9e069eaf
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/Gameplay/RelatesObjects/NonOwningCharacter/NonOwningCharacterMiniMapCanvas.prefab
+  uploadId: 857340

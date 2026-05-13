@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 875bd5e3e10f5724da3ea0aad00874db
+timeCreated: 1521635202
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/Gameplay/TargetCharacterObject.prefab
+  uploadId: 857340

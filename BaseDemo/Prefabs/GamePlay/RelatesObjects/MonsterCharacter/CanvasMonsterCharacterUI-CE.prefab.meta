@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3570a7d7c31a7704f92f9ffd3242ff3c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/Gameplay/RelatesObjects/MonsterCharacter/CanvasMonsterCharacterUI.prefab
+  uploadId: 857340

@@ -19,6 +19,8 @@ namespace MultiplayerARPG
         public WarpPointByCondition[] respawnPointsByCondition;
         [Tooltip("If this is `TRUE`, only duelers can attacks each other, other characters cannot do it, duelers also cannot attacks other")]
         public bool duelersCanAttackEachOtherOnly;
+        [Tooltip("If this is `TRUE`, non-summoned monsters with same faction as player/monster will be treated as allies. Keep this `FALSE` to always allow attacking monsters regardless of faction.")]
+        public bool useMonsterFactionAsAlliance = true;
 
         [System.NonSerialized]
         private Dictionary<int, List<WarpPointByCondition>> _cacheRespawnPointsByCondition;
@@ -118,7 +120,7 @@ namespace MultiplayerARPG
                 else
                 {
                     // If it has faction set, then check the faction between two characters
-                    if (targetEntity.FactionId != 0 && playerCharacter.FactionId == targetEntity.FactionId)
+                    if (useMonsterFactionAsAlliance && targetEntity.FactionId != 0 && playerCharacter.FactionId == targetEntity.FactionId)
                         return true;
                     // Monster always not player's ally
                     return false;
@@ -146,7 +148,7 @@ namespace MultiplayerARPG
                     return true;
 
                 // If it has faction set, then check the faction between two characters
-                if (targetEntity.FactionId != 0 && monsterCharacter.FactionId == targetEntity.FactionId)
+                if (useMonsterFactionAsAlliance && targetEntity.FactionId != 0 && monsterCharacter.FactionId == targetEntity.FactionId)
                     return true;
 
                 // Players are not monster's ally by default
@@ -226,7 +228,7 @@ namespace MultiplayerARPG
                 else
                 {
                     // If it has faction set, then check the faction between two characters
-                    if (targetEntity.FactionId != 0 && playerCharacter.FactionId == targetEntity.FactionId)
+                    if (useMonsterFactionAsAlliance && targetEntity.FactionId != 0 && playerCharacter.FactionId == targetEntity.FactionId)
                         return false;
                     // Monster always be player's enemy
                     return true;
@@ -254,7 +256,7 @@ namespace MultiplayerARPG
                     return false;
 
                 // If it has faction set, then check the faction between two characters
-                if (targetEntity.FactionId != 0 && monsterCharacter.FactionId == targetEntity.FactionId)
+                if (useMonsterFactionAsAlliance && targetEntity.FactionId != 0 && monsterCharacter.FactionId == targetEntity.FactionId)
                     return false;
 
                 // Players are monster's enemy by default
@@ -275,6 +277,7 @@ namespace MultiplayerARPG
             base.Serialize(writer);
             writer.Put((byte)pvpMode);
             writer.Put(duelersCanAttackEachOtherOnly);
+            writer.Put(useMonsterFactionAsAlliance);
         }
 
         public override void Deserialize(NetDataReader reader)
@@ -282,6 +285,7 @@ namespace MultiplayerARPG
             base.Deserialize(reader);
             pvpMode = (PvpMode)reader.GetByte();
             duelersCanAttackEachOtherOnly = reader.GetBool();
+            useMonsterFactionAsAlliance = reader.GetBool();
         }
     }
 }

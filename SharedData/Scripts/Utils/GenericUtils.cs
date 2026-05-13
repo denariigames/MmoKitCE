@@ -132,4 +132,14 @@ public static partial class GenericUtils
         int diff = (7 + (dateTime.DayOfWeek - startOfWeek)) % 7;
         return dateTime.AddDays(-1 * diff).Date;
     }
+
+    public static void AddKeysToList<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, List<TKey> list)
+    {
+        if (dictionary == null || dictionary.Count == 0 || list == null)
+            return;
+        foreach (var pair in dictionary)
+        {
+            list.Add(pair.Key);
+        }
+    }
 }

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5749a6e94d107c248a9b245cb0c2fb88
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Skill/UISkillDialog.prefab
+  uploadId: 857340

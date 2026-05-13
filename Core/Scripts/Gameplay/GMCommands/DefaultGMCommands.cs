@@ -673,8 +673,9 @@ namespace MultiplayerARPG
                 if (string.Equals(commandKey, CloseServers, StringComparison.OrdinalIgnoreCase))
                 {
                     var players = BaseGameNetworkManager.Singleton.GetPlayers();
-                    foreach (var player in players)
+                    while (players.MoveNext())
                     {
+                        LiteNetLibPlayer player = players.Current.Value;
                         BaseGameNetworkManager.Singleton.KickClient(player.ConnectionId, UITextKeys.UI_ERROR_SERVER_CLOSE);
                     }
                     BaseGameNetworkManager.Singleton.IsTemporarilyClose = true;
@@ -685,8 +686,9 @@ namespace MultiplayerARPG
                     if (string.Equals(data[1], BaseGameNetworkManager.Singleton.ChannelId, StringComparison.OrdinalIgnoreCase))
                     {
                         var players = BaseGameNetworkManager.Singleton.GetPlayers();
-                        foreach (var player in players)
+                        while (players.MoveNext())
                         {
+                            LiteNetLibPlayer player = players.Current.Value;
                             BaseGameNetworkManager.Singleton.KickClient(player.ConnectionId, UITextKeys.UI_ERROR_SERVER_CLOSE);
                         }
                         BaseGameNetworkManager.Singleton.IsTemporarilyClose = true;
@@ -695,7 +697,7 @@ namespace MultiplayerARPG
                 }
             }
 #endif
-                    return response;
+            return response;
         }
     }
 }

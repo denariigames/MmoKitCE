@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: aa3eac72dcbf9d549a51bd703e756ece
+timeCreated: 1520191362
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Item/UIItemIcon_WithDragHandler.prefab
+  uploadId: 857340

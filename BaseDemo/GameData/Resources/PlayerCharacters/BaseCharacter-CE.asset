@@ -1,0 +1,172 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b67f350c4283834f81cded3a656ff5e, type: 3}
+  m_Name: BaseCharacter-CE
+  m_EditorClassIdentifier: 
+  btnValidate: 0
+  id: 
+  defaultTitle: Base Character
+  languageSpecificTitles: []
+  defaultDescription: 
+  languageSpecificDescriptions: []
+  category: 
+  icon: {fileID: 0}
+  expTable: {fileID: 0}
+  stats:
+    baseStats:
+      hp: 10
+      hpRecovery: 0
+      hpLeechRate: 0
+      mp: 0
+      mpRecovery: 0
+      mpLeechRate: 0
+      stamina: 10
+      staminaRecovery: 0
+      staminaLeechRate: 0
+      food: 0
+      water: 0
+      accuracy: 0
+      evasion: 0
+      criRate: 0.25
+      criDmgRate: 1.5
+      blockRate: 0
+      blockDmgRate: 0
+      moveSpeed: 3
+      sprintSpeed: 0
+      atkSpeed: 1
+      weightLimit: 100
+      slotLimit: 0
+      goldRate: 0
+      expRate: 0
+      itemDropRate: 0
+      jumpHeight: 0
+      headDamageAbsorbs: 0
+      bodyDamageAbsorbs: 0
+      fallDamageAbsorbs: 0
+      gravityRate: 0
+      protectedSlotLimit: 0
+      ammoCapacity: 0
+      recoilModifier: 0
+      recoilRate: 0
+      rateOfFire: 0
+      reloadDuration: 0
+      fireSpreadRangeRate: 0
+      fireSpread: 0
+      decreaseFoodDecreation: 0
+      decreaseWaterDecreation: 0
+      decreaseStaminaDecreation: 0
+      buyItemPriceRate: 0
+      sellItemPriceRate: 0
+    statsIncreaseEachLevel:
+      hp: 0
+      hpRecovery: 0
+      hpLeechRate: 0
+      mp: 0
+      mpRecovery: 0
+      mpLeechRate: 0
+      stamina: 0
+      staminaRecovery: 0
+      staminaLeechRate: 0
+      food: 0
+      water: 0
+      accuracy: 0
+      evasion: 0
+      criRate: 0
+      criDmgRate: 0
+      blockRate: 0
+      blockDmgRate: 0
+      moveSpeed: 0
+      sprintSpeed: 0
+      atkSpeed: 0
+      weightLimit: 0
+      slotLimit: 0
+      goldRate: 0
+      expRate: 0
+      itemDropRate: 0
+      jumpHeight: 0
+      headDamageAbsorbs: 0
+      bodyDamageAbsorbs: 0
+      fallDamageAbsorbs: 0
+      gravityRate: 0
+      protectedSlotLimit: 0
+      ammoCapacity: 0
+      recoilModifier: 0
+      recoilRate: 0
+      rateOfFire: 0
+      reloadDuration: 0
+      fireSpreadRangeRate: 0
+      fireSpread: 0
+      decreaseFoodDecreation: 0
+      decreaseWaterDecreation: 0
+      decreaseStaminaDecreation: 0
+      buyItemPriceRate: 0
+      sellItemPriceRate: 0
+    rateIncreaseEachLevel:
+      hp: 0
+      hpRecovery: 0
+      hpLeechRate: 0
+      mp: 0
+      mpRecovery: 0
+      mpLeechRate: 0
+      stamina: 0
+      staminaRecovery: 0
+      staminaLeechRate: 0
+      food: 0
+      water: 0
+      accuracy: 0
+      evasion: 0
+      criRate: 0
+      criDmgRate: 0
+      blockRate: 0
+      blockDmgRate: 0
+      moveSpeed: 0
+      sprintSpeed: 0
+      atkSpeed: 0
+      weightLimit: 0
+      slotLimit: 0
+      goldRate: 0
+      expRate: 0
+      itemDropRate: 0
+      jumpHeight: 0
+      headDamageAbsorbs: 0
+      bodyDamageAbsorbs: 0
+      fallDamageAbsorbs: 0
+      gravityRate: 0
+      protectedSlotLimit: 0
+      ammoCapacity: 0
+      recoilModifier: 0
+      recoilRate: 0
+      rateOfFire: 0
+      reloadDuration: 0
+      fireSpreadRangeRate: 0
+      fireSpread: 0
+      decreaseFoodDecreation: 0
+      decreaseWaterDecreation: 0
+      decreaseStaminaDecreation: 0
+      buyItemPriceRate: 0
+      sellItemPriceRate: 0
+    statsIncreaseEachLevelByLevels: []
+  attributes: []
+  resistances: []
+  armors: []
+  statusEffectResistances: []
+  skills: []
+  rightHandEquipItem: {fileID: 0}
+  leftHandEquipItem: {fileID: 0}
+  armorItems: []
+  startItems: []
+  startMap: {fileID: 0}
+  useOverrideStartPosition: 0
+  overrideStartPosition: {x: 0, y: 0, z: 0}
+  useOverrideStartRotation: 0
+  overrideStartRotation: {x: 0, y: 0, z: 0}
+  startPointsByCondition: []

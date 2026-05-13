@@ -250,12 +250,11 @@ namespace MultiplayerARPG
         protected override void UpdateUI()
         {
             UpdateCoolDownRemainsDuration(0f);
+        }
 
-            IPlayerCharacterData targetPlayer = Character as IPlayerCharacterData;
-            if (targetPlayer == null)
-                targetPlayer = GameInstance.PlayingCharacter;
-
-            bool ableToLevelUp = targetPlayer != null && Skill != null && Skill.CanLevelUp(targetPlayer, Level, out _);
+        protected void UpdateAbleToLevelUp()
+        {
+            bool ableToLevelUp = GameInstance.PlayingCharacter != null && Skill != null && Skill.CanLevelUp(GameInstance.PlayingCharacter, Level, out _);
             if (_forceUpdateUi || _dirtyAbleToLevelUp != ableToLevelUp)
             {
                 _dirtyAbleToLevelUp = ableToLevelUp;
@@ -264,8 +263,11 @@ namespace MultiplayerARPG
                 else
                     onUnableToLevelUp.Invoke();
             }
+        }
 
-            bool ableToUse = targetPlayer != null && Skill != null && Skill.IsActive && Level > 0;
+        protected void UpdateAbleToUse()
+        {
+            bool ableToUse = GameInstance.PlayingCharacter != null && Skill != null && Skill.IsActive && Level > 0;
             if (_forceUpdateUi || _dirtyAbleToUse != ableToUse)
             {
                 _dirtyAbleToUse = ableToUse;
@@ -274,7 +276,10 @@ namespace MultiplayerARPG
                 else
                     onUnableToUse.Invoke();
             }
+        }
 
+        protected void UpdateMaxedLevel()
+        {
             bool maxedLevel = Skill != null && Skill.maxLevel <= Level;
             if (_forceUpdateUi || _dirtyMaxedLevel != maxedLevel)
             {
@@ -292,6 +297,9 @@ namespace MultiplayerARPG
                 name = $"(UICharacterSkill){(Skill == null ? string.Empty : Skill.Id)}";
 
             UpdateCoolDownRemainsDuration(1f);
+            UpdateAbleToLevelUp();
+            UpdateAbleToUse();
+            UpdateMaxedLevel();
 
             if (Level <= 0)
             {

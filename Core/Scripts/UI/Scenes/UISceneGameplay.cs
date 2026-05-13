@@ -118,7 +118,8 @@ namespace MultiplayerARPG
 
         private readonly List<UIBase> _openedNpcDialogs = new List<UIBase>();
         private readonly List<RaycastResult> _pointerOverUIResults = new List<RaycastResult>();
-        private PointerEventData _reusablePointerEventData;
+        private PointerEventData _reusablePointerEventData = null;
+        private BaseGameEntity _prevTargetEntity = null;
 
         protected override void Awake()
         {
@@ -135,6 +136,13 @@ namespace MultiplayerARPG
                     ui.gameObject.AddComponent<UIBlockController>();
                 }
             }
+            SetTargetCharacter(null);
+            SetTargetNpc(null);
+            SetTargetItemDrop(null);
+            SetTargetItemsContainer(null);
+            SetTargetBuilding(null);
+            SetTargetHarvestable(null);
+            SetTargetVehicle(null);
             this.InvokeInstanceDevExtMethods("Awake");
         }
 
@@ -195,6 +203,7 @@ namespace MultiplayerARPG
             _openedNpcDialogs.Nullify();
             _openedNpcDialogs?.Clear();
             _pointerOverUIResults?.Clear();
+            _prevTargetEntity = null;
             this.InvokeInstanceDevExtMethods("OnDestroy");
         }
 
@@ -282,6 +291,10 @@ namespace MultiplayerARPG
         /// <param name="entity"></param>
         public override void SetTargetEntity(BaseGameEntity entity)
         {
+            if (_prevTargetEntity == entity)
+                return;
+            _prevTargetEntity = entity;
+
             if (entity == null)
             {
                 SetTargetCharacter(null);
@@ -295,19 +308,75 @@ namespace MultiplayerARPG
             }
 
             if (entity is BaseCharacterEntity)
+            {
+                SetTargetNpc(null);
+                SetTargetItemDrop(null);
+                SetTargetItemsContainer(null);
+                SetTargetBuilding(null);
+                SetTargetHarvestable(null);
+                SetTargetVehicle(null);
                 SetTargetCharacter(entity as BaseCharacterEntity);
+            }
             if (entity is NpcEntity)
+            {
+                SetTargetCharacter(null);
+                SetTargetItemDrop(null);
+                SetTargetItemsContainer(null);
+                SetTargetBuilding(null);
+                SetTargetHarvestable(null);
+                SetTargetVehicle(null);
                 SetTargetNpc(entity as NpcEntity);
+            }
             if (entity is ItemDropEntity)
+            {
+                SetTargetCharacter(null);
+                SetTargetNpc(null);
+                SetTargetItemsContainer(null);
+                SetTargetBuilding(null);
+                SetTargetHarvestable(null);
+                SetTargetVehicle(null);
                 SetTargetItemDrop(entity as ItemDropEntity);
+            }
             if (entity is ItemsContainerEntity)
+            {
+                SetTargetCharacter(null);
+                SetTargetNpc(null);
+                SetTargetItemDrop(null);
+                SetTargetBuilding(null);
+                SetTargetHarvestable(null);
+                SetTargetVehicle(null);
                 SetTargetItemsContainer(entity as ItemsContainerEntity);
+            }
             if (entity is BuildingEntity)
+            {
+                SetTargetCharacter(null);
+                SetTargetNpc(null);
+                SetTargetItemDrop(null);
+                SetTargetItemsContainer(null);
+                SetTargetHarvestable(null);
+                SetTargetVehicle(null);
                 SetTargetBuilding(entity as BuildingEntity);
+            }
             if (entity is HarvestableEntity)
+            {
+                SetTargetCharacter(null);
+                SetTargetNpc(null);
+                SetTargetItemDrop(null);
+                SetTargetItemsContainer(null);
+                SetTargetBuilding(null);
+                SetTargetVehicle(null);
                 SetTargetHarvestable(entity as HarvestableEntity);
+            }
             if (entity is VehicleEntity)
+            {
+                SetTargetCharacter(null);
+                SetTargetNpc(null);
+                SetTargetItemDrop(null);
+                SetTargetItemsContainer(null);
+                SetTargetBuilding(null);
+                SetTargetHarvestable(null);
                 SetTargetVehicle(entity as VehicleEntity);
+            }
         }
 
         protected void SetTargetCharacter(BaseCharacterEntity character)
@@ -584,7 +653,7 @@ namespace MultiplayerARPG
             uiGuildInvitation.Show();
         }
 
-        public void OnIsWarpingChange(bool isWarping)
+        public void OnIsWarpingChange(BaseCharacterEntity target, bool oldIsWarping, bool isWarping)
         {
             if (uiIsWarping == null)
                 return;

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 8df996347f353d74885b4a0d779d49a2
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Friend/UIFriendDialog.prefab
+  uploadId: 857340

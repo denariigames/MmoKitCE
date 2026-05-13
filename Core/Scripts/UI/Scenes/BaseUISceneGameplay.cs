@@ -37,6 +37,31 @@ namespace MultiplayerARPG
         protected virtual void Awake()
         {
             Singleton = this;
+            InitCombatTextPool(uiCombatTextMiss);
+            InitCombatTextPool(uiCombatTextNormalDamage);
+            InitCombatTextPool(uiCombatTextCriticalDamage);
+            InitCombatTextPool(uiCombatTextBlockedDamage);
+            InitCombatTextPool(uiCombatTextHpRecovery);
+            InitCombatTextPool(uiCombatTextMpRecovery);
+            InitCombatTextPool(uiCombatTextStaminaRecovery);
+            InitCombatTextPool(uiCombatTextFoodRecovery);
+            InitCombatTextPool(uiCombatTextWaterRecovery);
+            InitCombatTextPool(uiCombatTextHpDecrease);
+            InitCombatTextPool(uiCombatTextMpDecrease);
+            InitCombatTextPool(uiCombatTextStaminaDecrease);
+            InitCombatTextPool(uiCombatTextFoodDecrease);
+            InitCombatTextPool(uiCombatTextWaterDecrease);
+            InitCombatTextPool(uiCombatTextHpLeech);
+            InitCombatTextPool(uiCombatTextMpLeech);
+            InitCombatTextPool(uiCombatTextStaminaLeech);
+            InitCombatTextPool(uiCombatTextFallDamage);
+            InitCombatTextPool(uiCombatTextImmune);
+        }
+
+        protected void InitCombatTextPool(UICombatText combatText)
+        {
+            if (combatText != null)
+                PoolSystem.InitPool(combatText);
         }
 
         protected virtual void OnDestroy()
@@ -181,13 +206,14 @@ namespace MultiplayerARPG
             UICombatText combatText;
             if (!instantiateCombatTextToWorldTransform && combatTextTransform)
             {
-                combatText = Instantiate(prefab, combatTextTransform);
+                combatText = PoolSystem.GetInstance(prefab);
+                combatText.transform.SetParent(combatTextTransform);
                 combatText.transform.localScale = Vector3.one;
                 combatText.gameObject.GetOrAddComponent<UIFollowWorldObject>().TargetObject = followingTransform;
             }
             else
             {
-                combatText = Instantiate(prefab);
+                combatText = PoolSystem.GetInstance(prefab);
                 combatText.transform.position = followingTransform.position;
             }
             combatText.Amount = amount;

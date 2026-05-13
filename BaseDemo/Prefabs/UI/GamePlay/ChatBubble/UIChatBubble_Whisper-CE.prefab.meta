@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c8b48ef4c9600ec4f9a84285dba8eb8a
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/_Gameplay/ChatBubble/UIChatBubble_Whisper.prefab
+  uploadId: 857340

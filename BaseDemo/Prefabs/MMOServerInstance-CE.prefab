@@ -1,0 +1,498 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1136011111669194
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4765183370109292}
+  - component: {fileID: 114414512406587944}
+  m_Layer: 0
+  m_Name: MySQLDatabase
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4765183370109292
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1136011111669194}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4009622383931608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114414512406587944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1136011111669194}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b07a9b1ffbc177946b89cbdae179403d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  address: 127.0.0.1
+  port: 3306
+  username: root
+  password: password
+  dbName: mmokitce
+  connectionString: 
+--- !u!1 &1250662783992638
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4689870637795574}
+  - component: {fileID: 114543387092495668}
+  m_Layer: 0
+  m_Name: CentralNetworkManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4689870637795574
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1250662783992638}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4009622383931608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114543387092495668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1250662783992638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74d920f2df3608f4aa394880f7198146, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentLogLevel: 2
+  networkAddress: localhost
+  networkPort: 7000
+  useWebSocket: 0
+  webSocketSecure: 0
+  webSocketCertificateFilePath: 
+  webSocketCertificatePassword: 
+  updateFps: 20
+  maxConnections: 1100
+  transportFactory: {fileID: 0}
+  clusterServerPort: 6010
+  mapSpawnMillisecondsTimeout: 0
+  defaultChannelMaxConnections: 500
+  channels:
+  - id: 1
+    title: Channel 1
+    maxConnections: 200
+  - id: 2
+    title: Channel 2
+    maxConnections: 0
+  disableDefaultLogin: 0
+  minUsernameLength: 2
+  maxUsernameLength: 24
+  minPasswordLength: 2
+  minCharacterNameLength: 2
+  maxCharacterNameLength: 16
+  requireEmail: 0
+  requireEmailVerification: 0
+  updateUserCountInterval: 5
+--- !u!1 &1454126604845530
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4889244740642296}
+  - component: {fileID: 114715813743394434}
+  m_Layer: 0
+  m_Name: SQLiteDatabase
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4889244740642296
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1454126604845530}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4009622383931608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114715813743394434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1454126604845530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f9248d29a5c4ce4285c1e7d937629bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dbPath: ./mmorpgtemplate.sqlite3
+  editorDbPath: C:\Porjects\MmoKitCE\builds\mmorpgtemplate.sqlite3
+--- !u!1 &1650234716345238
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4009622383931608}
+  - component: {fileID: 114227780437250376}
+  - component: {fileID: 114946005600446132}
+  m_Layer: 0
+  m_Name: MMOServerInstance-CE
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4009622383931608
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650234716345238}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 976896942459451648}
+  - {fileID: 4689870637795574}
+  - {fileID: 4281435147628774}
+  - {fileID: 4765183370109292}
+  - {fileID: 4889244740642296}
+  - {fileID: 4049227467700674}
+  - {fileID: 869722981334508554}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114227780437250376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650234716345238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5e08d8ccbfded44bb2400909f8f4376, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  logFolder: log
+  logExtension: log
+  logAreaHeight: 100
+  showLogSize: 20
+--- !u!114 &114946005600446132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650234716345238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6562084915e6c5749b275e15b0e66cdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  loginNetworkManager: {fileID: 3292125351772216773}
+  centralNetworkManager: {fileID: 114543387092495668}
+  mapSpawnNetworkManager: {fileID: 114788248445432888}
+  mapNetworkManager: {fileID: 0}
+  databaseNetworkManager: {fileID: 114035231915985668}
+  useCustomDatabaseClient: 0
+  customDatabaseClientSource: {fileID: 9006753358993515565}
+  useWebSocket: 0
+  webSocketSecure: 0
+  webSocketCertPath: 
+  webSocketCertPassword: 
+  startLoginOnAwake: 1
+  startCentralOnAwake: 1
+  startMapSpawnOnAwake: 1
+  startDatabaseOnAwake: 1
+  startMapOnAwake: 0
+  startingMap: {fileID: 11400000, guid: d8d947f013595cd41a2c4322c2ffa4e7, type: 2}
+  databaseOptionIndex: 0
+  disableDatabaseCaching: 0
+--- !u!1 &1773992668051484
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4281435147628774}
+  - component: {fileID: 114788248445432888}
+  m_Layer: 0
+  m_Name: MapSpawnNetworkManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4281435147628774
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1773992668051484}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4009622383931608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114788248445432888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1773992668051484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 711495ce9cd78fc4a8d39358f3e0d2ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentLogLevel: 2
+  networkAddress: localhost
+  networkPort: 6001
+  useWebSocket: 0
+  webSocketSecure: 0
+  webSocketCertificateFilePath: 
+  webSocketCertificatePassword: 
+  updateFps: 20
+  maxConnections: 1100
+  transportFactory: {fileID: 0}
+  clusterServerAddress: 127.0.0.1
+  clusterServerPort: 6010
+  publicAddress: 127.0.0.1
+  spawnExePath: ./MmoKitCE.exe
+  notSpawnInBatchMode: 0
+  startPort: 8000
+  batchModeArguments: -batchmode -nographics
+  spawningChannelIds:
+  - 1
+  spawningMaps:
+  - {fileID: 11400000, guid: d8d947f013595cd41a2c4322c2ffa4e7, type: 2}
+  spawningAllocateMaps:
+  - mapInfo: {fileID: 11400000, guid: d8d947f013595cd41a2c4322c2ffa4e7, type: 2}
+    allocateAmount: 0
+  isOverrideExePath: 1
+  overrideExePath: C:\Projects\MmoKitCE\\builds\MmoKitCE.exe
+  editorNotSpawnInBatchMode: 1
+--- !u!1 &1834896065226248
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4049227467700674}
+  - component: {fileID: 114035231915985668}
+  m_Layer: 0
+  m_Name: DatabaseNetworkManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4049227467700674
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1834896065226248}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4009622383931608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114035231915985668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1834896065226248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea8a47e377855194bab2c977e67ba885, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentLogLevel: 2
+  networkAddress: 127.0.0.1
+  networkPort: 6100
+  useWebSocket: 0
+  webSocketSecure: 0
+  webSocketCertificateFilePath: 
+  webSocketCertificatePassword: 
+  updateFps: 20
+  maxConnections: 200
+  transportFactory: {fileID: 0}
+  database: {fileID: 114414512406587944}
+  databaseOptions:
+  - {fileID: 114414512406587944}
+  - {fileID: 114715813743394434}
+--- !u!1 &3476521299117261828
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 976896942459451648}
+  - component: {fileID: 3292125351772216773}
+  m_Layer: 0
+  m_Name: LoginNetworkManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &976896942459451648
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3476521299117261828}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4009622383931608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3292125351772216773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3476521299117261828}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd7c47af9d7555a4eaa82a4d5a71a1a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentLogLevel: 2
+  networkAddress: localhost
+  networkPort: 7500
+  useWebSocket: 0
+  webSocketSecure: 0
+  webSocketCertificateFilePath: 
+  webSocketCertificatePassword: 
+  updateFps: 20
+  maxConnections: 4
+  transportFactory: {fileID: 0}
+  clusterServerAddress: 127.0.0.1
+  clusterServerPort: 6010
+  loginServerAddress: 127.0.0.1
+  disableDefaultLogin: 0
+  minUsernameLength: 2
+  maxUsernameLength: 24
+  minPasswordLength: 2
+  minCharacterNameLength: 2
+  maxCharacterNameLength: 16
+  requireEmail: 0
+  requireEmailVerification: 0
+--- !u!1 &9006753358993515565
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 869722981334508554}
+  - component: {fileID: 346102967232166504}
+  m_Layer: 0
+  m_Name: RestDatabaseClient
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &869722981334508554
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9006753358993515565}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4009622383931608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &346102967232166504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9006753358993515565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b33263496a720a94cafb69cf2615fc6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  apiUrl: http://localhost:5757/api/
+  secretKey: secret

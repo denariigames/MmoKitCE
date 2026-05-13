@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4264d4181508a764082a00582cc05748
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/_Gameplay/Standalone/UIChat_Standalone.prefab
+  uploadId: 857340

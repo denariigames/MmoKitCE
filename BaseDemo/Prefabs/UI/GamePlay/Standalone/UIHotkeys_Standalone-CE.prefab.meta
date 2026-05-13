@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d2734082a5dcd9641b178c187ab5b10e
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/_Gameplay/Standalone/UIHotkeys_Standalone.prefab
+  uploadId: 857340

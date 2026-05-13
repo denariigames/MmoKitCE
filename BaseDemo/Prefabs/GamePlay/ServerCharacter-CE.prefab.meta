@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5d1fef0b895ca2a43899fb0236936a59
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/Gameplay/ServerCharacter.prefab
+  uploadId: 857340

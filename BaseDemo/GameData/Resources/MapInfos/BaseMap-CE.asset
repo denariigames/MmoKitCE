@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 432ed403b30d5804bb2b9150a7426abb, type: 3}
+  m_Name: BaseMap-CE
+  m_EditorClassIdentifier: 
+  btnValidate: 0
+  id: 
+  defaultTitle: 
+  languageSpecificTitles: []
+  defaultDescription: 
+  languageSpecificDescriptions: []
+  category: 
+  icon: {fileID: 0}
+  scene:
+    sceneAsset: {fileID: 102900000, guid: a01300c54b4c51641a1c1b4f1b3c8a59, type: 3}
+    sceneName: BaseMap-CE
+  startPosition: {x: 0, y: 20, z: 0}
+  startRotation: {x: 0, y: 0, z: 0}
+  enablePkRules: 0
+  disableDealing: 0
+  disableVending: 0
+  disableDueling: 0
+  deadY: -100
+  playerDeadDropsEquipWeapons: 0
+  playerDeadDropsEquipItems: 0
+  playerDeadDropsNonEquipItems: 0
+  playerDeadDropsGold: 0
+  excludeItems: []
+  excludeAmmoTypes: []
+  excludeArmorTypes: []
+  excludeWeaponTypes: []
+  excludeJunk: 0
+  excludeArmor: 0
+  excludeShield: 0
+  excludeWeapon: 0
+  excludePotion: 0
+  excludeAmmo: 0
+  excludeBuilding: 0
+  excludePet: 0
+  excludeSocketEnhancer: 0
+  excludeMount: 0
+  excludeSkill: 0
+  minimapSprite: {fileID: 0}
+  minimapSprite2: {fileID: 0}
+  minimapPosition: {x: 0, y: 0, z: 0}
+  minimapBoundsWidth: 0
+  minimapBoundsLength: 0
+  minimapOrthographicSize: 0
+  canReturnToSavePoint: 0
+  pvpMode: 0
+  respawnPointsByCondition: []
+  duelersCanAttackEachOtherOnly: 0

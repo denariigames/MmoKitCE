@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb55c53625ff3d4eaaa40092d221401, type: 3}
+  m_Name: SocialSystemSetting-CE
+  m_EditorClassIdentifier: 
+  maxPartyMember: 8
+  partyMemberCanInvite: 0
+  partyMemberCanKick: 0
+  maxGuildMember: 50
+  minGuildNameLength: 2
+  maxGuildNameLength: 16
+  minGuildRoleNameLength: 2
+  maxGuildRoleNameLength: 16
+  maxGuildMessageLength: 140
+  maxGuildMessage2Length: 140
+  guildMemberRoles:
+  - roleName: Master
+    canInvite: 1
+    canKick: 1
+    canUseStorage: 1
+    shareExpPercentage: 0
+  - roleName: Member 1
+    canInvite: 0
+    canKick: 0
+    canUseStorage: 0
+    shareExpPercentage: 0
+  - roleName: Member 2
+    canInvite: 0
+    canKick: 0
+    canUseStorage: 0
+    shareExpPercentage: 0
+  - roleName: Member 3
+    canInvite: 0
+    canKick: 0
+    canUseStorage: 0
+    shareExpPercentage: 0
+  - roleName: Member 4
+    canInvite: 0
+    canKick: 0
+    canUseStorage: 0
+    shareExpPercentage: 0
+  - roleName: Member 5
+    canInvite: 0
+    canKick: 0
+    canUseStorage: 0
+    shareExpPercentage: 0
+  maxShareExpPercentage: 20
+  createGuildRequireItems: []
+  createGuildRequireCurrencies: []
+  createGuildRequiredGold: 1000
+  guildExpTree: 140000005b000000a2000000e90000003001000077010000be010000050200004c02000093020000da0200002103000068030000af030000f60300003d04000084040000cb0400001205000059050000a0050000e70500002e06000075060000bc060000040700004b07000092070000d90700002008000067080000ae080000f50800003c09000083090000ca090000110a0000580a00009f0a0000e60a00002d0b0000740b0000bb0b0000020c0000490c0000900c0000d70c00001e0d0000650d0000ac0d0000
+  guildMaxLevel: 50
+  guildExpCalculator:
+    minValue: 20
+    maxValue: 3500
+    growth: 1
+  guildCalculateExp: 0

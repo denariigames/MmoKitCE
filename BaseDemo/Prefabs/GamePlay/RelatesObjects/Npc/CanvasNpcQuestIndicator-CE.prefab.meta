@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4acaa26309bf3094094eec89f99e2972
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/Gameplay/RelatesObjects/Npc/CanvasNpcQuestIndicator.prefab
+  uploadId: 857340

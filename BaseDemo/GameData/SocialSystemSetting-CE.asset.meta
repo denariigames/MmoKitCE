@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 95ddf275d670f1b4c89a76147ba6930e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/GameData/SocialSystemSetting.asset
+  uploadId: 857340

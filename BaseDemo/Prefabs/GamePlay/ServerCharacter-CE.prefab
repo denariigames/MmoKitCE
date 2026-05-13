@@ -1,0 +1,396 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1799105401059422
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4478715711251074}
+  - component: {fileID: 20526131593619518}
+  - component: {fileID: 124945565372598648}
+  - component: {fileID: 114710661052413620}
+  - component: {fileID: 114448079849108932}
+  - component: {fileID: 4438141309297639666}
+  m_Layer: 0
+  m_Name: GameplayCamera
+  m_TagString: MainCamera
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4478715711251074
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799105401059422}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.0000000113133405, y: 0.9659259, z: -0.25881907, w: -0.000000042221963}
+  m_LocalPosition: {x: 0.00000022713104, y: 2.25, z: 2.5980759}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4344619396007044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!20 &20526131593619518
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799105401059422}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: -1
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294966271
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 0
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!124 &124945565372598648
+Behaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799105401059422}
+  m_Enabled: 1
+--- !u!114 &114710661052413620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799105401059422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f728177e7e400947abc4db638db136d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetCamera: {fileID: 20526131593619518}
+  target: {fileID: 4344619396007044}
+  targetOffset: {x: 0, y: 0.75, z: 0}
+  updateCameraOnUpdate: 0
+  updateCameraOnLateUpdate: 1
+  updateCameraOnFixedUpdate: 0
+  smoothFollow: 0
+  followSmoothing: 10
+  xRotation: 30
+  yRotation: 180
+  useTargetYRotation: 0
+  zoomDistance: 3
+  zoomByAspectRatio: 0
+  zoomByAspectRatioSettings:
+  - width: 16
+    height: 9
+    zoomDistance: 0.0001
+  - width: 16
+    height: 10
+    zoomDistance: 1.75
+  - width: 3
+    height: 2
+    zoomDistance: 3
+  - width: 4
+    height: 3
+    zoomDistance: 5.5
+  - width: 5
+    height: 4
+    zoomDistance: 7
+  enableWallHitSpring: 0
+  minDistanceToPerformWallHitSpring: 1
+  wallHitSpringPushForwardDistance: 0.5
+  wallHitSpringRadius: 0.5
+  wallHitLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  wallHitQueryTriggerInteraction: 1
+  _targetPosition: {x: 0, y: 0.75, z: 0}
+  _targetUp: {x: 0, y: 1, z: 0}
+  _targetYRotation: 0
+--- !u!114 &114448079849108932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799105401059422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34e5f4512b7c9e94a80ec394fd3a8441, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetCamera: {fileID: 20526131593619518}
+  target: {fileID: 4344619396007044}
+  targetOffset: {x: 0, y: 0.75, z: 0}
+  updateCameraOnUpdate: 0
+  updateCameraOnLateUpdate: 1
+  updateCameraOnFixedUpdate: 0
+  smoothFollow: 0
+  followSmoothing: 10
+  xRotation: 30
+  yRotation: 180
+  useTargetYRotation: 0
+  zoomDistance: 3
+  zoomByAspectRatio: 0
+  zoomByAspectRatioSettings:
+  - width: 16
+    height: 9
+    zoomDistance: 0.0001
+  - width: 16
+    height: 10
+    zoomDistance: 1.75
+  - width: 3
+    height: 2
+    zoomDistance: 3
+  - width: 4
+    height: 3
+    zoomDistance: 5.5
+  - width: 5
+    height: 4
+    zoomDistance: 7
+  enableWallHitSpring: 0
+  minDistanceToPerformWallHitSpring: 1
+  wallHitSpringPushForwardDistance: 0.5
+  wallHitSpringRadius: 0.5
+  wallHitLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  wallHitQueryTriggerInteraction: 1
+  _targetPosition: {x: 0, y: 0.75, z: 0}
+  _targetUp: {x: 0, y: 1, z: 0}
+  _targetYRotation: 0
+  xRotationAxisName: Mouse Y
+  yRotationAxisName: Mouse X
+  zoomAxisName: Mouse ScrollWheel
+  updateRotation: 1
+  updateRotationX: 0
+  updateRotationY: 0
+  updateZoom: 1
+  limitXRotation: 1
+  minXRotation: 0
+  maxXRotation: 45
+  smoothRotateX: 0
+  rotateXDeacceleration: 10
+  limitYRotation: 0
+  minYRotation: 0
+  maxYRotation: 0
+  smoothRotateY: 0
+  rotateYDeacceleration: 10
+  startXRotation: 30
+  startYRotation: 180
+  rotationSpeed: 5
+  rotationSpeedScale: 1
+  limitZoomDistance: 1
+  minZoomDistance: 2
+  maxZoomDistance: 10
+  smoothZoom: 0
+  zoomDeacceleration: 10
+  startZoomDistance: 3
+  zoomSpeed: -5
+  zoomSpeedScale: 1
+  enableAimAssist: 0
+  enableAimAssistX: 1
+  enableAimAssistY: 1
+  aimAssistRadius: 0.5
+  aimAssistMinDistanceFromFollowingTarget: 3
+  aimAssistDistance: 10
+  aimAssistLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  aimAssistObstacleLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097011
+  aimAssistXSpeed: 10
+  aimAssistYSpeed: 10
+  aimAssistMaxAngleFromFollowingTarget: 360
+  recoilReturnSpeed: 2
+  recoilSmoothing: 6
+  isSaveCamera: 0
+  savePrefsPrefix: GAMEPLAY
+--- !u!114 &4438141309297639666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799105401059422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+--- !u!1 &1982997027979126
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4344619396007044}
+  - component: {fileID: 136649521913570258}
+  - component: {fileID: 54228318257437014}
+  - component: {fileID: 114427175623056218}
+  m_Layer: 8
+  m_Name: ServerCharacter-CE
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4344619396007044
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1982997027979126}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4478715711251074}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &136649521913570258
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1982997027979126}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 1
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.5, z: 0}
+--- !u!54 &54228318257437014
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1982997027979126}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 1
+  m_Constraints: 112
+  m_CollisionDetection: 0
+--- !u!114 &114427175623056218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1982997027979126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4cd243b70ac219640bcd021cdc0866dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  controlCamera: {fileID: 20526131593619518}
+  groundingDistance: 0.1
+  jumpHeight: 2
+  gravityRate: 1
+  angularSpeed: 120
+  moveSpeed: 8

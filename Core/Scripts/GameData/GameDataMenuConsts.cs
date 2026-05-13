@@ -99,6 +99,10 @@ namespace MultiplayerARPG
         public const string SIMPLE_WARP_TO_TARGET_SKILL_MENU = "Create GameData/Skill/Simple Warp To Target Skill";
         public const int SIMPLE_WARP_TO_TARGET_SKILL_ORDER = -5795;
 
+        public const string SIMPLE_DASH_ATTACK_SKILL_FILE = "Simple Dash To Target Skill";
+        public const string SIMPLE_DASH_ATTACK_SKILL_MENU = "Create GameData/Skill/Simple Dash To Target Skill";
+        public const int SIMPLE_DASH_ATTACK_SKILL_ORDER = -5794;
+
         public const string LEGACY_ITEM_FILE = "Legacy Item";
         public const string LEGACY_ITEM_MENU = "Create GameData/Item/Legacy Item";
         public const int LEGACY_ITEM_ORDER = -5699;

@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 #if !NET && !NETCOREAPP
 using UnityEngine;
-using UnityEngine.Profiling;
 #endif
 
 namespace Insthync.DevExtension
 {
     public static class DevExtUtils
     {
-        private static readonly Dictionary<RuntimeTypeHandle, Dictionary<string, MethodInfo[]>> s_cacheDevExtMethods = new Dictionary<RuntimeTypeHandle, Dictionary<string, MethodInfo[]>>();
+        // NOTE: Use `Type` not `RuntimeTypeHandle` as the key because `RuntimeTypeHandle` comparison is slower than `Type` reference comparison, and `Type` is already cached by the runtime, so it won't cause additional memory usage.
+        private static readonly Dictionary<Type, Dictionary<string, MethodInfo[]>> s_cacheDevExtMethods = new Dictionary<Type, Dictionary<string, MethodInfo[]>>();
         private const BindingFlags InstanceMethodBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
         private const BindingFlags StaticMethodBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
         /// <summary>
@@ -59,7 +58,7 @@ namespace Insthync.DevExtension
         public static bool TryGetDevExtMethods(Type type, string baseMethodName, BindingFlags bindingFlags, out MethodInfo[] methods)
         {
             methods = null;
-            RuntimeTypeHandle typeHandle = type.TypeHandle;
+            Type typeHandle = type;
 
             if (!s_cacheDevExtMethods.TryGetValue(typeHandle, out var methodDict))
             {

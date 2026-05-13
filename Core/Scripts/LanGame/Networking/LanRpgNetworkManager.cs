@@ -429,9 +429,9 @@ namespace MultiplayerARPG
                 }, false, false);
                 SaveSystem.OnSceneChanging();
                 // Unregister all players characters to register later after map changed
-                foreach (LiteNetLibPlayer player in GetPlayers())
+                foreach (KeyValuePair<long, LiteNetLibPlayer> playerKvp in Players)
                 {
-                    UnregisterPlayerCharacter(player.ConnectionId);
+                    UnregisterPlayerCharacter(playerKvp.Key);
                 }
                 if (owningCharacter != null)
                 {

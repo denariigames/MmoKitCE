@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 28a99d33d955c164690783d41e10a6a0
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Item/Crafting/UIItemCraftFormula.prefab
+  uploadId: 857340

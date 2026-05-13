@@ -163,13 +163,13 @@ namespace MultiplayerARPG
         public virtual void OnApplyBuff(CharacterBuff characterBuff)
         {
             if (onApplyBuff != null)
-                onApplyBuff.Invoke(characterBuff);
+                onApplyBuff.Invoke(this, characterBuff);
         }
 
         public virtual void OnRemoveBuff(CharacterBuff characterBuff, BuffRemoveReasons reason)
         {
             if (onRemoveBuff != null)
-                onRemoveBuff.Invoke(characterBuff, reason);
+                onRemoveBuff.Invoke(this, characterBuff, reason);
         }
 
         public virtual void OnBuffHpRecovery(EntityInfo causer, int amount)
@@ -179,7 +179,7 @@ namespace MultiplayerARPG
             CurrentHp += amount;
             CallRpcAppendCombatText(CombatAmountType.HpRecovery, HitEffectsSourceType.None, 0, amount);
             if (onBuffHpRecovery != null)
-                onBuffHpRecovery.Invoke(causer, amount);
+                onBuffHpRecovery.Invoke(this, causer, amount);
         }
 
         public virtual void OnBuffHpDecrease(EntityInfo causer, int amount)
@@ -189,7 +189,7 @@ namespace MultiplayerARPG
             CurrentHp -= amount;
             CallRpcAppendCombatText(CombatAmountType.HpDecrease, HitEffectsSourceType.None, 0, amount);
             if (onBuffHpDecrease != null)
-                onBuffHpDecrease.Invoke(causer, amount);
+                onBuffHpDecrease.Invoke(this, causer, amount);
         }
 
         public virtual void OnBuffMpRecovery(EntityInfo causer, int amount)
@@ -199,7 +199,7 @@ namespace MultiplayerARPG
             CurrentMp += amount;
             CallRpcAppendCombatText(CombatAmountType.MpRecovery, HitEffectsSourceType.None, 0, amount);
             if (onBuffMpRecovery != null)
-                onBuffMpRecovery.Invoke(causer, amount);
+                onBuffMpRecovery.Invoke(this, causer, amount);
         }
 
         public virtual void OnBuffMpDecrease(EntityInfo causer, int amount)
@@ -209,7 +209,7 @@ namespace MultiplayerARPG
             CurrentMp -= amount;
             CallRpcAppendCombatText(CombatAmountType.MpDecrease, HitEffectsSourceType.None, 0, amount);
             if (onBuffMpDecrease != null)
-                onBuffMpDecrease.Invoke(causer, amount);
+                onBuffMpDecrease.Invoke(this, causer, amount);
         }
 
         public virtual void OnBuffStaminaRecovery(EntityInfo causer, int amount)
@@ -219,7 +219,7 @@ namespace MultiplayerARPG
             CurrentStamina += amount;
             CallRpcAppendCombatText(CombatAmountType.StaminaRecovery, HitEffectsSourceType.None, 0, amount);
             if (onBuffStaminaRecovery != null)
-                onBuffStaminaRecovery.Invoke(causer, amount);
+                onBuffStaminaRecovery.Invoke(this, causer, amount);
         }
 
         public virtual void OnBuffStaminaDecrease(EntityInfo causer, int amount)
@@ -229,7 +229,7 @@ namespace MultiplayerARPG
             CurrentStamina -= amount;
             CallRpcAppendCombatText(CombatAmountType.StaminaDecrease, HitEffectsSourceType.None, 0, amount);
             if (onBuffStaminaDecrease != null)
-                onBuffStaminaDecrease.Invoke(causer, amount);
+                onBuffStaminaDecrease.Invoke(this, causer, amount);
         }
 
         public virtual void OnBuffFoodRecovery(EntityInfo causer, int amount)
@@ -239,7 +239,7 @@ namespace MultiplayerARPG
             CurrentFood += amount;
             CallRpcAppendCombatText(CombatAmountType.FoodRecovery, HitEffectsSourceType.None, 0, amount);
             if (onBuffFoodRecovery != null)
-                onBuffFoodRecovery.Invoke(causer, amount);
+                onBuffFoodRecovery.Invoke(this, causer, amount);
         }
 
         public virtual void OnBuffFoodDecrease(EntityInfo causer, int amount)
@@ -249,7 +249,7 @@ namespace MultiplayerARPG
             CurrentFood -= amount;
             CallRpcAppendCombatText(CombatAmountType.FoodDecrease, HitEffectsSourceType.None, 0, amount);
             if (onBuffFoodDecrease != null)
-                onBuffFoodDecrease.Invoke(causer, amount);
+                onBuffFoodDecrease.Invoke(this, causer, amount);
         }
 
         public virtual void OnBuffWaterRecovery(EntityInfo causer, int amount)
@@ -259,7 +259,7 @@ namespace MultiplayerARPG
             CurrentWater += amount;
             CallRpcAppendCombatText(CombatAmountType.WaterRecovery, HitEffectsSourceType.None, 0, amount);
             if (onBuffWaterRecovery != null)
-                onBuffWaterRecovery.Invoke(causer, amount);
+                onBuffWaterRecovery.Invoke(this, causer, amount);
         }
 
         public virtual void OnBuffWaterDecrease(EntityInfo causer, int amount)
@@ -269,7 +269,7 @@ namespace MultiplayerARPG
             CurrentWater -= amount;
             CallRpcAppendCombatText(CombatAmountType.WaterDecrease, HitEffectsSourceType.None, 0, amount);
             if (onBuffWaterDecrease != null)
-                onBuffWaterDecrease.Invoke(causer, amount);
+                onBuffWaterDecrease.Invoke(this, causer, amount);
         }
     }
 }

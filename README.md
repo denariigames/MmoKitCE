@@ -30,12 +30,17 @@ Login Manager is a clean separation of login/authentication logic from the centr
 - Impoved scalability: Concurrent login limit prevents the login server from being overwhelmed during spikes. The dedicated login server + cluster client allows independent scaling of auth traffic away from game logic.
 
 
+### Sharded DatabaseNetworkManager
+Added lanes, queueing, deferred/throttled saves, and a working in-memory cache. 
+
+- Improved scalability: Vastly improved horizontal/concurrency scaling with sharded lanes + locks + ConcurrentDictionary support higher player counts and multi-threaded server ops without contention or overload. Limits (e.g., max saves/proceed) provide predictable load.
+
+
 ### Cell-Based Position Quantization
 Cell-based position quantization dramatically improves network efficiency for entity movement.
 
 - Improved scalability: Lower network traffic supports more concurrent players, higher update rates, and denser entity populations.
 - LOD based compression: Close entities (the ones the player actually interacts with) keep high-precision modes, while distance entities (the majority in large MMO worlds) now send position data in as little as 4 bytes.
-
 
 **World Size Assumptions:** The system uses a fixed square grid centered at the world origin. The maximum supported world size is determined by configurable CellSize. Positions outside the grid are clamped to edge cells.
 
@@ -45,8 +50,6 @@ All entity movement data processing converted from monothreaded per-entity updat
 
 - Improved scalability: Combined with vector quantization and packed serialization, network payloads shrink dramatically, improving both server tick rate and bandwidth usage.
 addons without touching core networking code.
-
-
 
 ## Quick Start / Installation Wizard
 
@@ -90,7 +93,7 @@ After installation, browse available addons via the Addon Manager window (Window
 
 ## Yo! Where's the demo?
 
-In keeping with the philosophy of a clean core distribution, a demo will not be included in CE. However, a demo is currently under development as an Addon.
+MmoKitCE includes BaseDemo, a minimal implementation that is intended to demonstrate scene setup. There is no content in the BaseDemo. For a more robust, developer-focused demo with content, check the Addon Manager for TinyEpicDemo.
 
 
 ## Updating MmoKitCE

@@ -1,6 +1,7 @@
 ﻿using LiteNetLibManager;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using UnityEngine.Pool;
 
 namespace MultiplayerARPG
 {
@@ -151,10 +152,13 @@ namespace MultiplayerARPG
 #if UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES
             if (!CanPickup())
                 return;
-            List<ItemDropEntity> itemDropEntities = FindGameEntitiesInDistance<ItemDropEntity>(CurrentGameInstance.pickUpItemDistance, CurrentGameInstance.itemDropLayer.Mask);
-            foreach (ItemDropEntity itemDropEntity in itemDropEntities)
+            using (CollectionPool<List<ItemDropEntity>, ItemDropEntity>.Get(out List<ItemDropEntity> itemDropEntities))
             {
-                CmdPickup(itemDropEntity.ObjectId);
+                FindGameEntitiesInDistance(itemDropEntities, CurrentGameInstance.pickUpItemDistance, CurrentGameInstance.itemDropLayer.Mask);
+                foreach (ItemDropEntity itemDropEntity in itemDropEntities)
+                {
+                    CmdPickup(itemDropEntity.ObjectId);
+                }
             }
 #endif
         }

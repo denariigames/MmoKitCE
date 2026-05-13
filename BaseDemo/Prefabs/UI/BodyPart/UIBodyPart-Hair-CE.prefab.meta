@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: dddc9b7b4eabe9e419235883af134eef
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/BodyPart/UIBodyPart-Hair.prefab
+  uploadId: 857340

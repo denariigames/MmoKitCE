@@ -1,16 +1,24 @@
 ﻿using Cysharp.Text;
+using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 namespace MultiplayerARPG
 {
-    public class UICombatText : MonoBehaviour
+    public class UICombatText : MonoBehaviour, IPoolDescriptor
     {
+        public const string POSITIVE_SIGNED_FORMAT = "+{0:N0}";
+        public const string NEGATIVE_SIGNED_FORMAT = "{0:N0}";
+
         public float lifeTime = 2f;
         public string format = "{0}";
-        public bool showPositiveSign;
+        public bool showPositiveSign = false;
         public TextWrapper textComponent;
+        public IPoolDescriptor ObjectPrefab { get; set; }
+
+        public int poolSize = 30;
+        public int PoolSize { get { return poolSize; } set { poolSize = value; } }
 
         private int _amount;
         public int Amount
@@ -19,14 +27,49 @@ namespace MultiplayerARPG
             set
             {
                 _amount = value;
-                textComponent.text = ZString.Format(format, (showPositiveSign && _amount > 0 ? "+" : string.Empty) + _amount.ToString("N0"));
+                textComponent.text = ZString.Format(format, ZString.Format(showPositiveSign && _amount > 0 ? POSITIVE_SIGNED_FORMAT : NEGATIVE_SIGNED_FORMAT, Amount));
             }
+        }
+
+        public void InitPrefab()
+        {
+
+        }
+
+        public void OnGetInstance()
+        {
+
+        }
+
+        public void OnPushBack()
+        {
+
+        }
+
+        public void PushBack(float delay)
+        {
+            PushBackRoutine(delay).Forget();
+        }
+
+        private async UniTaskVoid PushBackRoutine(float delay)
+        {
+            await UniTask.Delay((int)(delay * 1000));
+            PushBack();
+        }
+
+        public virtual void PushBack()
+        {
+            PoolSystem.PushBack(this);
         }
 
         private void Awake()
         {
             CacheComponents();
-            Destroy(gameObject, lifeTime);
+        }
+
+        private void OnEnable()
+        {
+            PushBack(lifeTime);
         }
 
         private void CacheComponents()

@@ -1,0 +1,178 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1437744010153436
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4063033428646606}
+  - component: {fileID: 114218027599039394}
+  m_Layer: 0
+  m_Name: MMOClientInstance-CE
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4063033428646606
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1437744010153436}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2831807445221647643}
+  - {fileID: 4727550104018028}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114218027599039394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1437744010153436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f440aab4ea66ec841b0ed504477d0d11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  loginNetworkManager: {fileID: 823148508681438950}
+  mapNetworkManager: {fileID: 0}
+  useWebSocket: 0
+  webSocketSecure: 0
+  networkSettings:
+  - {fileID: 11400000, guid: 6a3edb1361db33b45b656cf8376a2229, type: 2}
+--- !u!1 &1820522765887506
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4727550104018028}
+  - component: {fileID: 114125661795290440}
+  m_Layer: 0
+  m_Name: CentralNetworkManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4727550104018028
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1820522765887506}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4063033428646606}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114125661795290440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1820522765887506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74d920f2df3608f4aa394880f7198146, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentLogLevel: 2
+  networkAddress: localhost
+  networkPort: 6000
+  useWebSocket: 0
+  webSocketSecure: 0
+  webSocketCertificateFilePath: 
+  webSocketCertificatePassword: 
+  updateFps: 20
+  maxConnections: 4
+  transportFactory: {fileID: 0}
+  clusterServerPort: 6010
+  defaultChannelMaxConnections: 500
+  channels: []
+  mapSpawnMillisecondsTimeout: 0
+  updateUserCountInterval: 5
+--- !u!1 &816721658540487031
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2831807445221647643}
+  - component: {fileID: 823148508681438950}
+  m_Layer: 0
+  m_Name: LoginNetworkManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2831807445221647643
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 816721658540487031}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4063033428646606}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &823148508681438950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 816721658540487031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd7c47af9d7555a4eaa82a4d5a71a1a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentLogLevel: 2
+  networkAddress: localhost
+  networkPort: 7500
+  useWebSocket: 0
+  webSocketSecure: 0
+  webSocketCertificateFilePath: 
+  webSocketCertificatePassword: 
+  updateFps: 20
+  maxConnections: 4
+  transportFactory: {fileID: 0}
+  clusterServerAddress: 127.0.0.1
+  clusterServerPort: 6010
+  loginServerAddress: 127.0.0.1
+  disableDefaultLogin: 0
+  minUsernameLength: 2
+  maxUsernameLength: 24
+  minPasswordLength: 2
+  minCharacterNameLength: 2
+  maxCharacterNameLength: 16
+  requireEmail: 0
+  requireEmailVerification: 0

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5c1e53f41108f134ebce2bb0b156974e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/GameData/NetworkSetting.asset
+  uploadId: 857340

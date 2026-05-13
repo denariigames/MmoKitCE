@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: fa67f0b7f994d9548821d15fbf67531d
+timeCreated: 1512511252
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/Effects/WhiteHitEffect.prefab
+  uploadId: 857340

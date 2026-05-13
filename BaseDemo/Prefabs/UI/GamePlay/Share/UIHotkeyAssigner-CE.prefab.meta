@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 26cf128b5d8c2c74d9106b0941544710
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/_Gameplay/Share/UIHotkeyAssigner.prefab
+  uploadId: 857340

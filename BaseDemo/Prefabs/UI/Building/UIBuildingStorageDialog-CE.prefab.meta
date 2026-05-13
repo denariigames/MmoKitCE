@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 134a3d1be8489724993a493ead5e5a45
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Building/UIBuildingStorageDialog.prefab
+  uploadId: 857340

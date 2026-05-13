@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 611b907cf80c87a4eb9e0d5d4a8688f5
+timeCreated: 1519971344
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/Gameplay/ItemDropEntity.prefab
+  uploadId: 857340

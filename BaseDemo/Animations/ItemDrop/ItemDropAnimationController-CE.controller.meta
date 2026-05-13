@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 8979fe3c970c78a4eb3bc7f9982ea417
+timeCreated: 1522541513
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Animations/ItemDrop/ItemDropAnimationController.controller
+  uploadId: 857340

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: bb8d609b81bb4c94fa092dfccd2ba545
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/_Gameplay/Share/UIConstructBuilding.prefab
+  uploadId: 857340

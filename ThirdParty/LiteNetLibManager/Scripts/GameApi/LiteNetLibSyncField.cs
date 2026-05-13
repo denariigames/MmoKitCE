@@ -24,18 +24,8 @@ namespace LiteNetLibManager
         protected bool _latestChangeSyncedFromOwner = false;
         protected uint _latestReceiveTick = 0;
         protected byte _currentRedundancy = 0;
-        protected object _defaultValue;
 
         public abstract Type GetFieldType();
-        protected abstract object GetValue();
-        protected abstract void SetValue(object value);
-        protected virtual object GetDefaultValue() => GetValue();
-        internal abstract void OnChange(bool initial, object oldValue, object newValue);
-
-        protected virtual bool IsValueChanged(object oldValue, object newValue)
-        {
-            return oldValue == null || !oldValue.Equals(newValue);
-        }
 
         protected bool CanSync(bool isServer, bool isOwnerClient)
         {
@@ -125,78 +115,6 @@ namespace LiteNetLibManager
             if (_currentRedundancy > 0)
                 _currentRedundancy--;
         }
-
-        internal override sealed void Reset()
-        {
-            SetValue(_defaultValue);
-        }
-
-        internal override sealed void Setup(LiteNetLibBehaviour behaviour, int elementId)
-        {
-            base.Setup(behaviour, elementId);
-            _defaultValue = GetDefaultValue();
-            // Invoke on change function with initial state = true
-            switch (syncMode)
-            {
-                case LiteNetLibSyncFieldMode.ServerToClients:
-                case LiteNetLibSyncFieldMode.ServerToOwnerClient:
-                    if (IsServer)
-                        OnChange(true, _defaultValue, _defaultValue);
-                    break;
-                case LiteNetLibSyncFieldMode.ClientMulticast:
-                    if (IsOwnerClient || IsServer)
-                        OnChange(true, _defaultValue, _defaultValue);
-                    break;
-            }
-        }
-
-        internal override void WriteSyncData(uint tick, bool initial, NetDataWriter writer)
-        {
-            if (isDebug)
-                Logging.Log(LogTag, $"Write sync data, syncMode {syncMode.ToString()}, connectionId {ConnectionId}, isOwnerClient {IsOwnerClient}, objectId {ObjectId}, tick {tick}, initial {initial}, value {GetValue()}");
-            SerializeValue(writer);
-        }
-
-        internal override void ReadSyncData(uint tick, bool initial, NetDataReader reader)
-        {
-            object oldValue = GetValue();
-            DeserializeValue(reader);
-            if (!initial && tick <= _latestReceiveTick)
-            {
-                // Don't accept this, revert changes
-                SetValue(oldValue);
-                return;
-            }
-            _latestReceiveTick = tick;
-            if (isDebug)
-                Logging.Log(LogTag, $"Read sync data, syncMode {syncMode.ToString()}, connectionId {ConnectionId}, isOwnerClient {IsOwnerClient}, objectId {ObjectId}, tick {tick}, initial {initial}, oldValue {oldValue}, newValue {GetValue()}");
-            OnChange(initial, oldValue, GetValue());
-            if (syncMode == LiteNetLibSyncFieldMode.ClientMulticast && IsServer)
-                ValueChangedState(true);
-        }
-
-        internal virtual void DeserializeValue(NetDataReader reader)
-        {
-            Type type = GetFieldType();
-            if (type.IsArray)
-                SetValue(reader.GetArrayObject(type.GetElementType()));
-            else
-                SetValue(reader.GetValue(type));
-        }
-
-        internal virtual void SerializeValue(NetDataWriter writer)
-        {
-            Type type = GetFieldType();
-            if (type.IsArray)
-                writer.PutArrayObject(type.GetElementType(), GetValue());
-            else
-                writer.PutValue(type, GetValue());
-        }
-
-        public override string ToString()
-        {
-            return GetValue().ToString();
-        }
     }
 
     public class LiteNetLibSyncField<TType> : LiteNetLibSyncField
@@ -245,13 +163,48 @@ namespace LiteNetLibManager
             }
         }
 
-        protected override bool IsValueChanged(object oldValue, object newValue)
+        protected TType _defaultValue;
+        public virtual TType DefaultValue
         {
-            return IsValueChanged((TType)oldValue, (TType)newValue);
+            get { return _defaultValue; }
+            protected set { _defaultValue = value; }
+        }
+
+        internal override sealed void Setup(LiteNetLibBehaviour behaviour, int elementId)
+        {
+            base.Setup(behaviour, elementId);
+            DefaultValue = Value;
+            // Invoke on change function with initial state = true
+            switch (syncMode)
+            {
+                case LiteNetLibSyncFieldMode.ServerToClients:
+                case LiteNetLibSyncFieldMode.ServerToOwnerClient:
+                    if (IsServer)
+                        OnChange(true, DefaultValue, DefaultValue);
+                    break;
+                case LiteNetLibSyncFieldMode.ClientMulticast:
+                    if (IsOwnerClient || IsServer)
+                        OnChange(true, DefaultValue, DefaultValue);
+                    break;
+            }
+        }
+
+        public void MarkAsChanged()
+        {
+            if (IsSpawned && CanSync())
+            {
+                OnChange(false, _value, _value);
+                ValueChangedState(false);
+            }
         }
 
         protected virtual bool IsValueChanged(TType oldValue, TType newValue)
         {
+            if (GetFieldType().IsArray)
+            {
+                // For array type, we always consider it is changed, because we don't want to compare each element of the array which may cause performance issue
+                return true;
+            }
             return oldValue == null || !oldValue.Equals(newValue);
         }
 
@@ -260,25 +213,69 @@ namespace LiteNetLibManager
             return typeof(TType);
         }
 
-        protected override sealed object GetValue()
-        {
-            return _value;
-        }
-
-        protected override sealed void SetValue(object value)
-        {
-            _value = (TType)value;
-        }
-
-        internal override sealed void OnChange(bool initial, object oldValue, object newValue)
+        internal virtual void OnChange(bool initial, TType oldValue, TType newValue)
         {
             if (onChange != null)
-                onChange.Invoke(initial, (TType)oldValue, (TType)newValue);
+                onChange.Invoke(initial, oldValue, newValue);
         }
 
         public static implicit operator TType(LiteNetLibSyncField<TType> field)
         {
             return field.Value;
+        }
+
+        internal override void WriteSyncData(uint tick, bool initial, NetDataWriter writer)
+        {
+            if (isDebug)
+                Logging.Log(LogTag, $"Write sync data, syncMode {syncMode.ToString()}, connectionId {ConnectionId}, isOwnerClient {IsOwnerClient}, objectId {ObjectId}, tick {tick}, initial {initial}, value {Value}");
+            SerializeValue(writer);
+        }
+
+        internal override void ReadSyncData(uint tick, bool initial, NetDataReader reader)
+        {
+            TType oldValue = Value;
+            DeserializeValue(reader);
+            if (!initial && tick <= _latestReceiveTick)
+            {
+                // Don't accept this, revert changes
+                _value = oldValue;
+                return;
+            }
+            _latestReceiveTick = tick;
+            if (isDebug)
+                Logging.Log(LogTag, $"Read sync data, syncMode {syncMode.ToString()}, connectionId {ConnectionId}, isOwnerClient {IsOwnerClient}, objectId {ObjectId}, tick {tick}, initial {initial}, oldValue {oldValue}, newValue {Value}");
+            if (initial || IsValueChanged(oldValue, Value))
+                OnChange(initial, oldValue, Value);
+            if (syncMode == LiteNetLibSyncFieldMode.ClientMulticast && IsServer)
+                ValueChangedState(true);
+        }
+
+        internal virtual void DeserializeValue(NetDataReader reader)
+        {
+            Type type = GetFieldType();
+            if (type.IsArray)
+                _value = (TType)reader.GetArrayObject(type.GetElementType());
+            else
+                _value = (TType)reader.GetValue(type);
+        }
+
+        internal virtual void SerializeValue(NetDataWriter writer)
+        {
+            Type type = GetFieldType();
+            if (type.IsArray)
+                writer.PutArrayObject(type.GetElementType(), Value);
+            else
+                writer.PutValue(type, Value);
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString();
+        }
+
+        internal override sealed void Reset()
+        {
+            Value = _defaultValue;
         }
     }
 
@@ -289,6 +286,23 @@ namespace LiteNetLibManager
         internal override void DeserializeValue(NetDataReader reader)
         {
             _value = reader.Get<TType>();
+        }
+
+        internal override void SerializeValue(NetDataWriter writer)
+        {
+            writer.Put(_value);
+        }
+    }
+
+    [Serializable]
+    public abstract class SyncFieldNetSerializableClass<TType> : LiteNetLibSyncField<TType>
+        where TType : class, INetSerializable
+    {
+        public abstract TType Construct();
+
+        internal override void DeserializeValue(NetDataReader reader)
+        {
+            _value = reader.Get(Construct);
         }
 
         internal override void SerializeValue(NetDataWriter writer)
@@ -341,13 +355,12 @@ namespace LiteNetLibManager
 
         internal sealed override void SerializeValue(NetDataWriter writer)
         {
-            writer.PutArrayExtension(_value);
             if (_value == null)
             {
-                writer.Put(0);
+                writer.PutPackedInt(0);
                 return;
             }
-            writer.Put(_value.Length);
+            writer.PutPackedInt(_value.Length);
             foreach (TType element in _value)
             {
                 SerializeElementValue(writer, element);
@@ -362,6 +375,11 @@ namespace LiteNetLibManager
         internal virtual void SerializeElementValue(NetDataWriter writer, TType element)
         {
             writer.PutValue(element);
+        }
+
+        protected override sealed bool IsValueChanged(TType[] oldValue, TType[] newValue)
+        {
+            return true;
         }
 
         public int Length { get { return Value.Length; } }
@@ -399,11 +417,6 @@ namespace LiteNetLibManager
         {
             writer.Put(element);
         }
-
-        protected override bool IsValueChanged(bool[] oldValue, bool[] newValue)
-        {
-            return true;
-        }
     }
 
     [Serializable]
@@ -436,11 +449,6 @@ namespace LiteNetLibManager
         internal override void SerializeElementValue(NetDataWriter writer, byte element)
         {
             writer.Put(element);
-        }
-
-        protected override bool IsValueChanged(byte[] oldValue, byte[] newValue)
-        {
-            return true;
         }
     }
 
@@ -475,11 +483,6 @@ namespace LiteNetLibManager
         {
             writer.Put(element);
         }
-
-        protected override bool IsValueChanged(char[] oldValue, char[] newValue)
-        {
-            return true;
-        }
     }
 
     [Serializable]
@@ -512,11 +515,6 @@ namespace LiteNetLibManager
         internal override void SerializeElementValue(NetDataWriter writer, double element)
         {
             writer.Put(element);
-        }
-
-        protected override bool IsValueChanged(double[] oldValue, double[] newValue)
-        {
-            return true;
         }
     }
 
@@ -551,11 +549,6 @@ namespace LiteNetLibManager
         {
             writer.Put(element);
         }
-
-        protected override bool IsValueChanged(float[] oldValue, float[] newValue)
-        {
-            return true;
-        }
     }
 
     [Serializable]
@@ -588,11 +581,6 @@ namespace LiteNetLibManager
         internal override void SerializeElementValue(NetDataWriter writer, int element)
         {
             writer.PutPackedInt(element);
-        }
-
-        protected override bool IsValueChanged(int[] oldValue, int[] newValue)
-        {
-            return true;
         }
     }
 
@@ -627,11 +615,6 @@ namespace LiteNetLibManager
         {
             writer.PutPackedLong(element);
         }
-
-        protected override bool IsValueChanged(long[] oldValue, long[] newValue)
-        {
-            return true;
-        }
     }
 
     [Serializable]
@@ -647,7 +630,7 @@ namespace LiteNetLibManager
             writer.Put(_value);
         }
 
-        protected override bool IsValueChanged(object oldValue, object newValue)
+        protected override bool IsValueChanged(sbyte oldValue, sbyte newValue)
         {
             return oldValue != newValue;
         }
@@ -665,11 +648,6 @@ namespace LiteNetLibManager
         {
             writer.Put(element);
         }
-
-        protected override bool IsValueChanged(object oldValue, object newValue)
-        {
-            return true;
-        }
     }
 
     [Serializable]
@@ -685,7 +663,7 @@ namespace LiteNetLibManager
             writer.PutPackedShort(_value);
         }
 
-        protected override bool IsValueChanged(object oldValue, object newValue)
+        protected override bool IsValueChanged(short oldValue, short newValue)
         {
             return oldValue != newValue;
         }
@@ -702,11 +680,6 @@ namespace LiteNetLibManager
         internal override void SerializeElementValue(NetDataWriter writer, short element)
         {
             writer.PutPackedShort(element);
-        }
-
-        protected override bool IsValueChanged(object oldValue, object newValue)
-        {
-            return true;
         }
     }
 
@@ -732,9 +705,9 @@ namespace LiteNetLibManager
             writer.Put(_value);
         }
 
-        protected override bool IsValueChanged(object oldValue, object newValue)
+        protected override bool IsValueChanged(string oldValue, string newValue)
         {
-            return oldValue != newValue;
+            return !string.Equals(oldValue, newValue);
         }
     }
 
@@ -749,11 +722,6 @@ namespace LiteNetLibManager
         internal override void SerializeElementValue(NetDataWriter writer, string element)
         {
             writer.Put(element);
-        }
-
-        protected override bool IsValueChanged(object oldValue, object newValue)
-        {
-            return true;
         }
     }
 
@@ -770,7 +738,7 @@ namespace LiteNetLibManager
             writer.PutPackedUInt(_value);
         }
 
-        protected override bool IsValueChanged(object oldValue, object newValue)
+        protected override bool IsValueChanged(uint oldValue, uint newValue)
         {
             return oldValue != newValue;
         }
@@ -788,11 +756,6 @@ namespace LiteNetLibManager
         {
             writer.PutPackedUInt(element);
         }
-
-        protected override bool IsValueChanged(object oldValue, object newValue)
-        {
-            return true;
-        }
     }
 
     [Serializable]
@@ -808,7 +771,7 @@ namespace LiteNetLibManager
             writer.PutPackedULong(_value);
         }
 
-        protected override bool IsValueChanged(object oldValue, object newValue)
+        protected override bool IsValueChanged(ulong oldValue, ulong newValue)
         {
             return oldValue != newValue;
         }
@@ -826,11 +789,6 @@ namespace LiteNetLibManager
         {
             writer.PutPackedULong(element);
         }
-
-        protected override bool IsValueChanged(object oldValue, object newValue)
-        {
-            return true;
-        }
     }
 
     [Serializable]
@@ -846,7 +804,7 @@ namespace LiteNetLibManager
             writer.PutPackedUShort(_value);
         }
 
-        protected override bool IsValueChanged(object oldValue, object newValue)
+        protected override bool IsValueChanged(ushort oldValue, ushort newValue)
         {
             return oldValue != newValue;
         }
@@ -864,16 +822,21 @@ namespace LiteNetLibManager
         {
             writer.PutPackedUShort(element);
         }
-
-        protected override bool IsValueChanged(object oldValue, object newValue)
-        {
-            return true;
-        }
     }
 
     [Serializable]
     public class SyncFieldColor : LiteNetLibSyncField<Color>
     {
+        internal override void SerializeValue(NetDataWriter writer)
+        {
+            writer.PutColor(_value);
+        }
+
+        internal override void DeserializeValue(NetDataReader reader)
+        {
+            _value = reader.GetColor();
+        }
+
         protected override bool IsValueChanged(Color oldValue, Color newValue)
         {
             return oldValue.r != newValue.r || oldValue.g != newValue.g || oldValue.b != newValue.b || oldValue.a != newValue.a;
@@ -885,6 +848,16 @@ namespace LiteNetLibManager
     {
         [Tooltip("If angle between new value and old value >= this value, it will be determined that the value is changing")]
         public float valueChangeAngle = 1f;
+
+        internal override void SerializeValue(NetDataWriter writer)
+        {
+            writer.PutQuaternion(_value);
+        }
+
+        internal override void DeserializeValue(NetDataReader reader)
+        {
+            _value = reader.GetQuaternion();
+        }
 
         protected override bool IsValueChanged(Quaternion oldValue, Quaternion newValue)
         {
@@ -898,6 +871,16 @@ namespace LiteNetLibManager
         [Tooltip("If distance between new value and old value >= this value, it will be determined that the value is changing")]
         public float valueChangeDistance = 0.01f;
 
+        internal override void SerializeValue(NetDataWriter writer)
+        {
+            writer.PutVector2(_value);
+        }
+
+        internal override void DeserializeValue(NetDataReader reader)
+        {
+            _value = reader.GetVector2();
+        }
+
         protected override bool IsValueChanged(Vector2 oldValue, Vector2 newValue)
         {
             return Vector2.Distance(oldValue, newValue) >= valueChangeDistance;
@@ -909,6 +892,16 @@ namespace LiteNetLibManager
     {
         [Tooltip("If distance between new value and old value >= this value, it will be determined that the value is changing")]
         public float valueChangeDistance = 0.01f;
+
+        internal override void SerializeValue(NetDataWriter writer)
+        {
+            writer.PutVector2Int(_value);
+        }
+
+        internal override void DeserializeValue(NetDataReader reader)
+        {
+            _value = reader.GetVector2Int();
+        }
 
         protected override bool IsValueChanged(Vector2Int oldValue, Vector2Int newValue)
         {
@@ -922,6 +915,16 @@ namespace LiteNetLibManager
         [Tooltip("If distance between new value and old value >= this value, it will be determined that the value is changing")]
         public float valueChangeDistance = 0.01f;
 
+        internal override void SerializeValue(NetDataWriter writer)
+        {
+            writer.PutVector3(_value);
+        }
+
+        internal override void DeserializeValue(NetDataReader reader)
+        {
+            _value = reader.GetVector3();
+        }
+
         protected override bool IsValueChanged(Vector3 oldValue, Vector3 newValue)
         {
             return Vector3.Distance(oldValue, newValue) >= valueChangeDistance;
@@ -934,6 +937,16 @@ namespace LiteNetLibManager
         [Tooltip("If distance between new value and old value >= this value, it will be determined that the value is changing")]
         public float valueChangeDistance = 0.01f;
 
+        internal override void SerializeValue(NetDataWriter writer)
+        {
+            writer.PutVector3Int(_value);
+        }
+
+        internal override void DeserializeValue(NetDataReader reader)
+        {
+            _value = reader.GetVector3Int();
+        }
+
         protected override bool IsValueChanged(Vector3Int oldValue, Vector3Int newValue)
         {
             return Vector3Int.Distance(oldValue, newValue) >= valueChangeDistance;
@@ -945,6 +958,16 @@ namespace LiteNetLibManager
     {
         [Tooltip("If distance between new value and old value >= this value, it will be determined that the value is changing")]
         public float valueChangeDistance = 0.01f;
+
+        internal override void SerializeValue(NetDataWriter writer)
+        {
+            writer.PutVector4(_value);
+        }
+
+        internal override void DeserializeValue(NetDataReader reader)
+        {
+            _value = reader.GetVector4();
+        }
 
         protected override bool IsValueChanged(Vector4 oldValue, Vector4 newValue)
         {

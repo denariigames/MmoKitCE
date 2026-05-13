@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c9400ded356de664f868836359ff5746
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Item/Dismantle/UIDismantleItem.prefab
+  uploadId: 857340

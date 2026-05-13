@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: e5bade555f3ec3f438d7b2c0e13ee43a
+timeCreated: 1513546929
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/_Gameplay/CombatText/RecoveryHpText.prefab
+  uploadId: 857340

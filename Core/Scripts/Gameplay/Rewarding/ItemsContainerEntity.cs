@@ -80,6 +80,12 @@ namespace MultiplayerARPG
             gameObject.layer = CurrentGameInstance.itemDropLayer;
         }
 
+        public override void OnIdentityInitialize()
+        {
+            base.OnIdentityInitialize();
+            NetworkDestroy(_appearDuration);
+        }
+
         protected override void SetupNetElements()
         {
             base.SetupNetElements();
@@ -87,12 +93,6 @@ namespace MultiplayerARPG
             _dropperTitle.redundancyCount = 0;
             _dropperEntityId.syncMode = LiteNetLibSyncFieldMode.ServerToClients;
             _items.forOwnerOnly = false;
-        }
-
-        public override void OnIdentityInitialize()
-        {
-            base.OnIdentityInitialize();
-            NetworkDestroy(_appearDuration);
         }
 
         public void CallRpcOnPickedUp()

@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: af7151f261df87c46805fdd9f38d2a7f
+timeCreated: 1513546921
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/_Gameplay/CombatText/NormalDamageText.prefab
+  uploadId: 857340

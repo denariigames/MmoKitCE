@@ -412,56 +412,56 @@ namespace MultiplayerARPG
         private void OnIdChange(bool isInitial, string oldId, string id)
         {
             if (onIdChange != null)
-                onIdChange.Invoke(id);
+                onIdChange.Invoke(this, oldId, id);
         }
 
         private void OnCharacterNameChange(bool isInitial, string oldCharacterName, string characterName)
         {
             if (onCharacterNameChange != null)
-                onCharacterNameChange.Invoke(characterName);
+                onCharacterNameChange.Invoke(this, oldCharacterName, characterName);
         }
 
         private void OnLevelChange(bool isInitial, int oldLevel, int level)
         {
             IsRecaching = true;
             if (onLevelChange != null)
-                onLevelChange.Invoke(level);
+                onLevelChange.Invoke(this, oldLevel, level);
         }
 
         private void OnExpChange(bool isInitial, int oldExp, int exp)
         {
             if (onExpChange != null)
-                onExpChange.Invoke(exp);
+                onExpChange.Invoke(this, oldExp, exp);
         }
 
         private void OnIsInvincibleChange(bool isInitial, bool oldIsInvincible, bool isInvincible)
         {
             if (onIsInvincibleChange != null)
-                onIsInvincibleChange.Invoke(isInvincible);
+                onIsInvincibleChange.Invoke(this, oldIsInvincible, isInvincible);
         }
 
         private void OnCurrentMpChange(bool isInitial, int oldCurrentMp, int currentMp)
         {
             if (onCurrentMpChange != null)
-                onCurrentMpChange.Invoke(currentMp);
+                onCurrentMpChange.Invoke(this, oldCurrentMp, currentMp);
         }
 
         private void OnCurrentStaminaChange(bool isInitial, int oldCurrentStamina, int currentStamina)
         {
             if (onCurrentStaminaChange != null)
-                onCurrentStaminaChange.Invoke(currentStamina);
+                onCurrentStaminaChange.Invoke(this, oldCurrentStamina, currentStamina);
         }
 
         private void OnCurrentFoodChange(bool isInitial, int oldCurrentFood, int currentFood)
         {
             if (onCurrentFoodChange != null)
-                onCurrentFoodChange.Invoke(currentFood);
+                onCurrentFoodChange.Invoke(this, oldCurrentFood, currentFood);
         }
 
         private void OnCurrentWaterChange(bool isInitial, int oldCurrentWater, int currentWater)
         {
             if (onCurrentWaterChange != null)
-                onCurrentWaterChange.Invoke(currentWater);
+                onCurrentWaterChange.Invoke(this, oldCurrentWater, currentWater);
         }
 
         protected virtual void OnEquipWeaponSetChange(bool isInitial, byte oldEquipWeaponSet, byte equipWeaponSet)
@@ -470,7 +470,7 @@ namespace MultiplayerARPG
             MarkToUpdateAmmoSim();
             IsRecaching = true;
             if (onEquipWeaponSetChange != null)
-                onEquipWeaponSetChange.Invoke(equipWeaponSet);
+                onEquipWeaponSetChange.Invoke(this, oldEquipWeaponSet, equipWeaponSet);
         }
 
         protected virtual void OnIsWeaponsSheathedChange(bool isInitial, bool oldIsWeaponsSheathed, bool isWeaponsSheathed)
@@ -478,31 +478,31 @@ namespace MultiplayerARPG
             MarkToUpdateAppearances();
             IsRecaching = true;
             if (onIsWeaponsSheathedChange != null)
-                onIsWeaponsSheathedChange.Invoke(isWeaponsSheathed);
+                onIsWeaponsSheathedChange.Invoke(this, oldIsWeaponsSheathed, isWeaponsSheathed);
         }
 
         private void OnPitchChange(bool isInitial, ushort oldPitch, ushort pitch)
         {
             if (onPitchChange != null)
-                onPitchChange.Invoke(pitch);
+                onPitchChange.Invoke(this, oldPitch, pitch);
         }
 
         private void OnLookPositionChange(bool isInitial, Vector3 oldLookPosition, Vector3 lookPosition)
         {
             if (onLookPositionChange != null)
-                onLookPositionChange.Invoke(lookPosition);
+                onLookPositionChange.Invoke(this, oldLookPosition, lookPosition);
         }
 
         private void OnAimPositionChange(bool isInitial, AimPosition oldAimPosition, AimPosition aimPosition)
         {
             if (onAimPositionChange != null)
-                onAimPositionChange.Invoke(aimPosition);
+                onAimPositionChange.Invoke(this, oldAimPosition, aimPosition);
         }
 
         private void OnTargetEntityIdChange(bool isInitial, uint oldTargetEntityId, uint targetEntityId)
         {
             if (onTargetEntityIdChange != null)
-                onTargetEntityIdChange.Invoke(targetEntityId);
+                onTargetEntityIdChange.Invoke(this, oldTargetEntityId, targetEntityId);
         }
 
         private void OnMountChange(bool isInitial, CharacterMount oldMount, CharacterMount mount)
@@ -511,7 +511,7 @@ namespace MultiplayerARPG
             if (oldMount.type != mount.type || oldMount.sourceId != mount.sourceId || oldMount.level != mount.level)
                 IsRecaching = true;
             if (onMountChange != null)
-                onMountChange.Invoke(mount);
+                onMountChange.Invoke(this, oldMount, mount);
         }
 
         private void OnSummonerChange(bool isInitial, CharacterSummoner oldSummoner, CharacterSummoner mount)
@@ -520,7 +520,7 @@ namespace MultiplayerARPG
             if (oldSummoner.type != mount.type || oldSummoner.objectId != mount.objectId)
                 IsRecaching = true;
             if (onSummonerChange != null)
-                onSummonerChange.Invoke(mount);
+                onSummonerChange.Invoke(this, oldSummoner, mount);
         }
         #endregion
 

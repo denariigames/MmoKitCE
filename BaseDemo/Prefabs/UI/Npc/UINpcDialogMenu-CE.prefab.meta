@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 732718baed9732a4dbc99f52f6920b23
+timeCreated: 1524737887
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Npc/UINpcDialogMenu.prefab
+  uploadId: 857340

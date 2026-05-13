@@ -1,4 +1,6 @@
-﻿using Cysharp.Text;
+﻿// ce scability: #53
+
+using Cysharp.Text;
 using Cysharp.Threading.Tasks;
 using LiteNetLibManager;
 using System.Collections.Generic;
@@ -155,46 +157,61 @@ namespace MultiplayerARPG.MMO
 #endif
 
 #if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        private List<CharacterBuff> BuildSummonBuffsForSave(TransactionUpdateCharacterState state, PlayerCharacterData savingCharacterData)
+        {
+            List<CharacterBuff> summonBuffs = new List<CharacterBuff>();
+            if (!state.Has(TransactionUpdateCharacterState.Summons))
+                return summonBuffs;
+
+            CharacterSummon tempSummon;
+            CharacterBuff tempBuff;
+            for (int i = 0; i < savingCharacterData.Summons.Count; ++i)
+            {
+                tempSummon = savingCharacterData.Summons[i];
+                if (tempSummon.CacheEntity == null || tempSummon.CacheEntity.Buffs == null || tempSummon.CacheEntity.Buffs.Count == 0)
+                    continue;
+
+                for (int j = 0; j < tempSummon.CacheEntity.Buffs.Count; ++j)
+                {
+                    tempBuff = tempSummon.CacheEntity.Buffs[j];
+                    summonBuffs.Add(new CharacterBuff()
+                    {
+                        id = ZString.Concat(savingCharacterData.Id, '_', i, '_', j),
+                        type = tempBuff.type,
+                        dataId = tempBuff.dataId,
+                        level = tempBuff.level,
+                        buffRemainsDuration = tempBuff.buffRemainsDuration,
+                    });
+                }
+            }
+
+            return summonBuffs;
+        }
+
+        private static void ApplyCharacterMapSaveData(PlayerCharacterData savingCharacterData,
+            bool changeMap, string mapName,
+            Vector3 position, bool overrideRotation, Vector3 rotation)
+        {
+            if (!changeMap)
+                return;
+
+            savingCharacterData.CurrentMapName = mapName;
+            savingCharacterData.CurrentPosition = position;
+            if (overrideRotation)
+                savingCharacterData.CurrentRotation = rotation;
+        }
+
         internal async UniTask<bool> SaveCharacter(TransactionUpdateCharacterState state, PlayerCharacterData savingCharacterData,
             bool changeMap = false, string mapName = "",
             Vector3 position = default, bool overrideRotation = false, Vector3 rotation = default)
         {
             if (savingCharacters.Contains(savingCharacterData.Id))
                 return false;
-            // Prepare player character data
-            if (changeMap)
-            {
-                savingCharacterData.CurrentMapName = mapName;
-                savingCharacterData.CurrentPosition = position;
-                if (overrideRotation)
-                    savingCharacterData.CurrentRotation = rotation;
-            }
-            // Prepare summon buffs
-            List<CharacterBuff> summonBuffs = new List<CharacterBuff>();
-            if (state.Has(TransactionUpdateCharacterState.Summons))
-            {
-                CharacterSummon tempSummon;
-                CharacterBuff tempBuff;
-                for (int i = 0; i < savingCharacterData.Summons.Count; ++i)
-                {
-                    tempSummon = savingCharacterData.Summons[i];
-                    if (tempSummon.CacheEntity == null || tempSummon.CacheEntity.Buffs == null || tempSummon.CacheEntity.Buffs.Count == 0) continue;
-                    for (int j = 0; j < tempSummon.CacheEntity.Buffs.Count; ++j)
-                    {
-                        tempBuff = tempSummon.CacheEntity.Buffs[j];
-                        summonBuffs.Add(new CharacterBuff()
-                        {
-                            id = ZString.Concat(savingCharacterData.Id, '_', i, '_', j),
-                            type = tempBuff.type,
-                            dataId = tempBuff.dataId,
-                            level = tempBuff.level,
-                            buffRemainsDuration = tempBuff.buffRemainsDuration,
-                        });
-                    }
-                }
-            }
+
+            ApplyCharacterMapSaveData(savingCharacterData, changeMap, mapName, position, overrideRotation, rotation);
+            List<CharacterBuff> summonBuffs = BuildSummonBuffsForSave(state, savingCharacterData);
+
             savingCharacters.Add(savingCharacterData.Id);
-            // Update character
             var updateResult = await DatabaseClient.UpdateCharacterAsync(new UpdateCharacterReq()
             {
                 State = state,
@@ -205,7 +222,38 @@ namespace MultiplayerARPG.MMO
             cancellingReserveStorageCharacterIds.TryRemove(savingCharacterData.Id);
             savingCharacters.TryRemove(savingCharacterData.Id);
             if (LogDebug)
-                Logging.Log(LogTag, $"Character [{savingCharacterData.Id}] Saved, Success? {updateResult.IsSuccess}");
+                Logging.Log(LogTag, $"Character [{savingCharacterData.Id}] Save Enqueued, Success? {updateResult.IsSuccess}");
+            return updateResult.IsSuccess;
+        }
+
+        internal async UniTask<bool> ForceSaveCharacter(TransactionUpdateCharacterState state, PlayerCharacterData savingCharacterData,
+            bool changeMap = false, string mapName = "",
+            Vector3 position = default, bool overrideRotation = false, Vector3 rotation = default)
+        {
+            ApplyCharacterMapSaveData(savingCharacterData, changeMap, mapName, position, overrideRotation, rotation);
+            List<CharacterBuff> summonBuffs = BuildSummonBuffsForSave(state, savingCharacterData);
+
+            int waitLoops = 0;
+            while (savingCharacters.Contains(savingCharacterData.Id))
+            {
+                waitLoops++;
+                if (waitLoops > 300)
+                    break;
+                await UniTask.Delay(50);
+            }
+
+            savingCharacters.Add(savingCharacterData.Id);
+            var updateResult = await DatabaseClient.UpdateCharacterAsync(new UpdateCharacterReq()
+            {
+                State = state,
+                CharacterData = savingCharacterData,
+                SummonBuffs = summonBuffs,
+                DeleteStorageReservation = true,
+            });
+            cancellingReserveStorageCharacterIds.TryRemove(savingCharacterData.Id);
+            savingCharacters.TryRemove(savingCharacterData.Id);
+            if (LogDebug)
+                Logging.Log(LogTag, $"Character [{savingCharacterData.Id}] Forced Save Enqueued, Success? {updateResult.IsSuccess}");
             return updateResult.IsSuccess;
         }
 #endif
@@ -247,12 +295,47 @@ namespace MultiplayerARPG.MMO
 #endif
 
 #if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        internal async UniTask<bool> WaitAndForceSaveCharacter(TransactionUpdateCharacterState state, PlayerCharacterData savingCharacterData, CancellationToken cancellationToken,
+            bool changeMap = false, string mapName = "",
+            Vector3 position = default, bool overrideRotation = false, Vector3 rotation = default,
+            byte retireAttempts = 60, int retireDelayMs = 100)
+        {
+            int count = 0;
+            while (!await ForceSaveCharacter(state, savingCharacterData, changeMap, mapName, position, overrideRotation, rotation))
+            {
+                count++;
+                if (count > retireAttempts)
+                    return false;
+                await UniTask.Delay(retireDelayMs, cancellationToken: cancellationToken);
+            }
+            return true;
+        }
+#endif
+
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        internal async UniTask<bool> WaitAndForceSaveCharacter(TransactionUpdateCharacterState state, PlayerCharacterData savingCharacterData,
+            bool changeMap = false, string mapName = "",
+            Vector3 position = default, bool overrideRotation = false, Vector3 rotation = default,
+            byte retireAttempts = 60, int retireDelayMs = 100)
+        {
+            int count = 0;
+            while (!await ForceSaveCharacter(state, savingCharacterData, changeMap, mapName, position, overrideRotation, rotation))
+            {
+                count++;
+                if (count > retireAttempts)
+                    return false;
+                await UniTask.Delay(retireDelayMs);
+            }
+            return true;
+        }
+#endif
+
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
         internal async UniTask<bool> SaveBuilding(TransactionUpdateBuildingState state, BuildingSaveData savingBuildingData)
         {
             if (savingBuildings.Contains(savingBuildingData.Id))
                 return false;
             savingBuildings.Add(savingBuildingData.Id);
-            // Update building
             var updateResult = await DatabaseClient.UpdateBuildingAsync(new UpdateBuildingReq()
             {
                 State = state,
@@ -260,10 +343,34 @@ namespace MultiplayerARPG.MMO
                 MapName = CurrentMapInfo.Id,
                 BuildingData = savingBuildingData,
             });
-            // Update done, clear pending status data
             savingBuildings.TryRemove(savingBuildingData.Id);
             if (LogDebug)
-                Logging.Log(LogTag, $"Building [{savingBuildingData.Id}] Saved, Success? {updateResult.IsSuccess}");
+                Logging.Log(LogTag, $"Building [{savingBuildingData.Id}] Save Enqueued, Success? {updateResult.IsSuccess}");
+            return updateResult.IsSuccess;
+        }
+
+        internal async UniTask<bool> ForceSaveBuilding(TransactionUpdateBuildingState state, BuildingSaveData savingBuildingData)
+        {
+            int waitLoops = 0;
+            while (savingBuildings.Contains(savingBuildingData.Id))
+            {
+                waitLoops++;
+                if (waitLoops > 300)
+                    break;
+                await UniTask.Delay(50);
+            }
+
+            savingBuildings.Add(savingBuildingData.Id);
+            var updateResult = await DatabaseClient.UpdateBuildingAsync(new UpdateBuildingReq()
+            {
+                State = state,
+                ChannelId = ChannelId,
+                MapName = CurrentMapInfo.Id,
+                BuildingData = savingBuildingData,
+            });
+            savingBuildings.TryRemove(savingBuildingData.Id);
+            if (LogDebug)
+                Logging.Log(LogTag, $"Building [{savingBuildingData.Id}] Forced Save Enqueued, Success? {updateResult.IsSuccess}");
             return updateResult.IsSuccess;
         }
 #endif
@@ -288,6 +395,36 @@ namespace MultiplayerARPG.MMO
         {
             int count = 0;
             while (!await SaveBuilding(state, savingBuildingData))
+            {
+                count++;
+                if (count > retireAttempts)
+                    return false;
+                await UniTask.Delay(retireDelayMs);
+            }
+            return true;
+        }
+#endif
+
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        internal async UniTask<bool> WaitAndForceSaveBuilding(TransactionUpdateBuildingState state, BuildingSaveData savingBuildingData, CancellationToken cancellationToken, byte retireAttempts = 60, int retireDelayMs = 100)
+        {
+            int count = 0;
+            while (!await ForceSaveBuilding(state, savingBuildingData))
+            {
+                count++;
+                if (count > retireAttempts)
+                    return false;
+                await UniTask.Delay(retireDelayMs, cancellationToken: cancellationToken);
+            }
+            return true;
+        }
+#endif
+
+#if (UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE
+        internal async UniTask<bool> WaitAndForceSaveBuilding(TransactionUpdateBuildingState state, BuildingSaveData savingBuildingData, byte retireAttempts = 60, int retireDelayMs = 100)
+        {
+            int count = 0;
+            while (!await ForceSaveBuilding(state, savingBuildingData))
             {
                 count++;
                 if (count > retireAttempts)

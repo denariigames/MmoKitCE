@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
+using UnityEngine.Pool;
 using UnityEngine.Serialization;
 
 namespace MultiplayerARPG
@@ -85,27 +86,41 @@ namespace MultiplayerARPG
             base.OnDestroy();
         }
 
-        private void Entity_onNotifyEnemySpotted(BaseCharacterEntity enemy)
+        private void Entity_onNotifyEnemySpotted(BaseCharacterEntity target, BaseCharacterEntity enemy)
         {
             if (Entity.Characteristic != MonsterCharacteristic.Assist)
                 return;
             // Warn that this character received damage to nearby characters
-            List<BaseCharacterEntity> foundCharacters = Entity.FindAliveEntities<BaseCharacterEntity>(CharacterDatabase.VisualRange, true, false, false, CurrentGameInstance.playerLayer.Mask | CurrentGameInstance.playingLayer.Mask | CurrentGameInstance.monsterLayer.Mask);
-            if (foundCharacters == null || foundCharacters.Count == 0) return;
-            foreach (BaseCharacterEntity foundCharacter in foundCharacters)
+            using (CollectionPool<List<BaseCharacterEntity>, BaseCharacterEntity>.Get(out List<BaseCharacterEntity> foundCharacters))
             {
-                foundCharacter.NotifyEnemySpottedByAlly(Entity, enemy);
+                Entity.FindAliveEntities(foundCharacters, CharacterDatabase.VisualRange, true, false, false, CurrentGameInstance.playerLayer.Mask | CurrentGameInstance.playingLayer.Mask | CurrentGameInstance.monsterLayer.Mask);
+                if (foundCharacters == null || foundCharacters.Count == 0) return;
+                foreach (BaseCharacterEntity foundCharacter in foundCharacters)
+                {
+                    foundCharacter.NotifyEnemySpottedByAlly(Entity, enemy);
+                }
             }
         }
 
-        private void Entity_onNotifyEnemySpottedByAlly(BaseCharacterEntity ally, BaseCharacterEntity enemy)
+        private void Entity_onNotifyEnemySpottedByAlly(BaseCharacterEntity target, BaseCharacterEntity ally, BaseCharacterEntity enemy)
         {
             if ((Entity.SummonerEntity != null && Entity.SummonerEntity == ally) ||
                 Entity.Characteristic == MonsterCharacteristic.Assist)
                 Entity.SetAttackTarget(enemy);
         }
 
-        private void Entity_onReceivedDamage(HitBoxPosition position, Vector3 fromPosition, EntityInfo instigator, CombatAmountType combatAmountType, int totalDamage, CharacterItem weapon, BaseSkill skill, int skillLevel, CharacterBuff buff, bool isDamageOverTime)
+        private void Entity_onReceivedDamage(
+            DamageableEntity target,
+            HitBoxPosition position,
+            Vector3 fromPosition,
+            EntityInfo instigator,
+            CombatAmountType combatAmountType,
+            int totalDamage,
+            CharacterItem weapon,
+            BaseSkill skill,
+            int skillLevel,
+            CharacterBuff buff,
+            bool isDamageOverTime)
         {
             if (!instigator.TryGetEntity(out BaseCharacterEntity attackerCharacter))
                 return;
@@ -478,22 +493,24 @@ namespace MultiplayerARPG
                 {
                     isAggressive = isAggressive || aggressiveWhileSummoned;
                     // Find enemy around summoner
-                    _enemies.AddRange(Entity.FindAliveEntities<DamageableEntity>(
+                    Entity.FindAliveEntities(
+                        _enemies,
                         Entity.SummonerEntity.EntityTransform.position,
                         CharacterDatabase.SummonedVisualRange,
                         false, /* Don't find an allies */
                         isAggressive,  /* Find an enemies */
                         isAggressive,  /* Find an neutral */
-                        overlapMask));
+                        overlapMask);
                 }
                 else
                 {
-                    _enemies.AddRange(Entity.FindAliveEntities<DamageableEntity>(
+                    Entity.FindAliveEntities(
+                        _enemies,
                         CharacterDatabase.VisualRange,
                         false, /* Don't find an allies */
                         true,  /* Find an enemies */
                         false, /* Don't find an neutral */
-                        overlapMask));
+                        overlapMask);
                 }
                 // Find one enemy from a found list
                 if (FindOneEnemyFromList(isSummonedAndSummonerExisted, out enemy))

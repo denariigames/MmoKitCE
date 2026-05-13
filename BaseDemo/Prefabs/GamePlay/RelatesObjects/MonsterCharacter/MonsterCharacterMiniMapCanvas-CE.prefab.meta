@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2d0368f81f8351144a6b29dc200981b4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/Gameplay/RelatesObjects/MonsterCharacter/MonsterCharacterMiniMapCanvas.prefab
+  uploadId: 857340

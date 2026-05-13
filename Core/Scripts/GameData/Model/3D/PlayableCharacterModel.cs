@@ -86,7 +86,7 @@ namespace MultiplayerARPG.GameData.Model.Playables
             Entity.onIsUpdateEntityComponentsChanged += CacheEntity_onUpdateEntityComponentsChanged;
         }
 
-        private void CacheEntity_onUpdateEntityComponentsChanged(bool isUpdate)
+        private void CacheEntity_onUpdateEntityComponentsChanged(BaseGameEntity target, bool isUpdate)
         {
             if (!isUpdate)
             {

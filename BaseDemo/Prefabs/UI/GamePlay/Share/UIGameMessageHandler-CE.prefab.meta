@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: fabb6b3cc1077e44d96a1c03b770a62f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/_Gameplay/Share/UIGameMessageHandler.prefab
+  uploadId: 857340

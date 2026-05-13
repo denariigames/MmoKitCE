@@ -256,21 +256,21 @@ namespace MultiplayerARPG
         {
             EntityStart();
             if (onStart != null)
-                onStart.Invoke();
+                onStart.Invoke(this);
         }
         protected virtual void EntityStart() { }
 
         public override void OnIdentityInitialize()
         {
             if (onIdentityInitialize != null)
-                onIdentityInitialize.Invoke();
+                onIdentityInitialize.Invoke(this);
         }
 
         private void OnDestroy()
         {
             EntityOnDestroy();
             if (onDestroy != null)
-                onDestroy.Invoke();
+                onDestroy.Invoke(this);
             this.InvokeInstanceDevExtMethods("OnDestroy");
             Clean();
         }
@@ -287,7 +287,7 @@ namespace MultiplayerARPG
         {
             EntityOnEnable();
             if (onEnable != null)
-                onEnable.Invoke();
+                onEnable.Invoke(this);
             UpdateManager.Register(DefaultExecutionOrders.BASE_GAME_ENTITY, this);
         }
         protected virtual void EntityOnEnable() { }
@@ -296,7 +296,7 @@ namespace MultiplayerARPG
         {
             EntityOnDisable();
             if (onDisable != null)
-                onDisable.Invoke();
+                onDisable.Invoke(this);
             UpdateManager.Unregister(DefaultExecutionOrders.BASE_GAME_ENTITY, this);
         }
         protected virtual void EntityOnDisable() { }
@@ -329,7 +329,7 @@ namespace MultiplayerARPG
             }
             EntityOnSetOwnerClient(isOwnerClient);
             if (onSetOwnerClient != null)
-                onSetOwnerClient.Invoke();
+                onSetOwnerClient.Invoke(this);
         }
 
         protected virtual void EntityOnSetOwnerClient(bool isOwnerClient)
@@ -357,7 +357,7 @@ namespace MultiplayerARPG
             using (s_OnUpdateInvokeProfilerMarker.Auto())
             {
                 if (onUpdate != null)
-                    onUpdate.Invoke();
+                    onUpdate.Invoke(this);
             }
         }
 
@@ -429,7 +429,7 @@ namespace MultiplayerARPG
                 {
                     _wasUpdateEntityComponents = isUpdateEntityComponents;
                     if (onIsUpdateEntityComponentsChanged != null)
-                        onIsUpdateEntityComponentsChanged.Invoke(isUpdateEntityComponents);
+                        onIsUpdateEntityComponentsChanged.Invoke(this, isUpdateEntityComponents);
                 }
             }
             using (s_EntityLateUpdateProfilerMarker.Auto())
@@ -457,7 +457,7 @@ namespace MultiplayerARPG
             using (s_OnLateUpdateInvokeProfilerMarker.Auto())
             {
                 if (onLateUpdate != null)
-                    onLateUpdate.Invoke();
+                    onLateUpdate.Invoke(this);
             }
         }
 
@@ -499,10 +499,10 @@ namespace MultiplayerARPG
         public override sealed void OnSetup()
         {
             if (onSetup != null)
-                onSetup.Invoke();
+                onSetup.Invoke(this);
             SetupNetElements();
             if (onSetupNetElements != null)
-                onSetupNetElements.Invoke();
+                onSetupNetElements.Invoke(this);
         }
 
         protected virtual void SetupNetElements()
@@ -528,7 +528,7 @@ namespace MultiplayerARPG
         {
             base.OnNetworkDestroy(reasons);
             if (onNetworkDestroy != null)
-                onNetworkDestroy.Invoke(reasons);
+                onNetworkDestroy.Invoke(this, reasons);
         }
 
         public virtual bool IsHide()

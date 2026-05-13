@@ -45,9 +45,16 @@ namespace MultiplayerARPG
             where T : class, IGameEntity
         {
             List<T> result = new List<T>();
+            functions.FindGameEntitiesInDistance(position, distance, layerMask, result);
+            return result;
+        }
+
+        public static void FindGameEntitiesInDistance<T>(this IPhysicFunctions functions, Vector3 position, float distance, int layerMask, List<T> list)
+            where T : class, IGameEntity
+        {
             int tempOverlapSize = functions.OverlapObjects(position, distance, layerMask, hitTriggers: QueryTriggerInteraction.Collide);
             if (tempOverlapSize == 0)
-                return result;
+                return;
             IGameEntity tempBaseEntity;
             T tempEntity;
             for (int tempLoopCounter = 0; tempLoopCounter < tempOverlapSize; ++tempLoopCounter)
@@ -58,11 +65,10 @@ namespace MultiplayerARPG
                 tempEntity = tempBaseEntity.Entity as T;
                 if (tempEntity == null)
                     continue;
-                if (result.Contains(tempEntity))
+                if (list.Contains(tempEntity))
                     continue;
-                result.Add(tempEntity);
+                list.Add(tempEntity);
             }
-            return result;
         }
     }
 }

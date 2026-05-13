@@ -1,7 +1,6 @@
 ﻿using Insthync.UnityEditorUtils;
 using LiteNetLibManager;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.Events;
 
 namespace MultiplayerARPG
@@ -15,25 +14,25 @@ namespace MultiplayerARPG
         public UnityEvent onRespawn = new UnityEvent();
         public UnityEvent onLevelUp = new UnityEvent();
         // Caching
-        public event System.Action onRecached;
+        public event CharacterEntityDelegate onRecached;
         // Sync variables
-        public event System.Action<string> onIdChange;
-        public event System.Action<string> onCharacterNameChange;
-        public event System.Action<int> onLevelChange;
-        public event System.Action<int> onExpChange;
-        public event System.Action<bool> onIsInvincibleChange;
-        public event System.Action<int> onCurrentMpChange;
-        public event System.Action<int> onCurrentStaminaChange;
-        public event System.Action<int> onCurrentFoodChange;
-        public event System.Action<int> onCurrentWaterChange;
-        public event System.Action<byte> onEquipWeaponSetChange;
-        public event System.Action<bool> onIsWeaponsSheathedChange;
-        public event System.Action<ushort> onPitchChange;
-        public event System.Action<Vector3> onLookPositionChange;
-        public event System.Action<AimPosition> onAimPositionChange;
-        public event System.Action<uint> onTargetEntityIdChange;
-        public event System.Action<CharacterMount> onMountChange;
-        public event System.Action<CharacterSummoner> onSummonerChange;
+        public event CharacterEntityStringChangeDelegate onIdChange;
+        public event CharacterEntityStringChangeDelegate onCharacterNameChange;
+        public event CharacterEntityInt32ChangeDelegate onLevelChange;
+        public event CharacterEntityInt32ChangeDelegate onExpChange;
+        public event CharacterEntityBooleanChangeDelegate onIsInvincibleChange;
+        public event CharacterEntityInt32ChangeDelegate onCurrentMpChange;
+        public event CharacterEntityInt32ChangeDelegate onCurrentStaminaChange;
+        public event CharacterEntityInt32ChangeDelegate onCurrentFoodChange;
+        public event CharacterEntityInt32ChangeDelegate onCurrentWaterChange;
+        public event CharacterEntityUInt8ChangeDelegate onEquipWeaponSetChange;
+        public event CharacterEntityBooleanChangeDelegate onIsWeaponsSheathedChange;
+        public event CharacterEntityUInt16ChangeDelegate onPitchChange;
+        public event CharacterEntityVector3ChangeDelegate onLookPositionChange;
+        public event CharacterEntityAimPositionChangeDelegate onAimPositionChange;
+        public event CharacterEntityUInt32ChangeDelegate onTargetEntityIdChange;
+        public event CharacterEntityMountChangeDelegate onMountChange;
+        public event CharacterEntitySummonerChangeDelegate onSummonerChange;
         // Sync lists
         public event LiteNetLibSyncList<EquipWeapons>.OnOperationDelegate onSelectableWeaponSetsOperation;
         public event LiteNetLibSyncList<CharacterAttribute>.OnOperationDelegate onAttributesOperation;
@@ -47,6 +46,10 @@ namespace MultiplayerARPG
         public event AttackRoutineDelegate onAttackRoutine;
         public event UseSkillRoutineDelegate onUseSkillRoutine;
         public event LaunchDamageEntityDelegate onLaunchDamageEntity;
+        public event CanAttackDelegate onCanAttackValidated;
+        public event CanUseSkillDelegate onCanUseSkillValidated;
+        public event CanUseSkillDelegate onCanUseSkillItemValidated;
+        public event CanReloadDelegate onCanReloadValidated;
         // Buff events
         public event ApplyBuffDelegate onApplyBuff;
         public event RemoveBuffDelegate onRemoveBuff;
@@ -74,7 +77,7 @@ namespace MultiplayerARPG
             AimPosition aimPosition)
         {
             if (onAttackRoutine != null)
-                onAttackRoutine.Invoke(isLeftHand, weapon, simulateSeed, triggerIndex, damageInfo, damageAmounts, aimPosition);
+                onAttackRoutine.Invoke(this, isLeftHand, weapon, simulateSeed, triggerIndex, damageInfo, damageAmounts, aimPosition);
         }
 
         public virtual void OnUseSkillRoutine(
@@ -89,7 +92,7 @@ namespace MultiplayerARPG
             AimPosition aimPosition)
         {
             if (onUseSkillRoutine != null)
-                onUseSkillRoutine.Invoke(skill, level, isLeftHand, weapon, simulateSeed, triggerIndex, damageAmounts, targetObjectId, aimPosition);
+                onUseSkillRoutine.Invoke(this, skill, level, isLeftHand, weapon, simulateSeed, triggerIndex, damageAmounts, targetObjectId, aimPosition);
         }
 
         public virtual void OnLaunchDamageEntity(
@@ -104,7 +107,7 @@ namespace MultiplayerARPG
             AimPosition aimPosition)
         {
             if (onLaunchDamageEntity != null)
-                onLaunchDamageEntity.Invoke(isLeftHand, weapon, simulateSeed, triggerIndex, spreadIndex, damageAmounts, skill, skillLevel, aimPosition);
+                onLaunchDamageEntity.Invoke(this, isLeftHand, weapon, simulateSeed, triggerIndex, spreadIndex, damageAmounts, skill, skillLevel, aimPosition);
         }
 
         public virtual void OnRewardItem(RewardGivenType givenType, BaseItem item, int amount)

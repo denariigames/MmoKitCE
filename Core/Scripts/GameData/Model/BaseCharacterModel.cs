@@ -177,7 +177,7 @@ namespace MultiplayerARPG
 
         // Public events
         public event UpdateEquipmentModelsDelegate onBeforeUpdateEquipmentModels;
-        public event OnInstantiatedEquipmentDelegate onInstantiatedEquipment;
+        public event OnCharacterEquipmentModelInstantiateDelegate onInstantiatedEquipment;
 
         // Optimize garbage collector
         protected readonly List<string> _tempAddingKeys = new List<string>();
@@ -458,7 +458,7 @@ namespace MultiplayerARPG
 
             // Setup appearances before equip items
             if (onBeforeUpdateEquipmentModels != null)
-                onBeforeUpdateEquipmentModels.Invoke(cancellationTokenSource, this, showingModels, storingModels, unequippingSockets);
+                onBeforeUpdateEquipmentModels.Invoke(this, cancellationTokenSource, showingModels, storingModels, unequippingSockets);
 
             // Setup equipping models from equip items
             if (equipItems != null && equipItems.Count > 0)
@@ -713,7 +713,7 @@ namespace MultiplayerARPG
             }
         }
 
-        public async UniTask SetupEquippingModels(CancellationTokenSource cancellationTokenSource, Dictionary<string, EquipmentModel> showingModels, Dictionary<string, EquipmentModel> storingModels, HashSet<string> unequippingSockets, EquipmentModel[] equipmentModels, string equipPosition, CharacterItem item, bool isSheathModels = false, byte equipWeaponSet = 0, EquipmentModelDelegate onInstantiated = null)
+        public async UniTask SetupEquippingModels(CancellationTokenSource cancellationTokenSource, Dictionary<string, EquipmentModel> showingModels, Dictionary<string, EquipmentModel> storingModels, HashSet<string> unequippingSockets, EquipmentModel[] equipmentModels, string equipPosition, CharacterItem item, bool isSheathModels = false, byte equipWeaponSet = 0, OnEquipmentModelInstantiateDelegate onInstantiated = null)
         {
             if (equipmentModels == null || equipmentModels.Length == 0 || string.IsNullOrWhiteSpace(equipPosition))
                 return;
@@ -1025,7 +1025,7 @@ namespace MultiplayerARPG
 
         public virtual void OnInstantiatedEquipment(EquipmentModel model, GameObject instantiatedObject, BaseEquipmentEntity instantiatedEntity, EquipmentInstantiatedObjectGroup instantiatedObjectGroup, EquipmentContainer equipmentContainer)
         {
-            onInstantiatedEquipment?.Invoke(model, instantiatedObject, instantiatedEntity, instantiatedObjectGroup, equipmentContainer);
+            onInstantiatedEquipment?.Invoke(this, model, instantiatedObject, instantiatedEntity, instantiatedObjectGroup, equipmentContainer);
             if (model.useInstantiatedObject || model.doNotSetupBones)
                 return;
             BaseEquipmentModelBonesSetupManager equipmentModelBonesSetupManager = GameInstance.Singleton.EquipmentModelBonesSetupManager;

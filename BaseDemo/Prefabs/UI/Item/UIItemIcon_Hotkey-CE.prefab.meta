@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 7747648e954261949a26cb13231f31d0
+timeCreated: 1520191362
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 110188
+  packageName: MMORPG KIT (2D/3D/Survival)
+  packageVersion: 1.97b
+  assetPath: Assets/UnityMultiplayerARPG/Demo/Prefabs/UI/Item/UIItemIcon_Hotkey.prefab
+  uploadId: 857340
