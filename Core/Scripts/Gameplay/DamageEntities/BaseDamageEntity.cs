@@ -46,13 +46,9 @@ namespace MultiplayerARPG
         {
             get
             {
-#if UNITY_SERVER && !UNITY_EDITOR
-                return null;
-#else
                 if (_fxCollection == null && gameObject != null)
                     _fxCollection = new FxCollection(gameObject);
                 return _fxCollection;
-#endif
             }
         }
         private bool _playFxOnEnable;
