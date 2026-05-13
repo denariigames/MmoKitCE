@@ -141,6 +141,7 @@ namespace MultiplayerARPG.MMO
         public bool startMapSpawnOnAwake;
         public bool startDatabaseOnAwake;
         public bool startMapOnAwake;
+        public string startingChannelId;
         public BaseMapInfo startingMap;
         public int databaseOptionIndex;
         [FormerlySerializedAs("databaseDisableCacheReading")]
@@ -948,6 +949,7 @@ namespace MultiplayerARPG.MMO
             MapNetworkManager.webSocketSecure = WebSocketSecure;
             MapNetworkManager.webSocketCertificateFilePath = WebSocketCertificateFilePath;
             MapNetworkManager.webSocketCertificatePassword = WebSocketCertificatePassword;
+            MapNetworkManager.ChannelId = startingChannelId;
             MapNetworkManager.StartServer();
         }
 
