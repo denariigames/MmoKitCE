@@ -232,7 +232,7 @@ namespace MultiplayerARPG
             _findEnemyCountDown -= deltaTime;
             if (_enemies.Count <= 0 && _findEnemyCountDown > 0f)
                 return;
-            _findEnemyCountDown = Random.Range(findEnemyDelayMin, findEnemyDelayMin);
+            _findEnemyCountDown = Random.Range(findEnemyDelayMin, findEnemyDelayMax);
             if (!FindEnemy())
                 return;
             _enemyExisted = true;
