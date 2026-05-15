@@ -60,7 +60,6 @@ namespace MultiplayerARPG
         public BaseMapInfo[] mapInfos;
         public Quest[] quests;
         public Faction[] factions;
-        public Gacha[] gachas;
 
         protected override UniTask LoadDataImplement(GameInstance gameInstance)
         {
@@ -111,7 +110,6 @@ namespace MultiplayerARPG
             GameInstance.AddMapInfos(mapInfos);
             GameInstance.AddQuests(quests);
             GameInstance.AddFactions(factions);
-            GameInstance.AddGachas(gachas);
             this.InvokeInstanceDevExtMethods("LoadDataImplement", gameInstance);
             return default;
         }
@@ -142,7 +140,6 @@ namespace MultiplayerARPG
             GameInstance.AddMapInfos(mapInfos);
             GameInstance.AddQuests(quests);
             GameInstance.AddFactions(factions);
-            GameInstance.AddGachas(gachas);
 #if !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
             GameInstance.AddPlayerCharacterEntities(playerCharacterEntities);
 #endif
@@ -251,9 +248,6 @@ namespace MultiplayerARPG
 
             List<Faction> tempFactions = new List<Faction>(GameInstance.Factions.Values);
             factions = tempFactions.ToArray();
-
-            List<Gacha> tempGachas = new List<Gacha>(GameInstance.Gachas.Values);
-            gachas = tempGachas.ToArray();
 
             this.InvokeInstanceDevExtMethods("LoadReferredData");
 #if UNITY_EDITOR

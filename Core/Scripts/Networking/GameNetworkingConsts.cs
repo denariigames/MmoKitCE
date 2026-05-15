@@ -26,10 +26,6 @@
         public const ushort FormattedGameMessage = 121;
         public const ushort UpdateServerInfo = 122;
         // Networking requests/responses
-        public const ushort CashShopInfo = 100;
-        public const ushort CashShopBuy = 101;
-        public const ushort CashPackageInfo = 102;
-        public const ushort CashPackageBuyValidation = 103;
         public const ushort MailList = 104;
         public const ushort ReadMail = 105;
         public const ushort ClaimMailItems = 106;
@@ -100,8 +96,6 @@
         public const ushort ChangeGuildAutoAcceptRequests = 171;
         public const ushort ClaimAllMailsItems = 172;
         public const ushort DeleteAllMails = 173;
-        public const ushort GachaInfo = 174;
-        public const ushort OpenGacha = 175;
         public const ushort GetGuildInfo = 176;
         public const ushort FriendRequestNotification = 178;
         public const ushort GuildRequestNotification = 179;

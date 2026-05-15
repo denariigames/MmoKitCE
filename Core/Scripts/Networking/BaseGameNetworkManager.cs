@@ -220,10 +220,8 @@ namespace MultiplayerARPG
             GameInstance.JoinedGuild = null;
             PoolSystem.Clear();
             ClientBankActions.Clean();
-            ClientCashShopActions.Clean();
             ClientCharacterActions.Clean();
             ClientFriendActions.Clean();
-            ClientGachaActions.Clean();
             ClientGenericActions.Clean();
             ClientGuildActions.Clean();
             ClientInventoryActions.Clean();

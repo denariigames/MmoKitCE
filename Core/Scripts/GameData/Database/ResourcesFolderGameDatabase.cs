@@ -29,7 +29,6 @@ namespace MultiplayerARPG
             MonsterCharacter[] monsterCharacters = Resources.LoadAll<MonsterCharacter>("");
             BaseMapInfo[] mapInfos = Resources.LoadAll<BaseMapInfo>("");
             Faction[] factions = Resources.LoadAll<Faction>("");
-            Gacha[] gachas = Resources.LoadAll<Gacha>("");
             BasePlayerCharacterEntity[] playerCharacterEntities = Resources.LoadAll<BasePlayerCharacterEntity>("");
             BaseMonsterCharacterEntity[] monsterCharacterEntities = Resources.LoadAll<BaseMonsterCharacterEntity>("");
             VehicleEntity[] vehicleEntities = Resources.LoadAll<VehicleEntity>("");
@@ -50,7 +49,6 @@ namespace MultiplayerARPG
             GameInstance.AddCharacters(monsterCharacters);
             GameInstance.AddMapInfos(mapInfos);
             GameInstance.AddFactions(factions);
-            GameInstance.AddGachas(gachas);
 #if !EXCLUDE_PREFAB_REFS || DISABLE_ADDRESSABLES
             GameInstance.AddPlayerCharacterEntities(playerCharacterEntities);
             GameInstance.AddMonsterCharacterEntities(monsterCharacterEntities);

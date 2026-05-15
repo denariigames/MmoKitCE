@@ -73,10 +73,6 @@ namespace MultiplayerARPG
         protected bool deadDropProtected;
 
 
-        [Category(100, "Cash Shop Generating Settings")]
-        [SerializeField]
-        protected CashShopItemGeneratingData[] cashShopItemGeneratingList = new CashShopItemGeneratingData[0];
-
         public override string Title
         {
             get
@@ -204,23 +200,6 @@ namespace MultiplayerARPG
                 ItemRefine.PrepareRelatesData();
             GameInstance.AddItems(DismantleReturnItems);
             GameInstance.AddCurrencies(DismantleReturnCurrencies);
-        }
-
-        public void GenerateCashShopItems()
-        {
-            if (cashShopItemGeneratingList == null || cashShopItemGeneratingList.Length == 0)
-                return;
-
-            CashShopItemGeneratingData generatingData;
-            CashShopItem cashShopItem;
-            for (int i = 0; i < cashShopItemGeneratingList.Length; ++i)
-            {
-                generatingData = cashShopItemGeneratingList[i];
-                cashShopItem = CreateInstance<CashShopItem>();
-                cashShopItem.name = $"<CASHSHOPITEM_{name}_{i}>";
-                cashShopItem.GenerateByItem(this, generatingData);
-                GameInstance.CashShopItems[cashShopItem.DataId] = cashShopItem;
-            }
         }
     }
 }

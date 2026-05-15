@@ -35,7 +35,6 @@ namespace MultiplayerARPG
         public static readonly Dictionary<int, PlayerTitle> PlayerTitles = new Dictionary<int, PlayerTitle>();
         public static readonly Dictionary<int, GuildSkill> GuildSkills = new Dictionary<int, GuildSkill>();
         public static readonly Dictionary<int, GuildIcon> GuildIcons = new Dictionary<int, GuildIcon>();
-        public static readonly Dictionary<int, Gacha> Gachas = new Dictionary<int, Gacha>();
         public static readonly Dictionary<int, StatusEffect> StatusEffects = new Dictionary<int, StatusEffect>();
         public static readonly Dictionary<int, DamageElement> DamageElements = new Dictionary<int, DamageElement>();
         public static readonly Dictionary<int, EquipmentSet> EquipmentSets = new Dictionary<int, EquipmentSet>();
@@ -442,16 +441,6 @@ namespace MultiplayerARPG
         public static void AddGuildIcons(IEnumerable<GuildIcon> guildIcons)
         {
             AddManyGameData(GuildIcons, guildIcons);
-        }
-
-        public static void AddGachas(params Gacha[] gachas)
-        {
-            AddGachas((IEnumerable<Gacha>)gachas);
-        }
-
-        public static void AddGachas(IEnumerable<Gacha> gachas)
-        {
-            AddManyGameData(Gachas, gachas);
         }
 
         public static void AddStatusEffects(params StatusEffectApplying[] statusEffects)

@@ -1,3 +1,4 @@
+using Insthync.DevExtension;
 using LiteNetLibManager;
 
 namespace MultiplayerARPG
@@ -17,26 +18,22 @@ namespace MultiplayerARPG
         protected IServerUserContentHandlers ServerUserContentHandlers { get; set; }
         protected IServerLogHandlers ServerLogHandlers { get; set; }
         // Server Message Handlers
-        protected IServerCashShopMessageHandlers ServerCashShopMessageHandlers { get; set; }
         protected IServerMailMessageHandlers ServerMailMessageHandlers { get; set; }
         protected IServerStorageMessageHandlers ServerStorageMessageHandlers { get; set; }
         protected IServerCharacterMessageHandlers ServerCharacterMessageHandlers { get; set; }
         protected IServerInventoryMessageHandlers ServerInventoryMessageHandlers { get; set; }
         protected IServerPartyMessageHandlers ServerPartyMessageHandlers { get; set; }
         protected IServerGuildMessageHandlers ServerGuildMessageHandlers { get; set; }
-        protected IServerGachaMessageHandlers ServerGachaMessageHandlers { get; set; }
         protected IServerFriendMessageHandlers ServerFriendMessageHandlers { get; set; }
         protected IServerBankMessageHandlers ServerBankMessageHandlers { get; set; }
         protected IServerUserContentMessageHandlers ServerUserContentMessageHandlers { get; set; }
         // Client handlers
-        protected IClientCashShopHandlers ClientCashShopHandlers { get; set; }
         protected IClientMailHandlers ClientMailHandlers { get; set; }
         protected IClientStorageHandlers ClientStorageHandlers { get; set; }
         protected IClientCharacterHandlers ClientCharacterHandlers { get; set; }
         protected IClientInventoryHandlers ClientInventoryHandlers { get; set; }
         protected IClientPartyHandlers ClientPartyHandlers { get; set; }
         protected IClientGuildHandlers ClientGuildHandlers { get; set; }
-        protected IClientGachaHandlers ClientGachaHandlers { get; set; }
         protected IClientFriendHandlers ClientFriendHandlers { get; set; }
         protected IClientBankHandlers ClientBankHandlers { get; set; }
         protected IClientUserContentHandlers ClientUserContentHandlers { get; set; }
@@ -82,14 +79,6 @@ namespace MultiplayerARPG
                 RegisterServerMessage(GameNetworkingConsts.NotifyOnlineCharacter, ServerCharacterHandlers.HandleRequestOnlineCharacter);
             }
             // Request to server (response to client)
-            // Cash shop
-            if (ServerCashShopMessageHandlers != null)
-            {
-                RegisterRequestToServer<EmptyMessage, ResponseCashShopInfoMessage>(GameNetworkingConsts.CashShopInfo, ServerCashShopMessageHandlers.HandleRequestCashShopInfo);
-                RegisterRequestToServer<EmptyMessage, ResponseCashPackageInfoMessage>(GameNetworkingConsts.CashPackageInfo, ServerCashShopMessageHandlers.HandleRequestCashPackageInfo);
-                RegisterRequestToServer<RequestCashShopBuyMessage, ResponseCashShopBuyMessage>(GameNetworkingConsts.CashShopBuy, ServerCashShopMessageHandlers.HandleRequestCashShopBuy);
-                RegisterRequestToServer<RequestCashPackageBuyValidationMessage, ResponseCashPackageBuyValidationMessage>(GameNetworkingConsts.CashPackageBuyValidation, ServerCashShopMessageHandlers.HandleRequestCashPackageBuyValidation);
-            }
             // Mail
             if (ServerMailMessageHandlers != null)
             {
@@ -182,12 +171,6 @@ namespace MultiplayerARPG
                 RegisterRequestToServer<RequestGetGuildInfoMessage, ResponseGetGuildInfoMessage>(GameNetworkingConsts.GetGuildInfo, ServerGuildMessageHandlers.HandleRequestGetGuildInfo);
                 RegisterRequestToServer<EmptyMessage, ResponseGuildRequestNotificationMessage>(GameNetworkingConsts.GuildRequestNotification, ServerGuildMessageHandlers.HandleRequestGuildRequestNotification);
             }
-            // Gacha
-            if (ServerGachaMessageHandlers != null)
-            {
-                RegisterRequestToServer<EmptyMessage, ResponseGachaInfoMessage>(GameNetworkingConsts.GachaInfo, ServerGachaMessageHandlers.HandleRequestGachaInfo);
-                RegisterRequestToServer<RequestOpenGachaMessage, ResponseOpenGachaMessage>(GameNetworkingConsts.OpenGacha, ServerGachaMessageHandlers.HandleRequestOpenGacha);
-            }
             // Friend
             if (ServerFriendMessageHandlers != null)
             {
@@ -216,6 +199,8 @@ namespace MultiplayerARPG
                 RegisterRequestToServer<RequestAvailableContentsMessage, ResponseAvailableContentsMessage>(GameNetworkingConsts.AvailableContents, ServerUserContentMessageHandlers.HandleRequestAvailableContents);
                 RegisterRequestToServer<RequestUnlockContentMessage, ResponseUnlockContentMessage>(GameNetworkingConsts.UnlockContent, ServerUserContentMessageHandlers.HandleRequestUnlockContent);
             }
+
+            this.InvokeInstanceDevExtMethods("RegisterHandlerMessages");
         }
 
         protected virtual void CleanHandlers()
@@ -257,19 +242,19 @@ namespace MultiplayerARPG
 
         protected virtual void SetClientHandlersRef()
         {
-            GameInstance.ClientCashShopHandlers = ClientCashShopHandlers;
             GameInstance.ClientMailHandlers = ClientMailHandlers;
             GameInstance.ClientStorageHandlers = ClientStorageHandlers;
             GameInstance.ClientCharacterHandlers = ClientCharacterHandlers;
             GameInstance.ClientInventoryHandlers = ClientInventoryHandlers;
             GameInstance.ClientPartyHandlers = ClientPartyHandlers;
             GameInstance.ClientGuildHandlers = ClientGuildHandlers;
-            GameInstance.ClientGachaHandlers = ClientGachaHandlers;
             GameInstance.ClientFriendHandlers = ClientFriendHandlers;
             GameInstance.ClientBankHandlers = ClientBankHandlers;
             GameInstance.ClientUserContentHandlers = ClientUserContentHandlers;
             GameInstance.ClientOnlineCharacterHandlers = ClientOnlineCharacterHandlers;
             GameInstance.ClientChatHandlers = ClientChatHandlers;
+
+            this.InvokeInstanceDevExtMethods("SetClientHandlersRef");
         }
     }
 }

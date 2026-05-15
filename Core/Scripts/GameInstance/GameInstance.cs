@@ -11,9 +11,6 @@ using UnityEngine.AddressableAssets;
 #endif
 using UnityEngine.Rendering;
 using UnityEngine.Serialization;
-#if ENABLE_PURCHASING && (UNITY_IOS || UNITY_ANDROID)
-using UnityEngine.Purchasing;
-#endif
 
 namespace MultiplayerARPG
 {
@@ -76,14 +73,12 @@ namespace MultiplayerARPG
 
         public static readonly string LogTag = nameof(GameInstance);
         public static GameInstance Singleton { get; protected set; }
-        public static IClientCashShopHandlers ClientCashShopHandlers { get; set; }
         public static IClientMailHandlers ClientMailHandlers { get; set; }
         public static IClientCharacterHandlers ClientCharacterHandlers { get; set; }
         public static IClientInventoryHandlers ClientInventoryHandlers { get; set; }
         public static IClientStorageHandlers ClientStorageHandlers { get; set; }
         public static IClientPartyHandlers ClientPartyHandlers { get; set; }
         public static IClientGuildHandlers ClientGuildHandlers { get; set; }
-        public static IClientGachaHandlers ClientGachaHandlers { get; set; }
         public static IClientFriendHandlers ClientFriendHandlers { get; set; }
         public static IClientBankHandlers ClientBankHandlers { get; set; }
         public static IClientUserContentHandlers ClientUserContentHandlers { get; set; }
@@ -1630,7 +1625,6 @@ namespace MultiplayerARPG
             PlayerTitles.Clear();
             GuildSkills.Clear();
             GuildIcons.Clear();
-            Gachas.Clear();
             StatusEffects.Clear();
             DamageElements.Clear();
             EquipmentSets.Clear();
@@ -1761,9 +1755,6 @@ namespace MultiplayerARPG
 
             if (npcDatabase != null && npcDatabase.maps != null)
                 AddMapNpcs(npcDatabase.maps);
-
-            if (Application.isPlaying)
-                InitializePurchasing();
 
             System.GC.Collect();
             OnGameDataLoaded();
