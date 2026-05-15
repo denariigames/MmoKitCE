@@ -28,8 +28,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1278824955568960}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2976495, y: 0.37067005, z: -0.12672809, w: 0.87060237}
-  m_LocalPosition: {x: -5.699713, y: 6.8721733, z: -5.48017}
+  m_LocalRotation: {x: 0.033884935, y: 0.23922172, z: -0.008353806, w: 0.97033757}
+  m_LocalPosition: {x: -2.5502703, y: 1.1336606, z: -4.8578725}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -102,12 +102,15 @@ MonoBehaviour:
   targetCamera: {fileID: 20186615803325660}
   target: {fileID: 0}
   targetOffset: {x: 0, y: 0.75, z: 0}
+  updateCameraOnUpdate: 0
+  updateCameraOnLateUpdate: 1
+  updateCameraOnFixedUpdate: 0
   smoothFollow: 0
   followSmoothing: 10
-  xRotation: 37.75
-  yRotation: 46.125
+  xRotation: 4
+  yRotation: -332.30157
   useTargetYRotation: 0
-  zoomDistance: 10
+  zoomDistance: 5.5
   zoomByAspectRatio: 0
   zoomByAspectRatioSettings:
   - width: 16
@@ -126,6 +129,9 @@ MonoBehaviour:
     height: 4
     zoomDistance: 7
   enableWallHitSpring: 1
+  minDistanceToPerformWallHitSpring: 1
+  wallHitSpringPushForwardDistance: 0.5
+  wallHitSpringRadius: 0.5
   wallHitLayerMask:
     serializedVersion: 2
     m_Bits: 24577
@@ -160,7 +166,7 @@ MonoBehaviour:
   smoothZoom: 0
   zoomDeacceleration: 10
   startZoomDistance: 3
-  zoomSpeed: -5
+  zoomSpeed: 500
   zoomSpeedScale: 1
   enableAimAssist: 0
   enableAimAssistX: 1
@@ -284,7 +290,7 @@ Camera:
   m_GameObject: {fileID: 1875850924656240}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 3
+  m_ClearFlags: 4
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -340,6 +346,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   copyFromCamera: {fileID: 20186615803325660}
   copyToCamera: {fileID: 20441234044108766}
+  copyOrthographic: 1
+  copyOrthographicSize: 1
+  copyNearClipPlane: 1
+  copyFarClipPlane: 1
+  copyFieldOfView: 1
+  copyRect: 1
+  copyUsePhysicalProperties: 1
+  copyFocalLength: 1
+  copySensorSize: 1
+  copyLensShift: 1
 --- !u!114 &2658823881270596700
 MonoBehaviour:
   m_ObjectHideFlags: 0

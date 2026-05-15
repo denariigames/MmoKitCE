@@ -126,7 +126,9 @@ namespace MultiplayerARPG.MMO
 #endif
                 seconds--;
             } while (seconds > 0);
+#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
             await FlushCharacterSavesAsync();
+#endif
             await UniTask.Yield();
             ReadyToQuit = true;
             // Request to quit again
@@ -161,6 +163,7 @@ namespace MultiplayerARPG.MMO
 #endif
         }
 
+#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
         public void EnqueueCharacterSave(UpdateCharacterReq request, bool forceImmediate = false)
         {
             if (_characterSaveScheduler == null)
@@ -168,6 +171,7 @@ namespace MultiplayerARPG.MMO
 
             _characterSaveScheduler.Enqueue(request, forceImmediate);
         }
+
 
         public async UniTask<bool> InternalPersistCharacterUpdate(UpdateCharacterReq request)
         {
@@ -192,6 +196,7 @@ namespace MultiplayerARPG.MMO
                 return false;
             }
         }
+
 
         public async UniTask FlushCharacterSavesAsync()
         {
@@ -275,6 +280,7 @@ namespace MultiplayerARPG.MMO
                     return list;
                 });
         }
+#endif
 
         protected override void RegisterMessages()
         {

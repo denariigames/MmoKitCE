@@ -7,6 +7,7 @@ namespace MultiplayerARPG.MMO
 {
     public sealed class DatabaseCharacterSaveScheduler
     {
+#if NET || NETCOREAPP || ((UNITY_EDITOR || UNITY_SERVER || !EXCLUDE_SERVER_CODES) && UNITY_STANDALONE)
         private sealed class PendingCharacterSave
         {
             public string CharacterId;
@@ -163,7 +164,7 @@ namespace MultiplayerARPG.MMO
                 }
                 catch (Exception ex)
                 {
-                     System.Console.WriteLine($"[{nameof(DatabaseCharacterSaveScheduler)}] {ex}");
+                    System.Console.WriteLine($"[{nameof(DatabaseCharacterSaveScheduler)}] {ex}");
                 }
             }
         }
@@ -289,5 +290,6 @@ namespace MultiplayerARPG.MMO
         {
             return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000d;
         }
+#endif
     }
 }
