@@ -119,6 +119,431 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &75195801
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 75195803}
+  - component: {fileID: 75195802}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &75195802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 75195801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &75195803
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 75195801}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -300, y: 0, z: 75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &108748492
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 108748494}
+  - component: {fileID: 108748493}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &108748493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 108748492}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &108748494
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 108748492}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -300, y: 0, z: -250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &241367927
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 241367929}
+  - component: {fileID: 241367928}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &241367928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 241367927}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &241367929
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 241367927}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 300, y: 0, z: 250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &416213925
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 416213927}
+  - component: {fileID: 416213926}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &416213926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416213925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &416213927
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416213925}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 150, y: 0, z: -200}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &650788072
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 650788074}
+  - component: {fileID: 650788073}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &650788073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 650788072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &650788074
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 650788072}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 300, y: 0, z: 75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &753375340
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -175,16 +600,390 @@ PrefabInstance:
       propertyPath: m_Name
       value: BaseMap
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: d8307d783921f7642a4590ea4a6b079e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d8307d783921f7642a4590ea4a6b079e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 753375343}
   m_SourcePrefab: {fileID: 100100000, guid: d8307d783921f7642a4590ea4a6b079e, type: 3}
 --- !u!4 &753375341 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: d8307d783921f7642a4590ea4a6b079e, type: 3}
   m_PrefabInstance: {fileID: 753375340}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &753375342 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: d8307d783921f7642a4590ea4a6b079e, type: 3}
+  m_PrefabInstance: {fileID: 753375340}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &753375343
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 753375342}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -3961548047347239541, guid: d8307d783921f7642a4590ea4a6b079e, type: 3}
+--- !u!1 &876417677
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 876417679}
+  - component: {fileID: 876417678}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &876417678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 876417677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &876417679
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 876417677}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 300, y: 0, z: -250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &957994746
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 957994748}
+  - component: {fileID: 957994747}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &957994747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 957994746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &957994748
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 957994746}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 150, y: 0, z: 200}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &998721457
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 998721459}
+  - component: {fileID: 998721458}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &998721458
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 998721457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &998721459
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 998721457}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -300, y: 0, z: -75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1139057165
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1139057167}
+  - component: {fileID: 1139057166}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1139057166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1139057165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &1139057167
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1139057165}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -300, y: 0, z: 250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1147830758
 GameObject:
   m_ObjectHideFlags: 0
@@ -222,7 +1021,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 2097015
   type: 0
-  randomRadius: 50
+  randomRadius: 80
   squareSizeX: 0
   squareSizeZ: 0
   enableRotation: 1
@@ -243,7 +1042,7 @@ MonoBehaviour:
   btnTestSpawn: 0
   minLevel: 1
   maxLevel: 1
-  minAmount: 20
+  minAmount: 10
   maxAmount: 1
   destroyRespawnDelay: 0
   respawnPendingEntitiesDelay: 5
@@ -264,7 +1063,92 @@ Transform:
   m_GameObject: {fileID: 1147830758}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -200}
+  m_LocalPosition: {x: 0, y: 0, z: -250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1514423153
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1514423155}
+  - component: {fileID: 1514423154}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1514423154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1514423153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &1514423155
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1514423153}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -150, y: 0, z: 200}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -391,6 +1275,91 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+--- !u!1 &1617521670
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1617521672}
+  - component: {fileID: 1617521671}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1617521671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1617521670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &1617521672
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1617521670}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -150, y: 0, z: -200}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1868295832
 GameObject:
   m_ObjectHideFlags: 0
@@ -457,7 +1426,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1918121005
 Transform:
@@ -507,6 +1476,91 @@ MonoBehaviour:
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: e4a376233fd926e4c92d590ccdab9351, type: 2}
   m_BuildHeightMesh: 0
+--- !u!1 &1922812063
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1922812065}
+  - component: {fileID: 1922812064}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1922812064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922812063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &1922812065
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922812063}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1970050103
 GameObject:
   m_ObjectHideFlags: 0
@@ -558,6 +1612,91 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2109879753
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2109879755}
+  - component: {fileID: 2109879754}
+  m_Layer: 0
+  m_Name: MonsterSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2109879754
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2109879753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6420796500f2444ba4683925d87b4b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosColor: {r: 1, g: 0, b: 1, a: 1}
+  positionGizmosColor: {r: 0, g: 1, b: 1, a: 1}
+  positionGizmosRadius: 0.1
+  gizmosDimentionType: 0
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 2097015
+  type: 0
+  randomRadius: 80
+  squareSizeX: 0
+  squareSizeZ: 0
+  enableRotation: 1
+  groundFindingType: 0
+  groundDetectionOffsets: 100
+  findGroundUpOffsetsRate: 1
+  stillUseRandomedPositionIfGroundNotFound: 0
+  randomPositionAmount: 20
+  randomPositionSeed: 123456
+  randomSpacing: 0.5
+  randomedPosition3Ds: []
+  randomedPosition2Ds: []
+  excludeFromAllAreaBaking: 0
+  randomPositionMode: 0
+  btnBakeRandomPositions: 0
+  btnBakeAllRandomPositions: 0
+  testSpawnPrefab: {fileID: 0}
+  btnTestSpawn: 0
+  minLevel: 1
+  maxLevel: 1
+  minAmount: 10
+  maxAmount: 1
+  destroyRespawnDelay: 0
+  respawnPendingEntitiesDelay: 5
+  subChannelId: 
+  spawnType: 0
+  noPlayerNearbyDestroyDelay: 60
+  additionalRangeToFindNearbyPlayers: 30
+  prefab: {fileID: 7923063247244202827, guid: ee924507d9fb2b648bd7f8c047769cf2, type: 3}
+  spawningPrefabs: []
+  monsterCharacterEntity: {fileID: 0}
+  faction: {fileID: 0}
+--- !u!4 &2109879755
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2109879753}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 300, y: 0, z: -75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -565,5 +1704,18 @@ SceneRoots:
   - {fileID: 1557388186}
   - {fileID: 1918121005}
   - {fileID: 1970050105}
+  - {fileID: 108748494}
+  - {fileID: 1617521672}
   - {fileID: 1147830760}
+  - {fileID: 416213927}
+  - {fileID: 876417679}
+  - {fileID: 1139057167}
+  - {fileID: 1514423155}
+  - {fileID: 1922812065}
+  - {fileID: 957994748}
+  - {fileID: 241367929}
+  - {fileID: 650788074}
+  - {fileID: 75195803}
+  - {fileID: 2109879755}
+  - {fileID: 998721459}
   - {fileID: 1868295834}

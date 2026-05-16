@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   btnValidate: 0
   id: 
-  defaultTitle: 
+  defaultTitle: Base Map
   languageSpecificTitles: []
   defaultDescription: 
   languageSpecificDescriptions: []
@@ -23,7 +23,7 @@ MonoBehaviour:
   scene:
     sceneAsset: {fileID: 102900000, guid: a01300c54b4c51641a1c1b4f1b3c8a59, type: 3}
     sceneName: BaseMap-CE
-  startPosition: {x: 0, y: 50, z: 0}
+  startPosition: {x: -50, y: 10, z: -200}
   startRotation: {x: 0, y: 0, z: 0}
   enablePkRules: 0
   disableDealing: 0
