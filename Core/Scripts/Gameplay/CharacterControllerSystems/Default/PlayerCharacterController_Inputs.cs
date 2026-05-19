@@ -316,6 +316,12 @@ namespace MultiplayerARPG
                     if (isMouseHoldAndNotDrag)
                     {
                         IHoldActivatableEntity activatable = tempTransform.GetComponent<IHoldActivatableEntity>();
+                        if (activatable.IsNull())
+                        {
+                            DamageableHitBox hitBox = _physicFunctions.GetRaycastObject(tempCounter).GetComponent<DamageableHitBox>();
+                            if (hitBox != null)
+                                activatable = hitBox;
+                        }
                         if (!activatable.IsNull() && activatable.CanHoldActivate())
                         {
                             SetTarget(activatable, TargetActionType.HoldClickActivate);
@@ -326,7 +332,13 @@ namespace MultiplayerARPG
                     }
                     else if (mouseUpOnTarget)
                     {
-                        ITargetableEntity targetable = tempTransform.GetComponent<ITargetableEntity>();
+                         ITargetableEntity targetable = tempTransform.GetComponent<ITargetableEntity>();
+                        if (targetable.IsNull())
+                        {
+                            DamageableHitBox hitBox = _physicFunctions.GetRaycastObject(tempCounter).GetComponent<DamageableHitBox>();
+                            if (hitBox != null)
+                                targetable = hitBox;
+                        }
                         IActivatableEntity activatable = targetable as IActivatableEntity;
                         IPickupActivatableEntity pickupActivatable = targetable as IPickupActivatableEntity;
                         IDamageableEntity damageable = targetable as IDamageableEntity;
@@ -453,7 +465,10 @@ namespace MultiplayerARPG
         protected virtual void ClearTarget(bool exceptSelectedTarget = false)
         {
             if (!exceptSelectedTarget)
+            {
                 SelectedEntity = null;
+                SetSelectedDamageableHitBox(null);
+            }
             TargetEntity = null;
             PlayingCharacterEntity.SetTargetEntity(null);
             _targetPosition = null;

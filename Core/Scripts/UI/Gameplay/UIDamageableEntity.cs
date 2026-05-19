@@ -77,6 +77,7 @@ namespace MultiplayerARPG
                 CacheCanvas.enabled = false;
                 return;
             }
+            UpdateHp();
 
             if (Time.unscaledTime - _receivedDamageTime < visibleDurationAfterHit || visibleDurationAfterHit <= 0f)
             {
@@ -93,6 +94,9 @@ namespace MultiplayerARPG
             UpdateHp();
         }
 
+        /// <summary>
+        /// Update the HP UI, if the selected damageable hit box is a segmented part, use the segmented HP
+        /// </summary>
         protected void UpdateHp()
         {
             if (uiGageHp == null)
@@ -103,6 +107,16 @@ namespace MultiplayerARPG
             {
                 currentHp = Data.CurrentHp;
                 maxHp = Data.MaxHp;
+                BasePlayerCharacterController controller = BasePlayerCharacterController.Singleton;
+                if (Data is BuildingEntity building &&
+                    controller != null &&
+                    !string.IsNullOrEmpty(controller.SelectedSegmentedPartId) &&
+                    controller.SelectedGameEntityObjectId == building.ObjectId &&
+                    building.TryGetSegmentedPartHp(controller.SelectedSegmentedPartId, out int segmentedCurrentHp, out int segmentedMaxHp))
+                {
+                    currentHp = segmentedCurrentHp;
+                    maxHp = segmentedMaxHp;
+                }
             }
             uiGageHp.Update(currentHp, maxHp);
         }
