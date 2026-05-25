@@ -798,7 +798,9 @@ namespace LiteNetLibManager
                 // Not hide, so not hide
                 return false;
             }
-            if (HideExceptions.Contains(ConnectionId))
+            /// 
+            /// Added identity since it could have exceptions that apply to the object owner instead of the viewer.
+            if (HideExceptions.Contains(identity.ConnectionId))
             {
                 // In hide exception conditions, so not hide
                 return false;
