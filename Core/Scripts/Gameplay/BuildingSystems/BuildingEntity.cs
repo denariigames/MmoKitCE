@@ -700,20 +700,7 @@ namespace MultiplayerARPG
                     visualHitBoxes[j].OverrideSegmentedDamageTarget(this, dataList[i].partId);
                     visualHitBoxes[j].Setup((byte)j);
                 }
-                // Prevent finalized visual copy from running its own BuildingEntity logic.
-                BuildingEntity visualEntity = visual.GetComponent<BuildingEntity>();
-                if (visualEntity != null)
-                    visualEntity.enabled = false;
-                LiteNetLibIdentity visualIdentity = visual.GetComponent<LiteNetLibIdentity>();
-                if (visualIdentity != null)
-                    visualIdentity.enabled = false;
-                LiteNetLibBehaviour[] visualNetBehaviours = visual.GetComponentsInChildren<LiteNetLibBehaviour>(true);
-                for (int j = 0; j < visualNetBehaviours.Length; ++j)
-                {
-                    if (visualNetBehaviours[j] == null)
-                        continue;
-                    visualNetBehaviours[j].enabled = false;
-                }
+                StripFinalizedVisualNetworking(visual);
                 _finalizedChildVisualObjects.Add(visual);
                 if (!_finalizedPartVisualObjects.TryGetValue(dataList[i].partId, out List<GameObject> pieceVisuals))
                 {
@@ -770,6 +757,32 @@ namespace MultiplayerARPG
             if (!IsServer)
                 return;
             finalizedChildrenPayload.Value = BuildFinalizedChildrenPayloadJson();
+        }
+
+        /// <summary>
+        /// Remove networking and building entity from a local finalized visual clone.
+        /// The object is never network-spawned; colliders, hit boxes, and building areas are kept.
+        /// </summary>
+        private static void StripFinalizedVisualNetworking(GameObject visual)
+        {
+            if (visual == null)
+                return;
+
+            LiteNetLibBehaviour[] netBehaviours = visual.GetComponentsInChildren<LiteNetLibBehaviour>(true);
+            for (int i = 0; i < netBehaviours.Length; ++i)
+            {
+                if (netBehaviours[i] == null)
+                    continue;
+                Destroy(netBehaviours[i]);
+            }
+
+            LiteNetLibIdentity[] identities = visual.GetComponentsInChildren<LiteNetLibIdentity>(true);
+            for (int i = 0; i < identities.Length; ++i)
+            {
+                if (identities[i] == null)
+                    continue;
+                Destroy(identities[i]);
+            }
         }
 
         /// <summary>
