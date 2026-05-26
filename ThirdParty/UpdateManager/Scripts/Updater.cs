@@ -1,5 +1,10 @@
+//fixed Duplicate registration
+//Fixed so only editor/development use try/catch.
+// now has early outs
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Insthync.ManagedUpdating
 {
@@ -9,17 +14,24 @@ namespace Insthync.ManagedUpdating
         private readonly List<IManagedLateUpdate> _lateUpdates = new();
         private readonly List<IManagedFixedUpdate> _fixedUpdates = new();
 
+        public bool IsEmpty => _updates.Count == 0 && _lateUpdates.Count == 0 && _fixedUpdates.Count == 0;
+
         public void Register(IManagedUpdateBase item)
         {
-            if (item is IManagedUpdate update)
+            if (item == null)
+                return;
+
+            if (item is IManagedUpdate update && !_updates.Contains(update))
             {
                 _updates.Add(update);
             }
-            if (item is IManagedLateUpdate lateUpdate)
+
+            if (item is IManagedLateUpdate lateUpdate && !_lateUpdates.Contains(lateUpdate))
             {
                 _lateUpdates.Add(lateUpdate);
             }
-            if (item is IManagedFixedUpdate fixedUpdate)
+
+            if (item is IManagedFixedUpdate fixedUpdate && !_fixedUpdates.Contains(fixedUpdate))
             {
                 _fixedUpdates.Add(fixedUpdate);
             }
@@ -27,41 +39,55 @@ namespace Insthync.ManagedUpdating
 
         public void Unregister(IManagedUpdateBase item)
         {
+            if (item == null)
+                return;
+
             if (item is IManagedUpdate update)
             {
                 _updates.Remove(update);
             }
+
             if (item is IManagedLateUpdate lateUpdate)
             {
                 _lateUpdates.Remove(lateUpdate);
             }
+
             if (item is IManagedFixedUpdate fixedUpdate)
             {
                 _fixedUpdates.Remove(fixedUpdate);
             }
         }
 
+        public void Clear()
+        {
+            _updates.Clear();
+            _lateUpdates.Clear();
+            _fixedUpdates.Clear();
+        }
+
         internal void Update()
         {
             for (int i = _updates.Count - 1; i >= 0; --i)
             {
-                if (_updates[i] == null)
+                IManagedUpdate item = _updates[i];
+                if (IsDestroyedOrNull(item))
                 {
+                    _updates.RemoveAt(i);
                     continue;
                 }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 try
                 {
-                    _updates[i].ManagedUpdate();
+                    item.ManagedUpdate();
                 }
-                catch
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                (System.Exception ex)
-#endif
+                catch (Exception ex)
                 {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                     Debug.LogException(ex);
-#endif
                 }
+#else
+                item.ManagedUpdate();
+#endif
             }
         }
 
@@ -69,23 +95,25 @@ namespace Insthync.ManagedUpdating
         {
             for (int i = _lateUpdates.Count - 1; i >= 0; --i)
             {
-                if (_lateUpdates[i] == null)
+                IManagedLateUpdate item = _lateUpdates[i];
+                if (IsDestroyedOrNull(item))
                 {
+                    _lateUpdates.RemoveAt(i);
                     continue;
                 }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 try
                 {
-                    _lateUpdates[i].ManagedLateUpdate();
+                    item.ManagedLateUpdate();
                 }
-                catch
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                (System.Exception ex)
-#endif
+                catch (Exception ex)
                 {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                     Debug.LogException(ex);
-#endif
                 }
+#else
+                item.ManagedLateUpdate();
+#endif
             }
         }
 
@@ -93,24 +121,34 @@ namespace Insthync.ManagedUpdating
         {
             for (int i = _fixedUpdates.Count - 1; i >= 0; --i)
             {
-                if (_fixedUpdates[i] == null)
+                IManagedFixedUpdate item = _fixedUpdates[i];
+                if (IsDestroyedOrNull(item))
                 {
+                    _fixedUpdates.RemoveAt(i);
                     continue;
                 }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 try
                 {
-                    _fixedUpdates[i].ManagedFixedUpdate();
+                    item.ManagedFixedUpdate();
                 }
-                catch
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                (System.Exception ex)
-#endif
+                catch (Exception ex)
                 {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                     Debug.LogException(ex);
-#endif
                 }
+#else
+                item.ManagedFixedUpdate();
+#endif
             }
+        }
+
+        private static bool IsDestroyedOrNull<T>(T item) where T : class
+        {
+            if (item == null)
+                return true;
+
+            return item is Object unityObject && unityObject == null;
         }
     }
 }
