@@ -438,6 +438,10 @@ namespace MultiplayerARPG
         protected virtual void SetTarget(ITargetableEntity entity, TargetActionType targetActionType, bool checkControllerMode = true)
         {
             _targetPosition = null;
+            if (entity is DamageableHitBox hitBox)
+                SetSelectedDamageableHitBox(hitBox);
+            else
+                SetSelectedDamageableHitBox(null);
             if (checkControllerMode && controllerMode == PlayerCharacterControllerMode.WASD)
             {
                 if (_targetActionType != targetActionType)
