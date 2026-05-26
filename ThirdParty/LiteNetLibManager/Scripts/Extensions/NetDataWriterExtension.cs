@@ -14,8 +14,20 @@ namespace LiteNetLib.Utils
 
         public static void PutValue(this NetDataWriter writer, Type type, object value)
         {
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer));
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+            if (value == null)
+                throw new ArgumentNullException(nameof(value), $"Cannot write null value for type {type.FullName}");
+
+            Type originalType = type;
+
             if (type.IsEnum)
+            {
                 type = type.GetEnumUnderlyingType();
+                value = Convert.ChangeType(value, type);
+            }
 
             if (WriterRegistry.TryGetWriter(type, out Action<NetDataWriter, object> writeFunc))
             {
@@ -23,24 +35,30 @@ namespace LiteNetLib.Utils
                 return;
             }
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.LogWarning($"No writer registered for type: {type.FullName}");
-#endif
-            if (typeof(INetSerializable).IsAssignableFrom(type))
+            if (typeof(INetSerializable).IsAssignableFrom(originalType))
             {
-                (value as INetSerializable).Serialize(writer);
+                INetSerializable serializable = value as INetSerializable;
+                if (serializable == null)
+                    throw new ArgumentException($"Value must implement {nameof(INetSerializable)} for type {originalType.FullName}", nameof(value));
+
+                serializable.Serialize(writer);
                 return;
             }
 
-            throw new ArgumentException("NetDataWriter cannot write type " + value.GetType().Name);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.LogWarning($"No writer registered for type: {originalType.FullName}");
+#endif
+            throw new ArgumentException("NetDataWriter cannot write type " + originalType.Name);
         }
 
         public static void PutColor(this NetDataWriter writer, Color value)
         {
-            byte r = (byte)(value.r * 100f);
-            byte g = (byte)(value.g * 100f);
-            byte b = (byte)(value.b * 100f);
-            byte a = (byte)(value.a * 100f);
+            // Keep the existing 0..100 wire format for compatibility, but clamp and round
+            // so HDR/out-of-range color values do not wrap when cast to byte.
+            byte r = (byte)Mathf.RoundToInt(Mathf.Clamp01(value.r) * 100f);
+            byte g = (byte)Mathf.RoundToInt(Mathf.Clamp01(value.g) * 100f);
+            byte b = (byte)Mathf.RoundToInt(Mathf.Clamp01(value.b) * 100f);
+            byte a = (byte)Mathf.RoundToInt(Mathf.Clamp01(value.a) * 100f);
             writer.Put(r);
             writer.Put(g);
             writer.Put(b);
@@ -110,7 +128,11 @@ namespace LiteNetLib.Utils
                 writer.Put(0);
                 return;
             }
+
             Array castedArray = array as Array;
+            if (castedArray == null)
+                throw new ArgumentException("Value must be an array", nameof(array));
+
             writer.Put(castedArray.Length);
             foreach (object value in castedArray)
             {
