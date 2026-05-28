@@ -105,7 +105,6 @@ MonoBehaviour:
   maxConnections: 1100
   transportFactory: {fileID: 0}
   clusterServerPort: 6010
-  mapSpawnMillisecondsTimeout: 0
   defaultChannelMaxConnections: 500
   channels:
   - id: 1
@@ -114,14 +113,7 @@ MonoBehaviour:
   - id: 2
     title: Channel 2
     maxConnections: 0
-  disableDefaultLogin: 0
-  minUsernameLength: 2
-  maxUsernameLength: 24
-  minPasswordLength: 2
-  minCharacterNameLength: 2
-  maxCharacterNameLength: 16
-  requireEmail: 0
-  requireEmailVerification: 0
+  mapSpawnMillisecondsTimeout: 0
   updateUserCountInterval: 5
 --- !u!1 &1454126604845530
 GameObject:
@@ -168,7 +160,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dbPath: ./mmorpgtemplate.sqlite3
-  editorDbPath: C:\Porjects\MmoKitCE\builds\mmorpgtemplate.sqlite3
+  editorDbPath: C:\Projects\MmoKitCE\builds\mmorpgtemplate.sqlite3
 --- !u!1 &1650234716345238
 GameObject:
   m_ObjectHideFlags: 0
@@ -253,6 +245,7 @@ MonoBehaviour:
   startMapSpawnOnAwake: 1
   startDatabaseOnAwake: 1
   startMapOnAwake: 0
+  startingChannelId: 
   startingMap: {fileID: 11400000, guid: d8d947f013595cd41a2c4322c2ffa4e7, type: 2}
   databaseOptionIndex: 0
   disableDatabaseCaching: 0
@@ -325,7 +318,7 @@ MonoBehaviour:
   - mapInfo: {fileID: 11400000, guid: d8d947f013595cd41a2c4322c2ffa4e7, type: 2}
     allocateAmount: 0
   isOverrideExePath: 1
-  overrideExePath: C:\Projects\MmoKitCE\\builds\MmoKitCE.exe
+  overrideExePath: C:\Projects\MmoKitCE\builds\MmoKitCE.exe
   editorNotSpawnInBatchMode: 1
 --- !u!1 &1834896065226248
 GameObject:
@@ -385,6 +378,12 @@ MonoBehaviour:
   databaseOptions:
   - {fileID: 114414512406587944}
   - {fileID: 114715813743394434}
+  useDeferredCharacterSaveScheduler: 1
+  characterSaveLaneCount: 32
+  characterSaveTickMilliseconds: 500
+  characterSaveMaxPerTick: 8
+  characterSaveMinIntervalSeconds: 20
+  characterSaveRetryDelaySeconds: 5
 --- !u!1 &3476521299117261828
 GameObject:
   m_ObjectHideFlags: 0
