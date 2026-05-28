@@ -9,7 +9,21 @@ namespace Insthync.ManagedUpdating
         private static readonly SortedList<int, Updater> _updaters = new SortedList<int, Updater>();
 
         private static UpdateManager _instance;
-        public static UpdateManager Instance => _instance != null ? _instance : (_instance = CreateInstance());
+        private static bool _applicationIsQuitting;
+
+        public static UpdateManager Instance => GetOrCreateInstance();
+
+        private static UpdateManager GetOrCreateInstance()
+        {
+            if (_applicationIsQuitting)
+                return null;
+
+            if (_instance != null)
+                return _instance;
+
+            _instance = FindObjectOfType<UpdateManager>();
+            return _instance != null ? _instance : CreateInstance();
+        }
 
         private static UpdateManager CreateInstance()
         {
@@ -17,6 +31,7 @@ namespace Insthync.ManagedUpdating
             {
                 hideFlags = HideFlags.DontSave,
             };
+
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
@@ -27,12 +42,46 @@ namespace Insthync.ManagedUpdating
             {
                 DontDestroyOnLoad(gameObject);
             }
+
             return gameObject.AddComponent<UpdateManager>();
+        }
+
+        private void Awake()
+        {
+            if (_instance != null && _instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            _instance = this;
+        }
+
+        private void OnApplicationQuit()
+        {
+            _applicationIsQuitting = true;
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance != this)
+                return;
+
+            _instance = null;
+            _defaultUpdater.Clear();
+            _updaters.Clear();
         }
 
         public static void Register(IManagedUpdateBase updater)
         {
-            Instance.Register_Implementation(updater);
+            if (updater == null)
+                return;
+
+            UpdateManager instance = GetOrCreateInstance();
+            if (instance == null)
+                return;
+
+            instance.Register_Implementation(updater);
         }
 
         private void Register_Implementation(IManagedUpdateBase updater)
@@ -42,7 +91,10 @@ namespace Insthync.ManagedUpdating
 
         public static void Unregister(IManagedUpdateBase updater)
         {
-            Instance.Unregister_Implementation(updater);
+            if (updater == null || _instance == null)
+                return;
+
+            _instance.Unregister_Implementation(updater);
         }
 
         private void Unregister_Implementation(IManagedUpdateBase updater)
@@ -52,52 +104,76 @@ namespace Insthync.ManagedUpdating
 
         public static void Register(int order, IManagedUpdateBase updater)
         {
-            Instance.Register_Implementation(order, updater);
+            if (updater == null)
+                return;
+
+            UpdateManager instance = GetOrCreateInstance();
+            if (instance == null)
+                return;
+
+            instance.Register_Implementation(order, updater);
         }
 
         private void Register_Implementation(int order, IManagedUpdateBase updater)
         {
-            if (!_updaters.ContainsKey(order))
-                _updaters.Add(order, new Updater());
-            _updaters[order].Register(updater);
+            if (!_updaters.TryGetValue(order, out Updater updaterGroup))
+            {
+                updaterGroup = new Updater();
+                _updaters.Add(order, updaterGroup);
+            }
+
+            updaterGroup.Register(updater);
         }
 
         public static void Unregister(int order, IManagedUpdateBase updater)
         {
-            Instance.Unregister_Implementation(order, updater);
+            if (updater == null || _instance == null)
+                return;
+
+            _instance.Unregister_Implementation(order, updater);
         }
 
         private void Unregister_Implementation(int order, IManagedUpdateBase updater)
         {
-            if (!_updaters.ContainsKey(order))
+            if (!_updaters.TryGetValue(order, out Updater updaterGroup))
                 return;
-            _updaters[order].Unregister(updater);
+
+            updaterGroup.Unregister(updater);
+
+            if (updaterGroup.IsEmpty)
+                _updaters.Remove(order);
         }
 
         private void Update()
         {
             _defaultUpdater.Update();
-            for (int i = 0; i < _updaters.Count; ++i)
+
+            IList<Updater> orderedUpdaters = _updaters.Values;
+            for (int i = 0, count = orderedUpdaters.Count; i < count; ++i)
             {
-                _updaters.Values[i].Update();
+                orderedUpdaters[i].Update();
             }
         }
 
         private void LateUpdate()
         {
             _defaultUpdater.LateUpdate();
-            for (int i = 0; i < _updaters.Count; ++i)
+
+            IList<Updater> orderedUpdaters = _updaters.Values;
+            for (int i = 0, count = orderedUpdaters.Count; i < count; ++i)
             {
-                _updaters.Values[i].LateUpdate();
+                orderedUpdaters[i].LateUpdate();
             }
         }
 
         private void FixedUpdate()
         {
             _defaultUpdater.FixedUpdate();
-            for (int i = 0; i < _updaters.Count; ++i)
+
+            IList<Updater> orderedUpdaters = _updaters.Values;
+            for (int i = 0, count = orderedUpdaters.Count; i < count; ++i)
             {
-                _updaters.Values[i].FixedUpdate();
+                orderedUpdaters[i].FixedUpdate();
             }
         }
     }
