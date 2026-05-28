@@ -1389,9 +1389,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680296a8541844d46be994b6a2de3be0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 0}
+  preset: {fileID: 11400000, guid: f84a935e6ea0b15468b990a4a552c303, type: 2}
   settings:
-    backgroundColor: {r: 0, g: 0, b: 0, a: 1}
+    backgroundColor: {r: 1, g: 0, b: 0, a: 1}
     fontColor: {r: 1, g: 1, b: 1, a: 1}
     textAlignment: 0
     fontStyle: 1
@@ -1590,9 +1590,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680296a8541844d46be994b6a2de3be0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 0}
+  preset: {fileID: 11400000, guid: 378e55ebd0f096c4cbb72127a71e6cb2, type: 2}
   settings:
-    backgroundColor: {r: 0, g: 0, b: 0, a: 1}
+    backgroundColor: {r: 0, g: 0.4245283, b: 0.02086708, a: 1}
     fontColor: {r: 1, g: 1, b: 1, a: 1}
     textAlignment: 0
     fontStyle: 1
