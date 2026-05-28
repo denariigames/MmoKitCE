@@ -509,9 +509,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680296a8541844d46be994b6a2de3be0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 0}
+  preset: {fileID: 11400000, guid: 78140150bcdcc3a4e98beff610023bef, type: 2}
   settings:
-    backgroundColor: {r: 0, g: 0, b: 0, a: 1}
+    backgroundColor: {r: 0.8005827, g: 0.043075833, b: 0.8301887, a: 1}
     fontColor: {r: 1, g: 1, b: 1, a: 1}
     textAlignment: 0
     fontStyle: 1
