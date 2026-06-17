@@ -256,11 +256,11 @@ namespace MultiplayerARPG
             binaryFormatter.SurrogateSelector = surrogateSelector;
             binaryFormatter.Binder = new PlayerCharacterDataTypeBinder();
             string path = Application.persistentDataPath + "/" + savingData.Id + ".sav";
-            Debug.Log("Character Saving to: " + path);
+            //Debug.Log("Character Saving to: " + path);
             FileStream file = File.Open(path, FileMode.OpenOrCreate);
             binaryFormatter.Serialize(file, savingData);
             file.Close();
-            Debug.Log("Character Saved to: " + path);
+            //Debug.Log("Character Saved to: " + path);
         }
 
         public static T LoadPersistentCharacterDataById<T>(this T characterData, string id) where T : IPlayerCharacterData
