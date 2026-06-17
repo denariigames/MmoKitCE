@@ -698,7 +698,7 @@ namespace MultiplayerARPG
 
         public bool IsCreator(string playerCharacterId)
         {
-            return CreatorId.Equals(playerCharacterId);
+            return string.IsNullOrEmpty(CreatorId) ? false: CreatorId.Equals(playerCharacterId);
         }
 
         public virtual void InitSceneObject()
