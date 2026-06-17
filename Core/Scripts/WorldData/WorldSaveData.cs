@@ -12,6 +12,9 @@ namespace MultiplayerARPG
     {
         public List<BuildingSaveData> buildings = new List<BuildingSaveData>();
 
+        public float timeOfDay;
+        public int currentDay;
+
         public void SavePersistentData(string id, string map)
         {
             BinaryFormatter binaryFormatter = new BinaryFormatter();

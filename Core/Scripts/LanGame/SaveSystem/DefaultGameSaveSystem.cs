@@ -184,6 +184,13 @@ namespace MultiplayerARPG
                 if (buildingEntity == null) continue;
                 worldSaveData.buildings.Add(buildingEntity.CloneTo(new BuildingSaveData()));
             }
+
+            if (GameInstance.Singleton.DayNightTimeUpdater != null)
+            {
+                worldSaveData.timeOfDay = GameInstance.Singleton.DayNightTimeUpdater.TimeOfDay;
+                worldSaveData.currentDay = GameInstance.Singleton.DayNightTimeUpdater.CurrentDay;
+            }
+
             worldSaveData.SavePersistentData(hostPlayerCharacterData.Id, BaseGameNetworkManager.CurrentMapInfo.Id);
         }
 
