@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cysharp.Text;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace MultiplayerARPG
@@ -7,6 +8,13 @@ namespace MultiplayerARPG
     {
         public BasePlayerCharacterController Controller { get { return BasePlayerCharacterController.Singleton; } }
         public TextWrapper textTitle;
+
+        //add description and image support from buildingItem
+        public Image imageIcon;
+        public TextWrapper uiTextDescription;
+        [Tooltip("Format => {0} = {Description}")]
+        public UILocaleKeySetting formatKeyDescription = new UILocaleKeySetting(UIFormatKeys.UI_FORMAT_SIMPLE);
+
         [Tooltip("These game objects will be activate if target building entity's `isLocked` = `TRUE`")]
         public GameObject[] lockedObjects = new GameObject[0];
         [Tooltip("These game objects will be activate if target building entity's `isLocked` = `FALSE`")]
@@ -45,6 +53,8 @@ namespace MultiplayerARPG
         {
             base.OnDestroy();
             textTitle = null;
+            imageIcon = null;
+            uiTextDescription = null;
             lockedObjects.Nullify();
             unlockedObjects.Nullify();
             lockableObjects.Nullify();
@@ -81,6 +91,24 @@ namespace MultiplayerARPG
         {
             if (textTitle != null)
                 textTitle.text = _buildingEntity.Title;
+
+            //add description and image support from buildingItem
+            if (_buildingEntity?.item != null)
+            {
+                if (uiTextDescription != null)
+                {
+                    uiTextDescription.text = ZString.Format(
+                        LanguageManager.GetText(formatKeyDescription),
+                        _buildingEntity.item.Description);
+                }
+                imageIcon.SetImageGameDataIcon(_buildingEntity.item);
+            }
+            else
+            {
+                if (uiTextDescription != null)
+                    uiTextDescription.text = "";
+                imageIcon.SetImageGameDataIcon(null);
+            }
 
             bool isCreator = _buildingEntity.IsCreator(GameInstance.PlayingCharacterEntity);
             bool lockable = !_buildingEntity.IsLocked && _buildingEntity.Lockable && isCreator;

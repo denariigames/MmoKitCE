@@ -113,6 +113,9 @@ namespace MultiplayerARPG
         public float LifeTime { get { return lifeTime; } }
         public int BuildLimit { get { return buildLimit; } }
 
+        //add buildingItem reference for UI
+        public BuildingItem item;
+
         /// <summary>
         /// Use this as reference for area to build this object while in build mode
         /// </summary>
