@@ -660,26 +660,27 @@ namespace MultiplayerARPG
             NetDataWriter reliableWriter = EntityMovementDataBuffers.ReliablePacketWriter;
             NetDataWriter unreliableWriter = EntityMovementDataBuffers.UnreliablePacketWriter;
 
-            // Prepare packets
-            TransportHandler.WritePacket(reliableWriter, GameNetworkingConsts.EntityState);
-            reliableWriter.PutPackedLong(writeTimestamp);
-            int posBeforeWriteReliableStateCount = reliableWriter.Length;
-            int reliableStateCount = 0;
-            reliableWriter.Put(reliableStateCount);
-
-            TransportHandler.WritePacket(unreliableWriter, GameNetworkingConsts.EntityState);
-            unreliableWriter.PutPackedLong(writeTimestamp);
-            int posBeforeWriteUnreliableStateCount = unreliableWriter.Length;
-            int unreliableStateCount = 0;
-            unreliableWriter.Put(unreliableStateCount);
-            int posAfterWriteUnreliableStateCount = unreliableWriter.Length;
-
             int tempLastPosition;
 
             foreach (KeyValuePair<long, LiteNetLibPlayer> playerKvp in Players)
             {
                 if (playerKvp.Key == ClientConnectionId)
                     continue;
+
+                // Prepare packets for this player. WritePacket resets the shared writers, so
+                // nothing from the previous player's packets carries over.
+                TransportHandler.WritePacket(reliableWriter, GameNetworkingConsts.EntityState);
+                reliableWriter.PutPackedLong(writeTimestamp);
+                int posBeforeWriteReliableStateCount = reliableWriter.Length;
+                int reliableStateCount = 0;
+                reliableWriter.Put(reliableStateCount);
+
+                TransportHandler.WritePacket(unreliableWriter, GameNetworkingConsts.EntityState);
+                unreliableWriter.PutPackedLong(writeTimestamp);
+                int posBeforeWriteUnreliableStateCount = unreliableWriter.Length;
+                int unreliableStateCount = 0;
+                unreliableWriter.Put(unreliableStateCount);
+                int posAfterWriteUnreliableStateCount = unreliableWriter.Length;
 
                 LiteNetLibPlayer player = playerKvp.Value;
                 var objectIds = player.GetSubscribingObjectIds();
@@ -759,20 +760,6 @@ namespace MultiplayerARPG
             NetDataWriter reliableWriter = EntityMovementDataBuffers.ReliablePacketWriter;
             NetDataWriter unreliableWriter = EntityMovementDataBuffers.UnreliablePacketWriter;
 
-            // Prepare packets
-            TransportHandler.WritePacket(reliableWriter, GameNetworkingConsts.EntityState);
-            reliableWriter.PutPackedLong(writeTimestamp);
-            int posBeforeWriteReliableStateCount = reliableWriter.Length;
-            int reliableStateCount = 0;
-            reliableWriter.Put(reliableStateCount);
-
-            TransportHandler.WritePacket(unreliableWriter, GameNetworkingConsts.EntityState);
-            unreliableWriter.PutPackedLong(writeTimestamp);
-            int posBeforeWriteUnreliableStateCount = unreliableWriter.Length;
-            int unreliableStateCount = 0;
-            unreliableWriter.Put(unreliableStateCount);
-            int posAfterWriteUnreliableStateCount = unreliableWriter.Length;
-
             int tempLastPosition;
 
             //Native collections for job
@@ -789,6 +776,21 @@ namespace MultiplayerARPG
                 //Try get position for interest management, it will be used for determining data compression mode, but it's not required, so it won't cause problem if failed to get position
                 if (!DefaultServerUserHandlers.PlayerCharacters.TryGetValue(player.ConnectionId, out IPlayerCharacterData playerCharacter))
                     continue;
+
+                // Prepare packets for this player. WritePacket resets the shared writers, so
+                // nothing from the previous player's packets carries over.
+                TransportHandler.WritePacket(reliableWriter, GameNetworkingConsts.EntityState);
+                reliableWriter.PutPackedLong(writeTimestamp);
+                int posBeforeWriteReliableStateCount = reliableWriter.Length;
+                int reliableStateCount = 0;
+                reliableWriter.Put(reliableStateCount);
+
+                TransportHandler.WritePacket(unreliableWriter, GameNetworkingConsts.EntityState);
+                unreliableWriter.PutPackedLong(writeTimestamp);
+                int posBeforeWriteUnreliableStateCount = unreliableWriter.Length;
+                int unreliableStateCount = 0;
+                unreliableWriter.Put(unreliableStateCount);
+                int posAfterWriteUnreliableStateCount = unreliableWriter.Length;
 
                 //HashSet<uint> objectIds = player.GetSubscribingObjectIds();
                 //DG fix
