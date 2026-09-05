@@ -63,7 +63,9 @@ namespace MultiplayerARPG
 
                 int totalBits = bx + by + bz;
 
-                int byteCount = (totalBits + 7) / 8;
+                // The first byte holds 2 mode bits and only 6 data bits, so the mode bits must be
+                // counted or the top 2 bits of the last packed component (Y) are dropped.
+                int byteCount = (totalBits + 2 + 7) / 8;
 
                 // convert mode (3–6 → 0–3)
                 int modeBits = compressionMode - 3;
