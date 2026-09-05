@@ -76,6 +76,7 @@ namespace MultiplayerARPG
                 movementResults.Add(new MovementResult
                 {
                     objectId = objectId,
+                    reliably = entity.shouldSendReliably,
                     movementState = entity.movementState,
                     extraMovementState = entity.extraMovementState,
                     compressionMode = first,
